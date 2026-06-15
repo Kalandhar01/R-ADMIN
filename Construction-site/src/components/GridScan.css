@@ -52,10 +52,10 @@
 @media (max-width: 767px) {
   .gridscan {
     background:
-      radial-gradient(circle at 50% 44%, rgba(153, 27, 27, 0.32), transparent 34%),
-      linear-gradient(rgba(239, 68, 68, 0.14) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(239, 68, 68, 0.12) 1px, transparent 1px),
-      #05070c;
+      radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.08), transparent 50%),
+      linear-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+      #000000;
     background-position: center;
     background-size:
       auto,

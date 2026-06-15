@@ -97,7 +97,7 @@ export default function WorksGallery({
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-red-700">
                   {work.type}
                 </p>
-                <h2 className="mt-2 text-2xl font-semibold leading-tight text-slate-950">
+                <h2 className="mt-2 text-2xl font-bold leading-tight tracking-tight text-slate-950">
                   {work.title}
                 </h2>
                 <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">

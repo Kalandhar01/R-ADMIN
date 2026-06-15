@@ -1,35 +1,33 @@
 "use client";
-
-import {
-  BloomEffect,
-  ChromaticAberrationEffect,
-  EffectComposer,
-  EffectPass,
-  RenderPass,
-} from "postprocessing";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
-import * as THREE from "three";
-import "./GridScan.css";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import * as faceapi from 'face-api.js';
+import { BloomEffect, ChromaticAberrationEffect, EffectComposer, EffectPass, RenderPass } from 'postprocessing';
+import React, { useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
 
 type GridScanProps = {
   enableWebcam?: boolean;
   showPreview?: boolean;
   modelsPath?: string;
   sensitivity?: number;
+
   lineThickness?: number;
   linesColor?: string;
+
   gridScale?: number;
-  lineStyle?: "solid" | "dashed" | "dotted";
+  lineStyle?: 'solid' | 'dashed' | 'dotted';
   lineJitter?: number;
+
   enablePost?: boolean;
   bloomIntensity?: number;
   bloomThreshold?: number;
   bloomSmoothing?: number;
   chromaticAberration?: number;
   noiseIntensity?: number;
+
   scanColor?: string;
   scanOpacity?: number;
-  scanDirection?: "forward" | "backward" | "pingpong";
+  scanDirection?: 'forward' | 'backward' | 'pingpong';
   scanSoftness?: number;
   scanGlow?: number;
   scanPhaseTaper?: number;
@@ -39,7 +37,7 @@ type GridScanProps = {
   scanOnClick?: boolean;
   snapBackDelay?: number;
   className?: string;
-  style?: CSSProperties;
+  style?: React.CSSProperties;
 };
 
 const vert = `
@@ -86,47 +84,47 @@ float smoother01(float a, float b, float x){
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord)
 {
-  vec2 p = (2.0 * fragCoord - iResolution.xy) / iResolution.y;
+    vec2 p = (2.0 * fragCoord - iResolution.xy) / iResolution.y;
 
-  vec3 ro = vec3(0.0);
-  vec3 rd = normalize(vec3(p, 2.0));
+    vec3 ro = vec3(0.0);
+    vec3 rd = normalize(vec3(p, 2.0));
 
-  float cR = cos(uTilt), sR = sin(uTilt);
-  rd.xy = mat2(cR, -sR, sR, cR) * rd.xy;
+    float cR = cos(uTilt), sR = sin(uTilt);
+    rd.xy = mat2(cR, -sR, sR, cR) * rd.xy;
 
-  float cY = cos(uYaw), sY = sin(uYaw);
-  rd.xz = mat2(cY, -sY, sY, cY) * rd.xz;
+    float cY = cos(uYaw), sY = sin(uYaw);
+    rd.xz = mat2(cY, -sY, sY, cY) * rd.xz;
 
-  vec2 skew = clamp(uSkew, vec2(-0.7), vec2(0.7));
-  rd.xy += skew * rd.z;
+    vec2 skew = clamp(uSkew, vec2(-0.7), vec2(0.7));
+    rd.xy += skew * rd.z;
 
-  vec3 color = vec3(0.0);
+    vec3 color = vec3(0.0);
   float minT = 1e20;
   float gridScale = max(1e-5, uGridScale);
-  float fadeStrength = 2.0;
-  vec2 gridUV = vec2(0.0);
+    float fadeStrength = 2.0;
+    vec2 gridUV = vec2(0.0);
 
   float hitIsY = 1.0;
-  for (int i = 0; i < 4; i++)
-  {
-    float isY = float(i < 2);
-    float pos = mix(-0.2, 0.2, float(i)) * isY + mix(-0.5, 0.5, float(i - 2)) * (1.0 - isY);
-    float num = pos - (isY * ro.y + (1.0 - isY) * ro.x);
-    float den = isY * rd.y + (1.0 - isY) * rd.x;
-    float t = num / den;
-    vec3 h = ro + rd * t;
+    for (int i = 0; i < 4; i++)
+    {
+        float isY = float(i < 2);
+        float pos = mix(-0.2, 0.2, float(i)) * isY + mix(-0.5, 0.5, float(i - 2)) * (1.0 - isY);
+        float num = pos - (isY * ro.y + (1.0 - isY) * ro.x);
+        float den = isY * rd.y + (1.0 - isY) * rd.x;
+        float t = num / den;
+        vec3 h = ro + rd * t;
 
-    float depthBoost = smoothstep(0.0, 3.0, h.z);
-    h.xy += skew * 0.15 * depthBoost;
+        float depthBoost = smoothstep(0.0, 3.0, h.z);
+        h.xy += skew * 0.15 * depthBoost;
 
     bool use = t > 0.0 && t < minT;
     gridUV = use ? mix(h.zy, h.xz, isY) / gridScale : gridUV;
     minT = use ? t : minT;
     hitIsY = use ? isY : hitIsY;
-  }
+    }
 
-  vec3 hit = ro + rd * minT;
-  float dist = length(hit - ro);
+    vec3 hit = ro + rd * minT;
+    float dist = length(hit - ro);
 
   float jitterAmt = clamp(uLineJitter, 0.0, 1.0);
   if (jitterAmt > 0.0) {
@@ -213,81 +211,81 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
       float dotMaskY2 = 1.0 - smoothstep(dotWidth2, dotWidth2 + fwidth(gridUV2.y * dotRepeat2), cy2);
       float dotMaskX2 = 1.0 - smoothstep(dotWidth2, dotWidth2 + fwidth(gridUV2.x * dotRepeat2), cx2);
       lineX2 *= dotMaskY2;
-      lineY2 *= dotMaskX2;
+      lineX2 *= dotMaskX2;
     }
   }
-  float altMask = max(lineX2, lineY2);
+    float altMask = max(lineX2, lineY2);
 
-  float edgeDistX = min(abs(hit.x - (-0.5)), abs(hit.x - 0.5));
-  float edgeDistY = min(abs(hit.y - (-0.2)), abs(hit.y - 0.2));
-  float edgeDist = mix(edgeDistY, edgeDistX, hitIsY);
-  float edgeGate = 1.0 - smoothstep(gridScale * 0.5, gridScale * 2.0, edgeDist);
-  altMask *= edgeGate;
+    float edgeDistX = min(abs(hit.x - (-0.5)), abs(hit.x - 0.5));
+    float edgeDistY = min(abs(hit.y - (-0.2)), abs(hit.y - 0.2));
+    float edgeDist = mix(edgeDistY, edgeDistX, hitIsY);
+    float edgeGate = 1.0 - smoothstep(gridScale * 0.5, gridScale * 2.0, edgeDist);
+    altMask *= edgeGate;
 
   float lineMask = max(primaryMask, altMask);
 
-  float fade = exp(-dist * fadeStrength);
+    float fade = exp(-dist * fadeStrength);
 
-  float dur = max(0.05, uScanDuration);
-  float del = max(0.0, uScanDelay);
-  float scanZMax = 2.0;
-  float widthScale = max(0.1, uScanGlow);
-  float sigma = max(0.001, 0.18 * widthScale * uScanSoftness);
-  float sigmaA = sigma * 2.0;
+    float dur = max(0.05, uScanDuration);
+    float del = max(0.0, uScanDelay);
+    float scanZMax = 2.0;
+    float widthScale = max(0.1, uScanGlow);
+    float sigma = max(0.001, 0.18 * widthScale * uScanSoftness);
+    float sigmaA = sigma * 2.0;
 
-  float combinedPulse = 0.0;
-  float combinedAura = 0.0;
+    float combinedPulse = 0.0;
+    float combinedAura = 0.0;
 
-  float cycle = dur + del;
-  float tCycle = mod(iTime, cycle);
-  float scanPhase = clamp((tCycle - del) / dur, 0.0, 1.0);
-  float phase = scanPhase;
-  if (uScanDirection > 0.5 && uScanDirection < 1.5) {
-    phase = 1.0 - phase;
-  } else if (uScanDirection > 1.5) {
-    float t2 = mod(max(0.0, iTime - del), 2.0 * dur);
-    phase = (t2 < dur) ? (t2 / dur) : (1.0 - (t2 - dur) / dur);
-  }
-  float scanZ = phase * scanZMax;
-  float dz = abs(hit.z - scanZ);
-  float lineBand = exp(-0.5 * (dz * dz) / (sigma * sigma));
-  float taper = clamp(uPhaseTaper, 0.0, 0.49);
-  float headW = taper;
-  float tailW = taper;
-  float headFade = smoother01(0.0, headW, phase);
-  float tailFade = 1.0 - smoother01(1.0 - tailW, 1.0, phase);
-  float phaseWindow = headFade * tailFade;
-  float pulseBase = lineBand * phaseWindow;
-  combinedPulse += pulseBase * clamp(uScanOpacity, 0.0, 1.0);
-  float auraBand = exp(-0.5 * (dz * dz) / (sigmaA * sigmaA));
-  combinedAura += (auraBand * 0.25) * phaseWindow * clamp(uScanOpacity, 0.0, 1.0);
-
-  for (int i = 0; i < MAX_SCANS; i++) {
-    if (float(i) >= uScanCount) break;
-    float tActiveI = iTime - uScanStarts[i];
-    float phaseI = clamp(tActiveI / dur, 0.0, 1.0);
+    float cycle = dur + del;
+    float tCycle = mod(iTime, cycle);
+    float scanPhase = clamp((tCycle - del) / dur, 0.0, 1.0);
+    float phase = scanPhase;
     if (uScanDirection > 0.5 && uScanDirection < 1.5) {
-      phaseI = 1.0 - phaseI;
+      phase = 1.0 - phase;
     } else if (uScanDirection > 1.5) {
-      phaseI = (phaseI < 0.5) ? (phaseI * 2.0) : (1.0 - (phaseI - 0.5) * 2.0);
+      float t2 = mod(max(0.0, iTime - del), 2.0 * dur);
+      phase = (t2 < dur) ? (t2 / dur) : (1.0 - (t2 - dur) / dur);
     }
-    float scanZI = phaseI * scanZMax;
-    float dzI = abs(hit.z - scanZI);
-    float lineBandI = exp(-0.5 * (dzI * dzI) / (sigma * sigma));
-    float headFadeI = smoother01(0.0, headW, phaseI);
-    float tailFadeI = 1.0 - smoother01(1.0 - tailW, 1.0, phaseI);
-    float phaseWindowI = headFadeI * tailFadeI;
-    combinedPulse += lineBandI * phaseWindowI * clamp(uScanOpacity, 0.0, 1.0);
-    float auraBandI = exp(-0.5 * (dzI * dzI) / (sigmaA * sigmaA));
-    combinedAura += (auraBandI * 0.25) * phaseWindowI * clamp(uScanOpacity, 0.0, 1.0);
-  }
+    float scanZ = phase * scanZMax;
+    float dz = abs(hit.z - scanZ);
+    float lineBand = exp(-0.5 * (dz * dz) / (sigma * sigma));
+    float taper = clamp(uPhaseTaper, 0.0, 0.49);
+    float headW = taper;
+    float tailW = taper;
+    float headFade = smoother01(0.0, headW, phase);
+    float tailFade = 1.0 - smoother01(1.0 - tailW, 1.0, phase);
+    float phaseWindow = headFade * tailFade;
+    float pulseBase = lineBand * phaseWindow;
+    combinedPulse += pulseBase * clamp(uScanOpacity, 0.0, 1.0);
+    float auraBand = exp(-0.5 * (dz * dz) / (sigmaA * sigmaA));
+    combinedAura += (auraBand * 0.25) * phaseWindow * clamp(uScanOpacity, 0.0, 1.0);
+
+    for (int i = 0; i < MAX_SCANS; i++) {
+      if (float(i) >= uScanCount) break;
+      float tActiveI = iTime - uScanStarts[i];
+      float phaseI = clamp(tActiveI / dur, 0.0, 1.0);
+      if (uScanDirection > 0.5 && uScanDirection < 1.5) {
+        phaseI = 1.0 - phaseI;
+      } else if (uScanDirection > 1.5) {
+        phaseI = (phaseI < 0.5) ? (phaseI * 2.0) : (1.0 - (phaseI - 0.5) * 2.0);
+      }
+      float scanZI = phaseI * scanZMax;
+      float dzI = abs(hit.z - scanZI);
+      float lineBandI = exp(-0.5 * (dzI * dzI) / (sigma * sigma));
+      float headFadeI = smoother01(0.0, headW, phaseI);
+      float tailFadeI = 1.0 - smoother01(1.0 - tailW, 1.0, phaseI);
+      float phaseWindowI = headFadeI * tailFadeI;
+      combinedPulse += lineBandI * phaseWindowI * clamp(uScanOpacity, 0.0, 1.0);
+      float auraBandI = exp(-0.5 * (dzI * dzI) / (sigmaA * sigmaA));
+      combinedAura += (auraBandI * 0.25) * phaseWindowI * clamp(uScanOpacity, 0.0, 1.0);
+    }
 
   float lineVis = lineMask;
   vec3 gridCol = uLinesColor * lineVis * fade;
   vec3 scanCol = uScanColor * combinedPulse;
   vec3 scanAura = uScanColor * combinedAura;
 
-  color = gridCol + scanCol + scanAura;
+    color = gridCol + scanCol + scanAura;
 
   float n = fract(sin(dot(gl_FragCoord.xy + vec2(iTime * 123.4), vec2(12.9898,78.233))) * 43758.5453123);
   color += (n - 0.5) * uNoise;
@@ -307,19 +305,19 @@ void main(){
 }
 `;
 
-export default function GridScan({
+export const GridScan: React.FC<GridScanProps> = ({
   enableWebcam = false,
   showPreview = false,
-  modelsPath = "https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights",
+  modelsPath = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights',
   sensitivity = 0.55,
   lineThickness = 1,
-  linesColor = "#2F293A",
-  scanColor = "#FF9FFC",
+  linesColor = '#2F293A',
+  scanColor = '#FF9FFC',
   scanOpacity = 0.4,
   gridScale = 0.1,
-  lineStyle = "solid",
+  lineStyle = 'solid',
   lineJitter = 0.1,
-  scanDirection = "pingpong",
+  scanDirection = 'pingpong',
   enablePost = true,
   bloomIntensity = 0,
   bloomThreshold = 0,
@@ -334,9 +332,9 @@ export default function GridScan({
   enableGyro = false,
   scanOnClick = false,
   snapBackDelay = 250,
-  className = "",
-  style = {},
-}: GridScanProps) {
+  className,
+  style
+}) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -346,13 +344,9 @@ export default function GridScan({
   const bloomRef = useRef<BloomEffect | null>(null);
   const chromaRef = useRef<ChromaticAberrationEffect | null>(null);
   const rafRef = useRef<number | null>(null);
-  const faceApiRef = useRef<typeof import("face-api.js") | null>(null);
 
   const [modelsReady, setModelsReady] = useState(false);
   const [uiFaceActive, setUiFaceActive] = useState(false);
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)").matches : false,
-  );
 
   const lookTarget = useRef(new THREE.Vector2(0, 0));
   const tiltTarget = useRef(0);
@@ -365,8 +359,22 @@ export default function GridScan({
   const yawCurrent = useRef(0);
   const yawVel = useRef(0);
 
-  const maxScans = 8;
+  const MAX_SCANS = 8;
   const scanStartsRef = useRef<number[]>([]);
+
+  const pushScan = (t: number) => {
+    const arr = scanStartsRef.current.slice();
+    if (arr.length >= MAX_SCANS) arr.shift();
+    arr.push(t);
+    scanStartsRef.current = arr;
+    if (materialRef.current) {
+      const u = materialRef.current.uniforms;
+      const buf = new Array(MAX_SCANS).fill(0);
+      for (let i = 0; i < arr.length && i < MAX_SCANS; i++) buf[i] = arr[i];
+      u.uScanStarts.value = buf;
+      u.uScanCount.value = arr.length;
+    }
+  };
 
   const bufX = useRef<number[]>([]);
   const bufY = useRef<number[]>([]);
@@ -380,32 +388,8 @@ export default function GridScan({
   const depthResponse = THREE.MathUtils.lerp(0.25, 0.45, s);
   const smoothTime = THREE.MathUtils.lerp(0.45, 0.12, s);
   const maxSpeed = Infinity;
+
   const yBoost = THREE.MathUtils.lerp(1.2, 1.6, s);
-  const effectiveEnablePost = enablePost && !isMobile;
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 767px)");
-    const updateIsMobile = () => setIsMobile(mediaQuery.matches);
-
-    updateIsMobile();
-    mediaQuery.addEventListener("change", updateIsMobile);
-
-    return () => mediaQuery.removeEventListener("change", updateIsMobile);
-  }, []);
-
-  const pushScan = (t: number) => {
-    const arr = scanStartsRef.current.slice();
-    if (arr.length >= maxScans) arr.shift();
-    arr.push(t);
-    scanStartsRef.current = arr;
-    if (materialRef.current) {
-      const u = materialRef.current.uniforms;
-      const buf = new Array(maxScans).fill(0);
-      for (let i = 0; i < arr.length && i < maxScans; i++) buf[i] = arr[i];
-      u.uScanStarts.value = buf;
-      u.uScanCount.value = arr.length;
-    }
-  };
 
   useEffect(() => {
     const el = containerRef.current;
@@ -427,19 +411,13 @@ export default function GridScan({
       if (scanOnClick) pushScan(nowSec);
       if (
         enableGyro &&
-        typeof window !== "undefined" &&
-        window.DeviceOrientationEvent &&
-        "requestPermission" in DeviceOrientationEvent
+        typeof window !== 'undefined' &&
+        (window as any).DeviceOrientationEvent &&
+        (DeviceOrientationEvent as any).requestPermission
       ) {
         try {
-          await (
-            DeviceOrientationEvent as typeof DeviceOrientationEvent & {
-              requestPermission: () => Promise<PermissionState>;
-            }
-          ).requestPermission();
-        } catch {
-          // noop
-        }
+          await (DeviceOrientationEvent as any).requestPermission();
+        } catch {}
       }
     };
     const onEnter = () => {
@@ -451,21 +429,24 @@ export default function GridScan({
     const onLeave = () => {
       if (uiFaceActive) return;
       if (leaveTimer) clearTimeout(leaveTimer);
-      leaveTimer = window.setTimeout(() => {
-        lookTarget.current.set(0, 0);
-        tiltTarget.current = 0;
-        yawTarget.current = 0;
-      }, Math.max(0, snapBackDelay || 0));
+      leaveTimer = window.setTimeout(
+        () => {
+          lookTarget.current.set(0, 0);
+          tiltTarget.current = 0;
+          yawTarget.current = 0;
+        },
+        Math.max(0, snapBackDelay || 0)
+      );
     };
-    el.addEventListener("mousemove", onMove);
-    el.addEventListener("mouseenter", onEnter);
-    if (scanOnClick) el.addEventListener("click", onClick);
-    el.addEventListener("mouseleave", onLeave);
+    el.addEventListener('mousemove', onMove);
+    el.addEventListener('mouseenter', onEnter);
+    if (scanOnClick) el.addEventListener('click', onClick);
+    el.addEventListener('mouseleave', onLeave);
     return () => {
-      el.removeEventListener("mousemove", onMove);
-      el.removeEventListener("mouseenter", onEnter);
-      el.removeEventListener("mouseleave", onLeave);
-      if (scanOnClick) el.removeEventListener("click", onClick);
+      el.removeEventListener('mousemove', onMove);
+      el.removeEventListener('mouseenter', onEnter);
+      el.removeEventListener('mouseleave', onLeave);
+      if (scanOnClick) el.removeEventListener('click', onClick);
       if (leaveTimer) clearTimeout(leaveTimer);
     };
   }, [uiFaceActive, snapBackDelay, scanOnClick, enableGyro]);
@@ -474,16 +455,9 @@ export default function GridScan({
     const container = containerRef.current;
     if (!container) return;
 
-    let renderer: THREE.WebGLRenderer;
-
-    try {
-      renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: true });
-    } catch {
-      return;
-    }
-
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     rendererRef.current = renderer;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1 : 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.NoToneMapping;
@@ -493,7 +467,7 @@ export default function GridScan({
 
     const uniforms = {
       iResolution: {
-        value: new THREE.Vector3(container.clientWidth, container.clientHeight, renderer.getPixelRatio()),
+        value: new THREE.Vector3(container.clientWidth, container.clientHeight, renderer.getPixelRatio())
       },
       iTime: { value: 0 },
       uSkew: { value: new THREE.Vector2(0, 0) },
@@ -503,7 +477,7 @@ export default function GridScan({
       uLinesColor: { value: srgbColor(linesColor) },
       uScanColor: { value: srgbColor(scanColor) },
       uGridScale: { value: gridScale },
-      uLineStyle: { value: lineStyle === "dashed" ? 1 : lineStyle === "dotted" ? 2 : 0 },
+      uLineStyle: { value: lineStyle === 'dashed' ? 1 : lineStyle === 'dotted' ? 2 : 0 },
       uLineJitter: { value: Math.max(0, Math.min(1, lineJitter || 0)) },
       uScanOpacity: { value: scanOpacity },
       uNoise: { value: noiseIntensity },
@@ -513,9 +487,9 @@ export default function GridScan({
       uPhaseTaper: { value: scanPhaseTaper },
       uScanDuration: { value: scanDuration },
       uScanDelay: { value: scanDelay },
-      uScanDirection: { value: scanDirection === "backward" ? 1 : scanDirection === "pingpong" ? 2 : 0 },
-      uScanStarts: { value: new Array(maxScans).fill(0) },
-      uScanCount: { value: 0 },
+      uScanDirection: { value: scanDirection === 'backward' ? 1 : scanDirection === 'pingpong' ? 2 : 0 },
+      uScanStarts: { value: new Array(MAX_SCANS).fill(0) },
+      uScanCount: { value: 0 }
     };
 
     const material = new THREE.ShaderMaterial({
@@ -524,7 +498,7 @@ export default function GridScan({
       fragmentShader: frag,
       transparent: true,
       depthWrite: false,
-      depthTest: false,
+      depthTest: false
     });
     materialRef.current = material;
 
@@ -533,8 +507,9 @@ export default function GridScan({
     const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
     scene.add(quad);
 
-    if (effectiveEnablePost) {
-      const composer = new EffectComposer(renderer);
+    let composer: EffectComposer | null = null;
+    if (enablePost) {
+      composer = new EffectComposer(renderer);
       composerRef.current = composer;
       const renderPass = new RenderPass(scene, camera);
       composer.addPass(renderPass);
@@ -542,7 +517,7 @@ export default function GridScan({
       const bloom = new BloomEffect({
         intensity: 1.0,
         luminanceThreshold: bloomThreshold,
-        luminanceSmoothing: bloomSmoothing,
+        luminanceSmoothing: bloomSmoothing
       });
       bloom.blendMode.opacity.value = Math.max(0, bloomIntensity);
       bloomRef.current = bloom;
@@ -550,7 +525,7 @@ export default function GridScan({
       const chroma = new ChromaticAberrationEffect({
         offset: new THREE.Vector2(chromaticAberration, chromaticAberration),
         radialModulation: true,
-        modulationOffset: 0.0,
+        modulationOffset: 0.0
       });
       chromaRef.current = chroma;
 
@@ -564,7 +539,7 @@ export default function GridScan({
       material.uniforms.iResolution.value.set(container.clientWidth, container.clientHeight, renderer.getPixelRatio());
       if (composerRef.current) composerRef.current.setSize(container.clientWidth, container.clientHeight);
     };
-    window.addEventListener("resize", onResize);
+    window.addEventListener('resize', onResize);
 
     let last = performance.now();
     const tick = () => {
@@ -573,7 +548,7 @@ export default function GridScan({
       last = now;
 
       lookCurrent.current.copy(
-        smoothDampVec2(lookCurrent.current, lookTarget.current, lookVel.current, smoothTime, maxSpeed, dt),
+        smoothDampVec2(lookCurrent.current, lookTarget.current, lookVel.current, smoothTime, maxSpeed, dt)
       );
 
       const tiltSm = smoothDampFloat(
@@ -582,7 +557,7 @@ export default function GridScan({
         { v: tiltVel.current },
         smoothTime,
         maxSpeed,
-        dt,
+        dt
       );
       tiltCurrent.current = tiltSm.value;
       tiltVel.current = tiltSm.v;
@@ -593,7 +568,7 @@ export default function GridScan({
         { v: yawVel.current },
         smoothTime,
         maxSpeed,
-        dt,
+        dt
       );
       yawCurrent.current = yawSm.value;
       yawVel.current = yawSm.v;
@@ -616,10 +591,9 @@ export default function GridScan({
 
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      window.removeEventListener("resize", onResize);
+      window.removeEventListener('resize', onResize);
       material.dispose();
-      quad.geometry.dispose();
-
+      (quad.geometry as THREE.BufferGeometry).dispose();
       if (composerRef.current) {
         composerRef.current.dispose();
         composerRef.current = null;
@@ -638,24 +612,7 @@ export default function GridScan({
     lineStyle,
     lineJitter,
     scanDirection,
-    effectiveEnablePost,
-    isMobile,
-    noiseIntensity,
-    bloomIntensity,
-    scanGlow,
-    scanSoftness,
-    scanPhaseTaper,
-    scanDuration,
-    scanDelay,
-    bloomThreshold,
-    bloomSmoothing,
-    chromaticAberration,
-    smoothTime,
-    maxSpeed,
-    skewScale,
-    yBoost,
-    tiltScale,
-    yawScale,
+    enablePost
   ]);
 
   useEffect(() => {
@@ -663,16 +620,16 @@ export default function GridScan({
     if (m) {
       const u = m.uniforms;
       u.uLineThickness.value = lineThickness;
-      u.uLinesColor.value.copy(srgbColor(linesColor));
-      u.uScanColor.value.copy(srgbColor(scanColor));
+      (u.uLinesColor.value as THREE.Color).copy(srgbColor(linesColor));
+      (u.uScanColor.value as THREE.Color).copy(srgbColor(scanColor));
       u.uGridScale.value = gridScale;
-      u.uLineStyle.value = lineStyle === "dashed" ? 1 : lineStyle === "dotted" ? 2 : 0;
+      u.uLineStyle.value = lineStyle === 'dashed' ? 1 : lineStyle === 'dotted' ? 2 : 0;
       u.uLineJitter.value = Math.max(0, Math.min(1, lineJitter || 0));
       u.uBloomOpacity.value = Math.max(0, bloomIntensity);
       u.uNoise.value = Math.max(0, noiseIntensity);
       u.uScanGlow.value = scanGlow;
       u.uScanOpacity.value = Math.max(0, Math.min(1, scanOpacity));
-      u.uScanDirection.value = scanDirection === "backward" ? 1 : scanDirection === "pingpong" ? 2 : 0;
+      u.uScanDirection.value = scanDirection === 'backward' ? 1 : scanDirection === 'pingpong' ? 2 : 0;
       u.uScanSoftness.value = scanSoftness;
       u.uPhaseTaper.value = scanPhaseTaper;
       u.uScanDuration.value = Math.max(0.05, scanDuration);
@@ -680,16 +637,8 @@ export default function GridScan({
     }
     if (bloomRef.current) {
       bloomRef.current.blendMode.opacity.value = Math.max(0, bloomIntensity);
-      (
-        bloomRef.current as BloomEffect & {
-          luminanceMaterial: { threshold: number; smoothing: number };
-        }
-      ).luminanceMaterial.threshold = bloomThreshold;
-      (
-        bloomRef.current as BloomEffect & {
-          luminanceMaterial: { threshold: number; smoothing: number };
-        }
-      ).luminanceMaterial.smoothing = bloomSmoothing;
+      (bloomRef.current as any).luminanceMaterial.threshold = bloomThreshold;
+      (bloomRef.current as any).luminanceMaterial.smoothing = bloomSmoothing;
     }
     if (chromaRef.current) {
       chromaRef.current.offset.set(chromaticAberration, chromaticAberration);
@@ -712,7 +661,7 @@ export default function GridScan({
     scanSoftness,
     scanPhaseTaper,
     scanDuration,
-    scanDelay,
+    scanDelay
   ]);
 
   useEffect(() => {
@@ -726,25 +675,19 @@ export default function GridScan({
       lookTarget.current.set(nx, ny);
       tiltTarget.current = THREE.MathUtils.degToRad(gamma) * 0.4;
     };
-    window.addEventListener("deviceorientation", handler);
+    window.addEventListener('deviceorientation', handler);
     return () => {
-      window.removeEventListener("deviceorientation", handler);
+      window.removeEventListener('deviceorientation', handler);
     };
   }, [enableGyro, uiFaceActive]);
 
   useEffect(() => {
-    if (!enableWebcam && !showPreview) {
-      return;
-    }
-
     let canceled = false;
     const load = async () => {
       try {
-        const faceapi = await import("face-api.js");
-        faceApiRef.current = faceapi;
         await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri(modelsPath),
-          faceapi.nets.faceLandmark68TinyNet.loadFromUri(modelsPath),
+          faceapi.nets.faceLandmark68TinyNet.loadFromUri(modelsPath)
         ]);
         if (!canceled) setModelsReady(true);
       } catch {
@@ -755,22 +698,21 @@ export default function GridScan({
     return () => {
       canceled = true;
     };
-  }, [enableWebcam, showPreview, modelsPath]);
+  }, [modelsPath]);
 
   useEffect(() => {
     let stop = false;
     let lastDetect = 0;
-    const video = videoRef.current;
 
     const start = async () => {
-      const faceapi = faceApiRef.current;
-      if (!enableWebcam || !modelsReady || !faceapi) return;
+      if (!enableWebcam || !modelsReady) return;
+      const video = videoRef.current;
       if (!video) return;
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
-          audio: false,
+          video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
         });
         video.srcObject = stream;
         await video.play();
@@ -838,11 +780,8 @@ export default function GridScan({
           }
         }
 
-        const frameVideo = video as HTMLVideoElement & {
-          requestVideoFrameCallback?: (callback: () => void) => void;
-        };
-        if (frameVideo.requestVideoFrameCallback) {
-          frameVideo.requestVideoFrameCallback(() => detect(performance.now()));
+        if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
+          (video as any).requestVideoFrameCallback(() => detect(performance.now()));
         } else {
           requestAnimationFrame(detect);
         }
@@ -855,9 +794,10 @@ export default function GridScan({
 
     return () => {
       stop = true;
+      const video = videoRef.current;
       if (video) {
         const stream = video.srcObject as MediaStream | null;
-        if (stream) stream.getTracks().forEach((t) => t.stop());
+        if (stream) stream.getTracks().forEach(t => t.stop());
         video.pause();
         video.srcObject = null;
       }
@@ -865,24 +805,24 @@ export default function GridScan({
   }, [enableWebcam, modelsReady, depthResponse]);
 
   return (
-    <div ref={containerRef} className={`gridscan${className ? ` ${className}` : ""}`} style={style}>
+    <div ref={containerRef} className={`relative w-full h-full overflow-hidden ${className ?? ''}`} style={style}>
       {showPreview && (
-        <div className="gridscan__preview">
-          <video ref={videoRef} muted playsInline autoPlay className="gridscan__video" />
-          <div className="gridscan__badge">
+        <div className="right-3 bottom-3 absolute bg-black shadow-[0_4px_16px_rgba(0,0,0,0.4)] border border-white/25 rounded-lg w-[220px] h-[132px] overflow-hidden font-sans text-[12px] text-white leading-[1.2] pointer-events-none">
+          <video ref={videoRef} muted playsInline autoPlay className="w-full h-full object-cover -scale-x-100" />
+          <div className="top-2 left-2 absolute bg-black/50 backdrop-blur-[4px] px-[6px] py-[2px] rounded-[6px]">
             {enableWebcam
               ? modelsReady
                 ? uiFaceActive
-                  ? "Face: tracking"
-                  : "Face: searching"
-                : "Loading models"
-              : "Webcam disabled"}
+                  ? 'Face: tracking'
+                  : 'Face: searching'
+                : 'Loading models'
+              : 'Webcam disabled'}
           </div>
         </div>
       )}
     </div>
   );
-}
+};
 
 function srgbColor(hex: string) {
   const c = new THREE.Color(hex);
@@ -895,7 +835,7 @@ function smoothDampVec2(
   currentVelocity: THREE.Vector2,
   smoothTime: number,
   maxSpeed: number,
-  deltaTime: number,
+  deltaTime: number
 ): THREE.Vector2 {
   const out = current.clone();
   smoothTime = Math.max(0.0001, smoothTime);
@@ -903,8 +843,8 @@ function smoothDampVec2(
   const x = omega * deltaTime;
   const exp = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
 
-  const originalTo = target.clone();
   const change = current.clone().sub(target);
+  const originalTo = target.clone();
 
   const maxChange = maxSpeed * smoothTime;
   if (change.length() > maxChange) change.setLength(maxChange);
@@ -931,7 +871,7 @@ function smoothDampFloat(
   velRef: { v: number },
   smoothTime: number,
   maxSpeed: number,
-  deltaTime: number,
+  deltaTime: number
 ): { value: number; v: number } {
   smoothTime = Math.max(0.0001, smoothTime);
   const omega = 2 / smoothTime;
@@ -972,8 +912,8 @@ function median(buf: number[]) {
 }
 
 function centroid(points: { x: number; y: number }[]) {
-  let x = 0;
-  let y = 0;
+  let x = 0,
+    y = 0;
   const n = points.length || 1;
   for (const p of points) {
     x += p.x;

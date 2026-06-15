@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  optimizePackageImports: ["lucide-react", "motion", "three"],
 };
 
 export default nextConfig;

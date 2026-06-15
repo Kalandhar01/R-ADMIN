@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { Bodoni_Moda, Inter, Manrope } from "next/font/google";
 import "./globals.css";
+import { seoContent } from "@/lib/architecturePremiumContent";
 
 const siteUrl = "https://architecture.ractysh.com";
-const siteTitle = "Ractysh Architecture | Built Beyond Blueprints";
-const siteDescription =
-  "Private villas, modern residences and composed spatial experiences shaped through light, proportion and restraint.";
+const siteTitle = seoContent.metaTitle;
+const siteDescription = seoContent.metaDescription;
+const ogTitle = seoContent.ogTitle;
+const ogDescription = seoContent.ogDescription;
+const twitterTitle = seoContent.twitterTitle;
+const twitterDescription = seoContent.twitterDescription;
 const previewImage = "/images/architecture/ractysh-built-beyond-blueprints-poster.webp";
 const iconImage = "/images/architecture/ractysh-architecture-logo.webp";
 
@@ -41,8 +45,8 @@ export const metadata: Metadata = {
     type: "website",
     url: "/",
     siteName: "Ractysh Architecture",
-    title: siteTitle,
-    description: siteDescription,
+    title: ogTitle,
+    description: ogDescription,
     images: [
       {
         url: previewImage,
@@ -55,10 +59,11 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: siteTitle,
-    description: siteDescription,
+    title: twitterTitle,
+    description: twitterDescription,
     images: [previewImage]
   },
+  keywords: [...seoContent.keywords],
   robots: {
     index: true,
     follow: true,

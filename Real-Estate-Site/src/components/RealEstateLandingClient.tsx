@@ -3,15 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import India from "@react-map/india";
-import { type CSSProperties, type FormEvent, type MouseEvent, type TouchEvent, type WheelEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, type FormEvent, type MouseEvent, type TouchEvent, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, animate, motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type Variants } from "framer-motion";
-import { ArrowDown, ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Instagram, Linkedin, Mail, MapPin, Phone } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { LandingData, PropertyView } from "@/lib/real-estate";
 import { HeroParallax } from "@/components/ui/hero-parallax";
 import ParallaxHeroImagesDemo from "@/components/parallax-hero-images-demo";
 import { RactyshGroupFooterSubscribeCompact, RactyshGroupSubscribePopup } from "@/components/RactyshGroupSubscribe";
+import FeaturedServicesSection from "@/components/FeaturedServicesSection";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -21,6 +22,7 @@ const buildingManualPauseDuration = 9000;
 const editorialEase = [0.22, 1, 0.36, 1] as const;
 const heroHeadlineLines = ["Invest In", "Spaces That", "Appreciate."];
 const mobileMenuLinks = [
+  ["Services", "#services"],
   ["The Building", "#building"],
   ["Portfolio", "#portfolio"],
   ["Location", "#location"],
@@ -851,6 +853,14 @@ export function RealEstateLandingClient({ data }: { data: LandingData }) {
   }, [mobileMenuOpen]);
 
   useEffect(() => {
+    const isOpen = leadProperty && leadIntent;
+    if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [leadProperty, leadIntent]);
+
+  useEffect(() => {
     const buildingMediaQuery = window.matchMedia("(max-width: 767px)");
     const storiesMediaQuery = window.matchMedia("(max-width: 900px)");
 
@@ -1136,16 +1146,6 @@ export function RealEstateLandingClient({ data }: { data: LandingData }) {
     }
   }
 
-  function handleHeroCardWheel(event: WheelEvent<HTMLElement>) {
-    if (!event.deltaX && !event.deltaY) return;
-    event.preventDefault();
-    window.scrollBy({
-      left: event.deltaX,
-      top: event.deltaY,
-      behavior: "auto"
-    });
-  }
-
   function handleAnchoredNavClick(event: MouseEvent<HTMLAnchorElement>, href: string) {
     event.preventDefault();
     setMobileMenuOpen(false);
@@ -1226,6 +1226,7 @@ export function RealEstateLandingClient({ data }: { data: LandingData }) {
       <RactyshGroupSubscribePopup />
       <header className={`lp-header ${navHidden ? "is-hidden" : ""} ${navScrolled ? "is-scrolled" : ""} ${mobileMenuOpen ? "is-menu-open" : ""} is-on-${navSurface}`} aria-label="Primary navigation">
         <nav className="lp-nav" aria-label="Main menu">
+          <a href="#services">Services</a>
           <a href="#building">The Building</a>
           <a href="#portfolio">Portfolio</a>
           <a href="#location">Location</a>
@@ -1408,7 +1409,6 @@ export function RealEstateLandingClient({ data }: { data: LandingData }) {
               <motion.aside
                 key={`mobile-hero-card-${hero.id}`}
                 className="re-mobile-hero-preview"
-                onWheel={handleHeroCardWheel}
                 variants={mobileHeroCardContainerVariants}
                 initial="hidden"
                 animate="show"
@@ -1430,7 +1430,6 @@ export function RealEstateLandingClient({ data }: { data: LandingData }) {
               variants={heroCardContainerVariants}
               initial="hidden"
               animate="show"
-              onWheel={handleHeroCardWheel}
             >
               <motion.div
                 className="re-hero-card-float"
@@ -1482,6 +1481,8 @@ export function RealEstateLandingClient({ data }: { data: LandingData }) {
       >
         <ParallaxHeroImagesDemo />
       </motion.section>
+
+      <FeaturedServicesSection />
 
       {building ? (
         <motion.section
@@ -1760,59 +1761,100 @@ export function RealEstateLandingClient({ data }: { data: LandingData }) {
 
       <motion.section className="prefooter-spacer re-closing" {...pageRevealProps(prefersReducedMotion, 0, 0.24)}>
         <h2>Acquire spaces with clarity, restraint and long-term value.</h2>
-        <p>Private residences, premium apartments and commercial investments shaped through the Ractysh enterprise ecosystem.</p>
+        <p className="text-xl">Private residences, premium apartments and commercial investments shaped through the Ractysh enterprise ecosystem.</p>
         {hero ? <button type="button" onClick={() => openLead(hero, "consultation")}>Schedule Consultation</button> : null}
       </motion.section>
 
-      <motion.footer className="lp-footer re-footer" id="contact" data-reveal {...pageRevealProps(prefersReducedMotion, 0, 0.18)}>
-        <motion.div
-          className="re-footer-top"
-          initial={prefersReducedMotion ? false : "hidden"}
-          whileInView={prefersReducedMotion ? undefined : "show"}
-          viewport={{ once: true, amount: 0.24, margin: "0px 0px -8% 0px" }}
-          variants={pageRevealContainerVariants}
-        >
-          <motion.div className="re-footer-brand" variants={pageRevealItemVariants}>
-            <p>Ractysh Real Estate</p>
-            <h2>Premium property acquisition and investment opportunities.</h2>
+      <motion.footer
+        className="re-footer"
+        id="contact"
+        variants={pageRevealContainerVariants}
+        initial={prefersReducedMotion ? false : "hidden"}
+        whileInView={prefersReducedMotion ? undefined : "show"}
+        viewport={{ once: true, amount: 0.1 }}
+      >
+        <div className="re-footer-inner">
+          <div className="re-footer-grid">
+            <motion.div className="re-footer-brand-col" variants={pageRevealItemVariants}>
+              <div className="re-footer-brand-logo">
+                <span className="re-footer-brand-mark">R</span>
+                <div className="re-footer-brand-text">
+                  <strong>RACTYSH</strong>
+                  <small>REAL ESTATE</small>
+                </div>
+              </div>
+              <p className="re-footer-brand-desc">
+                Premium property acquisition and investment opportunities across South India.
+              </p>
+              <div className="re-footer-social">
+                <a href="https://instagram.com/ractysh" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                  <Instagram size={18} />
+                </a>
+                <a href="https://linkedin.com/company/ractysh" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                  <Linkedin size={18} />
+                </a>
+                <a href="mailto:hello@ractysh.com" aria-label="Email">
+                  <Mail size={18} />
+                </a>
+              </div>
+            </motion.div>
+
+            <motion.div className="re-footer-links-col" variants={pageRevealItemVariants}>
+              <h3 className="re-footer-col-title">Locations</h3>
+              <ul className="re-footer-col-list">
+                <li><a href="#location">Coimbatore</a></li>
+                <li><a href="#location">Palani</a></li>
+                <li><a href="#location">Dindigul</a></li>
+              </ul>
+            </motion.div>
+
+            <motion.div className="re-footer-links-col" variants={pageRevealItemVariants}>
+              <h3 className="re-footer-col-title">Services</h3>
+              <ul className="re-footer-col-list">
+                <li><a href="#portfolio">Residential</a></li>
+                <li><a href="#portfolio">Commercial</a></li>
+                <li><a href="#portfolio">Investment Consulting</a></li>
+                <li><a href="#portfolio">Portfolio Advisory</a></li>
+              </ul>
+            </motion.div>
+
+            <motion.div className="re-footer-links-col" variants={pageRevealItemVariants}>
+              <h3 className="re-footer-col-title">Contact</h3>
+              <ul className="re-footer-col-list re-footer-contact-list">
+                <li>
+                  <a href="mailto:hello@ractysh.com">
+                    <Mail size={14} />
+                    <span>hello@ractysh.com</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="tel:+919876543210">
+                    <Phone size={14} />
+                    <span>+91 98765 43210</span>
+                  </a>
+                </li>
+                <li>
+                  <span className="re-footer-contact-addr">
+                    <MapPin size={14} />
+                    <span>Coimbatore, Tamil Nadu</span>
+                  </span>
+                </li>
+              </ul>
+            </motion.div>
+          </div>
+
+          <motion.div className="re-footer-subscribe-row" variants={pageRevealItemVariants}>
+            <RactyshGroupFooterSubscribeCompact />
           </motion.div>
-          <RactyshGroupFooterSubscribeCompact />
-        </motion.div>
-        <motion.div
-          className="re-footer-links"
-          initial={prefersReducedMotion ? false : "hidden"}
-          whileInView={prefersReducedMotion ? undefined : "show"}
-          viewport={{ once: true, amount: 0.28, margin: "0px 0px -8% 0px" }}
-          variants={pageRevealContainerVariants}
-        >
-          <motion.div className="re-footer-col" variants={pageRevealItemVariants}>
-            <h3>Locations</h3>
-            <a href="#location">Coimbatore</a>
-            <a href="#location">Palani</a>
-            <a href="#location">Dindigul</a>
+
+          <motion.div className="re-footer-bottom" variants={pageRevealItemVariants}>
+            <p className="re-footer-copy">&copy; 2026 Ractysh Real Estate. All rights reserved.</p>
+            <div className="re-footer-legal">
+              <a href="/privacy">Privacy</a>
+              <a href="/terms">Terms</a>
+            </div>
           </motion.div>
-          <motion.div className="re-footer-col" variants={pageRevealItemVariants}>
-            <h3>Services</h3>
-            <a href="#portfolio">Residential</a>
-            <a href="#portfolio">Commercial</a>
-            <a href="#portfolio">Investment Consulting</a>
-            <a href="#portfolio">Portfolio Advisory</a>
-          </motion.div>
-          <motion.div className="re-footer-col" variants={pageRevealItemVariants}>
-            <h3>Contact</h3>
-            <a href="mailto:hello@ractysh.com">hello@ractysh.com</a>
-            <button type="button" onClick={() => {
-              if (hero) openLead(hero, "consultation");
-            }}>Property Consultation</button>
-            <button type="button" onClick={() => {
-              if (hero) openLead(hero, "consultation");
-            }}>Investment Enquiries</button>
-          </motion.div>
-        </motion.div>
-        <motion.div className="re-footer-bottom" {...pageRevealProps(prefersReducedMotion, 0.08, 0.32)}>
-          <p>Ractysh Real Estate © 2026</p>
-          <p>Coimbatore • Palani • Dindigul</p>
-        </motion.div>
+        </div>
       </motion.footer>
 
       <LeadDrawer property={leadProperty} intent={leadIntent} onClose={() => {

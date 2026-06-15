@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 import { TransitionProvider } from "@/components/providers/TransitionProvider";
+import { ChatBot } from "@/components/ChatBot";
 
 const buildManifestFont = localFont({
   src: "../../../../node_modules/next/dist/next-devtools/server/font/geist-latin.woff2",
@@ -50,7 +51,10 @@ export default function RootLayout({
       <body className="page-noise font-sans">
         <SmoothScrollProvider>
           <Suspense fallback={null}>
-            <TransitionProvider>{children}</TransitionProvider>
+            <TransitionProvider>
+              {children}
+              <ChatBot />
+            </TransitionProvider>
           </Suspense>
         </SmoothScrollProvider>
       </body>

@@ -14,11 +14,11 @@ interface HeroHeadingProps {
 
 const headlineLines = [
   [
-    { text: "Architecture, construction", highlight: false }
+    { text: "Architecture, Construction,", highlight: false }
   ],
   [
-    { text: "real estate, trade", highlight: true },
-    { text: " and OTC exchange", highlight: false }
+    { text: "Real Estate, Trade", highlight: true },
+    { text: " and OTC Exchange", highlight: false }
   ]
 ];
 

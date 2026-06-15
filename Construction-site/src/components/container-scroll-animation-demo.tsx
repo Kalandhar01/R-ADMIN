@@ -29,7 +29,7 @@ export default function HeroScrollDemo() {
       <ContainerScroll
         titleComponent={
           <div className="relative z-10 mx-auto max-w-5xl px-4">
-            <h2 className="mx-auto max-w-3xl text-balance text-3xl font-semibold leading-tight text-slate-950 sm:text-4xl md:text-[2.75rem]">
+            <h2 className="mx-auto max-w-3xl text-balance text-3xl font-bold leading-tight tracking-tight text-slate-950 sm:text-4xl md:text-5xl">
               A command layer for{" "}
               <span className="relative inline-block text-red-800">
                 real site movement

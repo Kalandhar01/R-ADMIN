@@ -23,7 +23,7 @@ export function FloatingCards({ divisions }: FloatingCardsProps) {
       title: "Construction Delivery Control",
       eyebrow: "Construction Command",
       status: "In Progress",
-      description: "Track site execution, structural work, MEP coordination, procurement and premium handover",
+      description: "Track civil works, MEP, building construction, interiors, landscape, swimming pools, lifts and turnkey delivery",
       iconText: "CON",
       assignee: "Ractysh C",
       progress: "18 out of 26",

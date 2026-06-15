@@ -1940,11 +1940,19 @@ body {
 }
 
 .arch-hero-title {
-  max-width: 11ch;
+  width: 100%;
+  max-width: 10ch;
+  margin-inline: auto;
   color: #ffffff;
-  font-size: 4.45rem;
+  font-size: clamp(4rem, 7vw, 8rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
   line-height: 0.88;
+  text-align: center;
   text-wrap: balance;
+  overflow-wrap: normal;
+  word-break: normal;
+  overflow: visible;
 }
 
 .arch-hero-title span,
@@ -3232,7 +3240,8 @@ body {
 
 @media (max-width: 720px) {
   .arch-skip-intro {
-    top: 1.25rem;
+    top: auto;
+    bottom: 1.5rem;
     right: 1.25rem;
   }
 
@@ -3305,11 +3314,6 @@ body {
 .architecture-site :is(.arch-hero-title, .arch-section-title, .arch-footer-title) {
   letter-spacing: 0;
   text-wrap: balance;
-}
-
-.arch-hero-title {
-  max-width: 11.4ch;
-  line-height: 0.9;
 }
 
 .arch-section-title {
@@ -4088,6 +4092,189 @@ body {
   opacity: 0.74;
 }
 
+/* ── Project Type custom select ── */
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-field {
+  display: grid;
+  gap: 0.62rem;
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-label {
+  color: rgba(17, 17, 17, 0.66);
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-control {
+  position: relative;
+  width: 100%;
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 3.75rem;
+  border: 1px solid rgba(17, 17, 17, 0.13);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--consultation-ink);
+  padding: 1rem 1.05rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  text-align: left;
+  font-size: inherit;
+  font-family: inherit;
+  gap: 0.5rem;
+  outline: none;
+  transition:
+    border-color 260ms ease,
+    background 260ms ease,
+    box-shadow 260ms ease,
+    transform 260ms ease;
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-trigger-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--consultation-ink);
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-trigger-value[data-placeholder="true"] {
+  color: rgba(17, 17, 17, 0.38);
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-chevron {
+  flex-shrink: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+  color: rgba(17, 17, 17, 0.5);
+  transition: transform 260ms ease;
+}
+
+.architecture-site .arch-luxury-consultation-desk .is-open .arch-projecttype-chevron {
+  transform: rotate(180deg);
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-trigger:focus {
+  border-color: rgba(109, 16, 24, 0.8);
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(109, 16, 24, 0.12),
+    0 18px 44px rgba(17, 17, 17, 0.07);
+  transform: translateY(-1px);
+}
+
+/* ── Dropdown panel ── */
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-panel {
+  position: absolute;
+  z-index: 9999;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  display: none;
+  overflow: visible;
+  border: 1px solid rgba(17, 17, 17, 0.13);
+  border-radius: 2px;
+  background: #ffffff;
+  box-shadow:
+    0 34px 90px rgba(17, 17, 17, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.72rem 0.85rem;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.1);
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-search svg {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: rgba(17, 17, 17, 0.4);
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--consultation-ink);
+  font-size: inherit;
+  font-family: inherit;
+  outline: none;
+  padding: 0;
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-search input::placeholder {
+  color: rgba(17, 17, 17, 0.38);
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.72rem 0.85rem;
+  color: var(--consultation-ink);
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-option:hover,
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-option.is-active {
+  background: rgba(17, 17, 17, 0.05);
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-option.is-selected {
+  font-weight: 700;
+  color: var(--consultation-red);
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-option span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-option .arch-projecttype-check {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: var(--consultation-red);
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-option.is-selected .arch-projecttype-check {
+  opacity: 1;
+}
+
+.architecture-site .arch-luxury-consultation-desk .arch-projecttype-empty {
+  padding: 1.2rem 0.85rem;
+  color: rgba(17, 17, 17, 0.5);
+  text-align: center;
+}
+
 .architecture-site .arch-consultation-trust {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4194,6 +4381,53 @@ body {
   .architecture-site .arch-consultation-image-note {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .architecture-site .arch-luxury-consultation-desk .arch-projecttype-field {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .architecture-site .arch-luxury-consultation-desk .arch-projecttype-control {
+    min-width: 0;
+    overflow: visible;
+    width: 100%;
+  }
+
+  .architecture-site .arch-luxury-consultation-desk .arch-projecttype-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 56px;
+    padding: 16px 20px;
+    gap: 0;
+  }
+
+  .architecture-site .arch-luxury-consultation-desk .arch-projecttype-trigger-value {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .architecture-site .arch-luxury-consultation-desk .arch-projecttype-chevron {
+    flex-shrink: 0;
+    flex-grow: 0;
+    margin-left: 0.5rem;
+  }
+
+  .architecture-site .arch-luxury-consultation-desk .arch-projecttype-option {
+    min-height: 48px;
+    padding: 0.65rem 0.85rem;
+  }
+
+  .architecture-site .arch-luxury-consultation-desk .arch-projecttype-option span {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.4;
   }
 }
 
@@ -5116,7 +5350,8 @@ body {
   }
 
   .arch-project-modal-hero {
-    min-height: 20rem;
+    min-height: 14rem;
+    aspect-ratio: 4 / 3;
   }
 
   .arch-project-modal-body {
@@ -6503,6 +6738,16 @@ body {
     padding-left: 1.5rem;
   }
 
+  .architecture-site .arch-contact-process-list article {
+    gap: 0.75rem;
+    padding: 0 0 2rem;
+  }
+
+  .architecture-site .arch-contact-process-list p {
+    font-size: 0.92rem;
+    line-height: 1.65;
+  }
+
   .architecture-site .arch-contact-process-line {
     left: 0.2rem;
   }
@@ -6725,11 +6970,12 @@ body {
 }
 
 .architecture-site .arch-contact-final-title {
-  max-width: 10ch;
+  max-width: min(100%, 28ch);
   margin: 1.35rem auto 0;
   color: #111111;
-  font-size: clamp(4rem, 9vw, 9rem);
-  line-height: 0.88;
+  font-size: clamp(3rem, 7vw, 7rem);
+  line-height: 0.9;
+  overflow: visible;
 }
 
 .architecture-site .arch-contact-final-copy {
@@ -6843,9 +7089,12 @@ body {
   z-index: 1;
   display: grid;
   min-height: 500px;
-  max-width: 1280px;
+  width: 100%;
+  max-width: 100vw;
   margin: 0 auto;
-  padding: 3rem 1.25rem 1.1rem;
+  padding: 3rem 20px 1.1rem;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .architecture-site .arch-journal-footer-top {
@@ -6965,19 +7214,23 @@ body {
 
 .architecture-site .arch-journal-footer-statement {
   display: grid;
-  max-width: 10ch;
+  max-width: 100%;
+  width: 100%;
   align-self: center;
   margin: 3rem 0;
   color: #ffffff;
-  font-size: 5.5rem;
+  font-size: clamp(2.5rem, 10vw, 5rem);
   font-weight: 500;
-  line-height: 1;
+  line-height: 0.9;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  text-wrap: balance;
 }
 
 .architecture-site .arch-journal-footer-statement span {
   display: block;
   overflow: visible;
-  line-height: 1.24;
+  line-height: 1.1;
   padding-block: 0.02em;
 }
 
@@ -7262,51 +7515,120 @@ body {
 
 @media (max-width: 1023px) {
   .architecture-site .arch-journal-footer-statement {
-    font-size: 4.4rem;
+    font-size: clamp(2.5rem, 8vw, 4.4rem);
   }
 }
 
 @media (max-width: 720px) {
   .architecture-site .arch-journal-footer {
-    min-height: 560px;
+    min-height: auto;
   }
 
   .architecture-site .arch-journal-footer-top {
     display: grid;
     gap: 1rem;
+    text-align: center;
+    justify-items: center;
   }
 
   .architecture-site .arch-journal-footer-group-link {
     width: min(100%, 15.5rem);
     min-width: 0;
+    text-align: center;
+    justify-items: center;
+  }
+
+  .architecture-site .arch-journal-footer-group-link span,
+  .architecture-site .arch-journal-footer-group-link small {
+    text-align: center;
+  }
+
+  .architecture-site .arch-journal-footer-group-link small {
+    display: none;
   }
 
   .architecture-site .arch-journal-footer-inner {
-    min-height: 560px;
-    padding-top: 2.3rem;
+    min-height: auto;
+    padding: 2.3rem 20px 1.1rem;
   }
 
   .architecture-site .arch-journal-footer-statement {
-    margin: 3.4rem 0;
-    font-size: 3.25rem;
-    line-height: 0.94;
+    margin: 2rem 0;
+    font-size: clamp(2.5rem, 10vw, 3.25rem);
+    line-height: 0.9;
+    text-align: center;
+    justify-items: center;
+  }
+
+  .architecture-site .arch-journal-footer-statement span {
+    display: inline;
+  }
+
+  .architecture-site .arch-journal-footer-brand {
+    justify-content: center;
+  }
+
+  .architecture-site .arch-journal-footer-brand .brand-logo {
+    flex-shrink: 0;
+  }
+
+  .architecture-site .arch-journal-footer p {
+    text-align: center;
   }
 
   .architecture-site .arch-journal-newsletter {
     grid-template-columns: 1fr;
+    gap: 1rem;
     padding-bottom: 1.6rem;
+  }
+
+  .architecture-site .arch-journal-newsletter-copy {
+    text-align: center;
   }
 
   .architecture-site .arch-journal-newsletter-form {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .architecture-site .arch-journal-newsletter-form input {
+    width: 100%;
   }
 
   .architecture-site .arch-journal-newsletter-form button {
     width: 100%;
+    min-width: 0;
   }
 
   .architecture-site .arch-journal-footer-columns {
+    grid-template-columns: 1fr;
     gap: 1.55rem;
+    text-align: center;
+    justify-items: center;
+  }
+
+  .architecture-site .arch-journal-footer-column > div {
+    align-items: center;
+    justify-items: center;
+  }
+
+  .architecture-site .arch-journal-footer-link,
+  .architecture-site .arch-journal-footer-location {
+    width: auto;
+  }
+
+  .architecture-site .arch-journal-footer-strip {
+    text-align: center;
+    justify-items: center;
+  }
+
+  .architecture-site .arch-journal-footer-strip span:nth-child(2) {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .architecture-site .arch-journal-footer-statement {
+    max-width: 100%;
   }
 }
 
@@ -7583,7 +7905,10 @@ body {
 
 /* Hero opening content update */
 .architecture-site .arch-hero-content {
+  width: 100%;
   max-width: 900px;
+  align-items: center;
+  padding-inline: clamp(1rem, 4vw, 4rem);
 }
 
 .architecture-site .arch-hero-overlay {
@@ -7594,19 +7919,25 @@ body {
 }
 
 .architecture-site .arch-hero-title {
-  width: min(100%, 900px);
-  max-width: 900px;
+  width: 100%;
+  max-width: 10ch;
+  margin: 6vh auto 0;
   color: #ffffff;
-  font-size: clamp(3.8rem, 7.8vw, 7.3rem);
-  font-weight: 700;
-  letter-spacing: 0;
-  line-height: 0.9;
+  font-size: clamp(4rem, 7vw, 8rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 0.88;
   text-align: center;
+  text-wrap: balance;
+  overflow-wrap: normal;
+  word-break: normal;
+  overflow: visible;
 }
 
 .architecture-site .arch-hero-subtitle {
   width: min(100%, 600px);
   max-width: 600px;
+  margin-top: 4vh;
   color: rgba(255, 255, 255, 0.82);
   font-size: clamp(1.125rem, 0.35vw + 1.02rem, 1.25rem);
   font-weight: 500;
@@ -7616,20 +7947,33 @@ body {
 
 @media (max-width: 1023px) {
   .architecture-site .arch-hero-title {
-    font-size: clamp(3.45rem, 9.6vw, 6.3rem);
     line-height: 0.9;
   }
 }
 
 @media (max-width: 720px) {
   .architecture-site .arch-hero-title {
-    font-size: clamp(2.85rem, 13.6vw, 4rem);
     line-height: 0.92;
+    text-align: left;
+    margin-inline: 0;
+  }
+
+  .architecture-site .arch-title-line:not(:last-child) {
+    margin-right: 2rem;
   }
 
   .architecture-site .arch-hero-subtitle {
     font-size: 1.05rem;
     line-height: 1.62;
+    text-align: left;
+  }
+
+  .architecture-site .arch-hero-content {
+    align-items: flex-start;
+  }
+
+  .architecture-site .arch-hero-actions {
+    justify-content: flex-start;
   }
 }
 
@@ -7658,7 +8002,7 @@ body {
 }
 
 .architecture-site .arch-hero-title {
-  max-width: min(100%, 12.5ch);
+  max-width: min(100%, 20ch);
 }
 
 .architecture-site .arch-section-title {
@@ -7756,20 +8100,25 @@ body {
 }
 
 .architecture-site .arch-contact-final-title {
-  max-width: min(100%, 11ch);
-  font-size: clamp(3.55rem, 7.8vw, 7.75rem);
+  max-width: min(100%, 28ch);
+  font-size: clamp(2.5rem, 5.5vw, 5.5rem);
+  overflow: visible;
 }
 
 .architecture-site .arch-journal-footer-statement {
-  max-width: min(100%, 12ch);
-  font-size: clamp(3.6rem, 6.2vw, 5rem);
+  max-width: 100%;
+  width: 100%;
+  font-size: clamp(2.5rem, 10vw, 5rem);
+  line-height: 0.9;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  text-wrap: balance;
 }
 
 .architecture-site :is(
   .arch-title-line,
   .arch-contact-hero-title span,
-  .arch-contact-experience .arch-consultation-form-head h3 span,
-  .arch-journal-footer-statement span
+  .arch-contact-experience .arch-consultation-form-head h3 span
 ) {
   white-space: nowrap;
 }

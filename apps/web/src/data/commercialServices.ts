@@ -64,33 +64,46 @@ export const commercialServicePages: CommercialServicePageData[] = [
     eyebrow: "Commercial Services / Construction",
     title: "Construction Service",
     summary:
-      "Construction service support for site execution, vendor coordination, milestone control and turnkey delivery planning.",
+      "Full-spectrum construction services including civil engineering, MEP, commercial & residential buildings, renovations, PEB, turnkey projects, interior works, landscape, swimming pools, lifts, mega structures, government tenders, project management, approvals, surveys, soil testing, and building stability testing.",
     image: "/services/showcase-construction.webp",
     imageAlt: "Premium construction service for site delivery coordination",
     relatedDivision: "Construction Division",
     metrics: [
-      { label: "Service Type", value: "Build" },
-      { label: "Output", value: "Delivery" },
-      { label: "Route", value: "Service" }
+      { label: "Service Type", value: "Full-Spectrum" },
+      { label: "Output", value: "End-to-End" },
+      { label: "Capabilities", value: "25+" }
     ],
     capabilities: [
       {
-        title: "Execution planning",
-        body: "Structure scope, sequence, resources and site dependencies before work moves into delivery."
+        title: "Civil & MEP Engineering",
+        body: "Civil engineering works and consultations, MEP engineering works, electrical works, plumbing works coordinated under one execution umbrella."
       },
       {
-        title: "Vendor coordination",
-        body: "Coordinate specialist teams, procurement signals and communication rhythm around one project view."
+        title: "Building Construction",
+        body: "Commercial building construction, residential building construction, building renovation, PEB structures and turnkey project delivery."
       },
       {
-        title: "Quality checkpoints",
-        body: "Keep progress, finish expectations and issue routing visible through practical control points."
+        title: "Specialized Works",
+        body: "Labour contracts, interior works, turf construction, painting works, tiles work, landscape work, swimming pool works and lift execution."
+      },
+      {
+        title: "Mega & Government Projects",
+        body: "Mega structure projects, government building construction and tender works, project management consultation, building approval works."
+      },
+      {
+        title: "Material & Product Sourcing",
+        body: "Building material and product sourcing with supply chain coordination for seamless site execution."
+      },
+      {
+        title: "Testing & Survey",
+        body: "Land and building survey works, soil testing, building stability testing for structural integrity and compliance."
       }
     ],
     workflow: [
-      { title: "Scope", body: "Project requirements, drawings and delivery expectations are reviewed." },
-      { title: "Plan", body: "Milestones, teams and procurement dependencies are sequenced." },
-      { title: "Control", body: "Site progress, issues and handover priorities are tracked." }
+      { title: "Enquiry", body: "Project requirements, site context, timeline and budget are reviewed." },
+      { title: "Proposal", body: "Scope, estimates, milestones and delivery approach are presented." },
+      { title: "Execution", body: "Site work, quality control, vendor coordination and progress tracking are managed." },
+      { title: "Handover", body: "Completion, snag closure, documentation and client handover are completed." }
     ]
   },
   {
@@ -99,33 +112,54 @@ export const commercialServicePages: CommercialServicePageData[] = [
     eyebrow: "Commercial Services / Real Estate",
     title: "Real Estate Service",
     summary:
-      "Real estate service support for asset positioning, development readiness, investor material and property presentation.",
+      "Land and building promotion, villa projects, plotted developments, residential and commercial buildings, row houses, gated communities and government-approved lands and plots.",
     image: "/services/showcase-real-estate.webp",
-    imageAlt: "Premium real estate service for asset positioning",
+    imageAlt: "Premium real estate service for property development",
     relatedDivision: "Real Estate Division",
     metrics: [
-      { label: "Service Type", value: "Advisory" },
-      { label: "Output", value: "Positioning" },
-      { label: "Route", value: "Service" }
+      { label: "Service Type", value: "Development" },
+      { label: "Properties", value: "Premium" },
+      { label: "Coverage", value: "End-to-End" }
     ],
     capabilities: [
       {
-        title: "Asset positioning",
-        body: "Clarify buyer logic, value story, location strengths and market-facing presentation."
+        title: "Land & Building Promoters",
+        body: "Strategic land identification, project feasibility, approvals coordination and end-to-end promotion for residential and commercial developments."
       },
       {
-        title: "Development readiness",
-        body: "Connect property opportunity with planning, design and delivery considerations."
+        title: "Villas",
+        body: "Premium villa projects with modern architecture, private outdoor spaces and luxury finishes for discerning homeowners."
       },
       {
-        title: "Investor material",
-        body: "Prepare concise narratives, visuals and service inputs for serious property conversations."
+        title: "Plots",
+        body: "Prime plotted developments with clear titles, legal documentation and infrastructure-ready land for residential and investment purposes."
+      },
+      {
+        title: "Residential Buildings",
+        body: "Apartments, flats and multi-story residential buildings designed for comfort, community living and long-term value."
+      },
+      {
+        title: "Commercial Buildings",
+        body: "Commercial spaces, office complexes and retail buildings positioned for business visibility, accessibility and income generation."
+      },
+      {
+        title: "Row Houses",
+        body: "Contemporary row house developments with shared amenities, individual identity and efficient land utilization."
+      },
+      {
+        title: "Gated Community",
+        body: "Secure gated community projects with clubhouse, landscaping, 24/7 security and premium shared amenities."
+      },
+      {
+        title: "Government Approved Lands & Plots",
+        body: "DTCP and CMDA approved lands and plots with clear documentation, legal compliance and ready-to-build status."
       }
     ],
     workflow: [
-      { title: "Intake", body: "Property type, location, status and commercial objectives are collected." },
-      { title: "Frame", body: "Positioning, readiness and presentation needs are structured." },
-      { title: "Prepare", body: "Investor-facing and decision-facing service material is organized." }
+      { title: "Site Identification", body: "Location, accessibility, legal status and market potential are assessed." },
+      { title: "Approvals & Compliance", body: "Regulatory approvals, title verification and documentation are completed." },
+      { title: "Development & Promotion", body: "Design, construction and marketing are executed for the target audience." },
+      { title: "Handover & Support", body: "Property handover, documentation and post-sale support are managed." }
     ]
   },
   {
@@ -169,33 +203,38 @@ export const commercialServicePages: CommercialServicePageData[] = [
     eyebrow: "Commercial Services / OTC Exchange",
     title: "OTC Exchange Service",
     summary:
-      "OTC exchange service support for private counterparty intake, documentation routing and transaction-readiness workflows.",
+      "Crypto based currency exchange service, USDT currency exchange service, FIU registered ISO certified partnerships and KYC verification for OTC transactions.",
     image: "/services/showcase-otc-exchange.webp",
-    imageAlt: "OTC exchange service for private transaction coordination",
+    imageAlt: "OTC exchange service for digital currency and crypto transactions",
     relatedDivision: "OTC Exchange Division",
     metrics: [
-      { label: "Service Type", value: "Private" },
-      { label: "Output", value: "Readiness" },
-      { label: "Route", value: "Service" }
+      { label: "Service Type", value: "Digital Exchange" },
+      { label: "Partnerships", value: "FIU Registered" },
+      { label: "Compliance", value: "ISO Certified" }
     ],
     capabilities: [
       {
-        title: "Counterparty intake",
-        body: "Capture requirement context, mandate sensitivity and suitability signals for private conversations."
+        title: "Crypto Based Currency Exchange",
+        body: "Secure crypto-to-fiat and crypto-to-crypto exchange services with real-time pricing, deep liquidity and institutional-grade settlement."
       },
       {
-        title: "Documentation routing",
-        body: "Structure the information path needed before serious counterparty review."
+        title: "USDT Currency Exchange",
+        body: "USDT-to-fiat and USDT-to-crypto exchange services with competitive rates, fast settlement and transparent transaction tracking."
       },
       {
-        title: "Transaction readiness",
-        body: "Prepare a disciplined service workflow for qualified private-market discussions."
+        title: "FIU Registered & ISO Certified Partnerships",
+        body: "Our company is partnered with FIU registered and ISO certified institutions, ensuring regulatory compliance, operational standards and client trust."
+      },
+      {
+        title: "KYC Verification for OTC",
+        body: "Comprehensive KYC verification for OTC transactions — identity verification, document review and compliance screening for qualified counterparties."
       }
     ],
     workflow: [
-      { title: "Qualify", body: "Initial context, requirement and suitability boundaries are reviewed." },
-      { title: "Structure", body: "Documentation and counterparty communication needs are organized." },
-      { title: "Coordinate", body: "Next steps move through a controlled service workflow." }
+      { title: "Enquiry", body: "Exchange requirement, currency pair, volume and settlement preferences are discussed." },
+      { title: "Verification", body: "KYC documentation and compliance checks are completed before transaction processing." },
+      { title: "Execution", body: "Exchange is executed at agreed rates with real-time tracking and confirmation." },
+      { title: "Settlement", body: "Funds are settled through compliant channels with full transaction documentation." }
     ]
   }
 ];

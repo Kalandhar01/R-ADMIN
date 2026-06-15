@@ -13,35 +13,115 @@ gsap.registerPlugin(ScrollTrigger);
 const subServices = [
   {
     number: "01",
-    name: "Architecture Design",
-    href: "/architecture-design",
-    description: "Concept architecture, spatial identity and signature massing for premium developments.",
+    name: "Architectural Design",
+    href: "/architectural-design",
+    description: "Concept architecture, spatial identity and signature massing for premium residential and commercial developments.",
     image: "/services/showcase-architecture.webp",
-    alt: "Luxury architecture design concept for a modern villa"
+    alt: "Premium architectural design concept for a modern villa"
   },
   {
     number: "02",
     name: "Interior Design",
     href: "/interior-design",
-    description: "Interior atmosphere, material rhythm and private-luxury spatial experiences.",
+    description: "Interior atmosphere, material rhythm and private-luxury spatial experiences for residential and commercial interiors.",
     image: "/visualization/gallery-interior.webp",
     alt: "Premium interior design with refined materials"
   },
   {
     number: "03",
-    name: "Landscape Planning",
-    href: "/landscape-planning",
-    description: "Arrival sequences, outdoor living, terrain logic and landscape-led place identity.",
-    image: "/visualization/gallery-exterior.webp",
-    alt: "Modern exterior architecture and landscape planning"
+    name: "Structural Design",
+    href: "/structural-design",
+    description: "Engineering structure with architectural discipline — beams, grids, load paths and QA systems for premium builds.",
+    image: "/services/construction-india-commercial-tower.webp",
+    alt: "Structural design for premium commercial construction"
   },
   {
     number: "04",
-    name: "3D Visualization",
-    href: "/3d-visualization",
-    description: "Cinematic renders, walkthrough thinking and visual clarity before execution.",
+    name: "MEP Design",
+    href: "/mep-design",
+    description: "Mechanical, electrical and plumbing systems designed for efficiency, compliance and seamless building integration.",
+    image: "/visualization/systems-model.webp",
+    alt: "MEP design systems for modern buildings"
+  },
+  {
+    number: "05",
+    name: "Landscape Design",
+    href: "/landscape-design",
+    description: "Outdoor environments, terrain logic, planting palettes and arrival sequences shaped as premium landscape experiences.",
+    image: "/visualization/gallery-exterior.webp",
+    alt: "Modern landscape design for premium developments"
+  },
+  {
+    number: "06",
+    name: "Urban Planning",
+    href: "/urban-planning",
+    description: "Site strategy, zoning logic, circulation networks and master planning for residential, commercial and mixed-use precincts.",
+    image: "/visualization/gallery-lobby.webp",
+    alt: "Urban planning and master site strategy"
+  },
+  {
+    number: "07",
+    name: "3D Model & Visualisation",
+    href: "/3d-model-visualisation",
+    description: "Photorealistic 3D models, walkthrough-ready presentations and spatial studies for confident design decisions.",
     image: "/visualization/hero-studio.webp",
-    alt: "Architecture visualization studio presentation"
+    alt: "3D model and visualisation studio presentation"
+  },
+  {
+    number: "08",
+    name: "Rendering",
+    href: "/rendering",
+    description: "Cinematic still renders, material studies and decision-grade visual output for architecture and interior projects.",
+    image: "/visualization/presentation-standards.webp",
+    alt: "Architectural rendering presentation"
+  },
+  {
+    number: "09",
+    name: "Furniture Design",
+    href: "/furniture-design",
+    description: "Custom furniture, joinery and object design for residential, hospitality and commercial interior environments.",
+    image: "/visualization/gallery-interior.webp",
+    alt: "Premium furniture design for luxury interiors"
+  },
+  {
+    number: "10",
+    name: "Architectural Lighting Design",
+    href: "/architectural-lighting-design",
+    description: "Layered lighting strategies that shape atmosphere, function, display and evening experience for interior and exterior spaces.",
+    image: "/visualization/hero-studio.webp",
+    alt: "Architectural lighting design for ambient spaces"
+  },
+  {
+    number: "11",
+    name: "Elevation Design",
+    href: "/elevation-design",
+    description: "Facade language, proportion systems and exterior identity designed for lasting architectural presence.",
+    image: "/services/showcase-architecture.webp",
+    alt: "Elevation design for premium building facades"
+  },
+  {
+    number: "12",
+    name: "Commercial Building Design",
+    href: "/commercial-building-design",
+    description: "Boardroom-grade massing, lobby impression and workplace clarity for premium commercial and enterprise environments.",
+    image: "/services/showcase-real-estate.webp",
+    alt: "Commercial building design for enterprise environments"
+  },
+  {
+    number: "13",
+    name: "Project Management Consultation (PMC)",
+    href: "/project-management-consultation",
+    description: "Project governance, milestone tracking, reporting rhythm and stakeholder coordination for premium execution.",
+    image: "/services/construction-india-site-governance.webp",
+    alt: "Project management consultation for premium builds"
+  },
+  {
+    number: "14",
+    name: "Logo Design",
+    href: "/logo-design",
+    description: "Brand identity, visual language and logo systems designed for enterprises, studios and commercial ventures.",
+    image: "/services/design-systems-premium-bg.webp",
+    alt: "Logo design for brand identity systems"
   }
 ] as const;
 
@@ -578,7 +658,7 @@ export function ArchitectureServiceHubPage() {
             </div>
 
             <p className="order-3 max-w-[28rem] text-base font-medium leading-8 text-[#5f554a] md:text-lg lg:mt-6">
-              A premium design studio for architecture, interiors, landscape and visualization.
+              A premium design studio for architectural, interior, structural, MEP, landscape, urban, 3D, rendering, furniture, lighting, elevation, commercial, PMC and logo design.
             </p>
 
             <div className="order-4 flex flex-col gap-3 sm:flex-row lg:mt-8">
@@ -594,6 +674,14 @@ export function ArchitectureServiceHubPage() {
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[8px] border border-[#d8bf82] bg-white/62 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#17120f] transition hover:-translate-y-0.5 hover:border-[#8B0E14]"
               >
                 Contact Service Desk
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="#"
+                target="_blank"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[8px] border border-[#d8bf82] bg-white/62 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#8B0E14] transition hover:-translate-y-0.5 hover:border-[#8B0E14]"
+              >
+                For More Details, Check This
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -636,11 +724,11 @@ export function ArchitectureServiceHubPage() {
               Architecture Service Ecosystem
             </p>
             <h2 data-ash-reveal className="mt-4 max-w-[43rem] font-display text-4xl font-black leading-[0.98] tracking-normal text-[#15110d] md:text-5xl xl:text-6xl">
-              One Architecture Platform. Four Specialized Services.
+              One Architecture Platform. 14 Specialized Services.
             </h2>
           </div>
           <p data-ash-reveal className="max-w-[35rem] text-base font-medium leading-8 text-[#665b50] md:text-lg">
-            A connected design platform where architecture, interiors, landscape and visualization move as one premium studio workflow.
+            A connected design platform where architectural, interior, structural, MEP, landscape, urban, 3D, rendering, furniture, lighting, elevation, commercial, PMC and logo design move as one premium studio workflow.
           </p>
         </div>
 
@@ -660,7 +748,7 @@ export function ArchitectureServiceHubPage() {
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,12,10,0.02),rgba(15,12,10,0.32))]" />
                 <span className="absolute left-4 top-4 rounded-full border border-white/38 bg-white/86 px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#8B0E14] shadow-[0_12px_34px_rgba(18,9,10,0.16)] backdrop-blur-xl">
-                  {service.number} / 04
+                  {service.number} / 14
                 </span>
               </figure>
 
@@ -671,10 +759,6 @@ export function ArchitectureServiceHubPage() {
                 <p className="mt-4 text-[0.96rem] font-medium leading-7 text-[#63584e]">
                   {service.description}
                 </p>
-                <span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#8B0E14]">
-                  Explore
-                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-                </span>
               </div>
             </Link>
           ))}
@@ -715,10 +799,6 @@ export function ArchitectureServiceHubPage() {
                   <p className="mt-6 max-w-[32rem] text-base font-medium leading-8 text-[#62564c] md:text-lg">
                     {service.description}
                   </p>
-                  <span className="mt-8 inline-flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.16em] text-[#8B0E14]">
-                    Explore Service
-                    <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-                  </span>
                 </div>
               </div>
             </Link>
@@ -739,7 +819,7 @@ export function ArchitectureServiceHubPage() {
               </h2>
             </div>
             <p data-ash-reveal className="max-w-[34rem] text-base font-medium leading-8 text-[#665b50] md:text-lg">
-              Villas, corporate environments, interiors, landscapes and renders are treated as one visual language.
+              Villas, corporate environments, interiors, landscapes, renders and all architecture services are treated as one visual language.
             </p>
           </div>
 
@@ -831,6 +911,14 @@ export function ArchitectureServiceHubPage() {
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[8px] border border-[#d8b765] bg-[#fffaf0] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#17120f] transition hover:-translate-y-0.5 hover:border-[#8B0E14] hover:bg-white"
               >
                 Contact Service Desk
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="#"
+                target="_blank"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[8px] border border-[#d8b765] bg-[#fffaf0] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#8B0E14] transition hover:-translate-y-0.5 hover:border-[#8B0E14] hover:bg-white"
+              >
+                For More Details, Check This
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>

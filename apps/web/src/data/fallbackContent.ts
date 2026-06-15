@@ -76,16 +76,33 @@ export const fallbackContent: SiteContent = {
       name: "Construction",
       legalName: "Ractysh Construction Division",
       summary:
-        "Execution-first construction division delivering civil works, structural coordination, MEP, renovation and turnkey projects.",
+        "A full-spectrum construction division delivering civil engineering, MEP, commercial & residential buildings, renovations, PEB structures, turnkey projects, interior works, landscape, swimming pools, lifts, mega structures, government tenders, project management, approvals, surveys, soil testing, and stability testing.",
       services: [
-        "Construction",
+        "Civil Engineering Works & Consultations",
+        "MEP Engineering Works",
+        "Commercial Building Construction",
+        "Residential Building Construction",
+        "Building Renovation",
+        "PEB Structures",
+        "Turnkey Projects",
+        "Labour Contracts",
         "Interior Works",
-        "Renovation",
-        "PEB Structural Work",
-        "Electrical & Plumbing",
-        "Painting Work",
-        "Material Sourcing",
-        "Turnkey Projects"
+        "Turf Construction",
+        "Electrical Works",
+        "Plumbing Works",
+        "Painting Works",
+        "Tiles Work",
+        "Building Material & Product Sourcing",
+        "Landscape Work",
+        "Swimming Pool Works",
+        "Lift Execution",
+        "Mega Structure Projects & Construction",
+        "Government Building Construction & Tender Works",
+        "Project Management Consultation",
+        "Building Approval Works",
+        "Land & Building Survey Works",
+        "Soil Testing",
+        "Building Stability Testing"
       ],
       metric: "Project delivery"
     },
@@ -94,9 +111,9 @@ export const fallbackContent: SiteContent = {
       name: "Real Estate",
       legalName: "Ractysh Real Estate Division",
       summary:
-        "Asset positioning, development advisory, sales readiness and investor presentation for premium property opportunities.",
-      services: ["Asset Positioning", "Development Advisory", "Sales Readiness", "Leasing Strategy", "Investor Presentation"],
-      metric: "Asset strategy"
+        "Land and building promotion, villa projects, plotted developments, residential and commercial buildings, row houses, gated communities and government-approved lands and plots.",
+      services: ["Land & Building Promoters", "Villas", "Plots", "Residential Buildings", "Commercial Buildings", "Row Houses", "Gated Community", "Govt Approved Lands & Plots"],
+      metric: "Property development"
     },
     {
       id: "import-export",
@@ -112,9 +129,9 @@ export const fallbackContent: SiteContent = {
       name: "OTC Exchange",
       legalName: "Ractysh OTC Exchange Division",
       summary:
-        "Private counterparty coordination, deal-room documentation and settlement-readiness workflows for qualified OTC opportunities.",
-      services: ["Private Counterparty Intake", "Deal-Room Coordination", "Documentation Workflow", "Transaction Readiness"],
-      metric: "Private exchange"
+        "Crypto based currency exchange, USDT currency exchange, FIU registered ISO certified partnerships and KYC verification for OTC transactions.",
+      services: ["Crypto Based Currency Exchange", "USDT Currency Exchange", "FIU Registered ISO Certified Partnerships", "KYC Verification for OTC"],
+      metric: "Digital exchange"
     }
   ],
   services: [
@@ -131,16 +148,16 @@ export const fallbackContent: SiteContent = {
       tags: ["Architecture", "Planning"]
     },
     {
-      title: "Real Estate Asset Strategy",
-      description: "Asset positioning, development advisory, investor presentation and sales readiness for premium property programs.",
+      title: "Real Estate Services",
+      description: "Land and building promotion, villa projects, plotted developments, residential and commercial buildings, row houses, gated communities and government-approved lands and plots.",
       company: "Ractysh Real Estate",
-      tags: ["Real Estate", "Asset Strategy", "Development"]
+      tags: ["Real Estate", "Property Development", "Land & Building"]
     },
     {
       title: "Construction Delivery",
-      description: "Construction, interiors, MEP, sourcing and finishing handled through one accountable channel.",
+      description: "Civil engineering, MEP, commercial & residential building, PEB, turnkey projects, interior works, landscape, and full-spectrum construction execution.",
       company: "Ractysh Construction",
-      tags: ["Construction", "Execution"]
+      tags: ["Construction", "Execution", "Civil", "MEP", "Turnkey"]
     },
     {
       title: "Design Visualization",
@@ -150,9 +167,9 @@ export const fallbackContent: SiteContent = {
     },
     {
       title: "Premium Renovation",
-      description: "High-control renovation and interiors for clients who expect speed, finish and discretion.",
+      description: "High-control renovation, interior works, painting, tiling and finishing for clients who expect speed, quality and discretion.",
       company: "Ractysh Construction",
-      tags: ["Renovation", "Interiors"]
+      tags: ["Renovation", "Interiors", "Finishing"]
     },
     {
       title: "International Business Support",
@@ -161,10 +178,10 @@ export const fallbackContent: SiteContent = {
       tags: ["Cross-Border Commerce", "Supplier Network"]
     },
     {
-      title: "OTC Exchange Coordination",
-      description: "Private counterparty intake, deal-room documentation and transaction-readiness workflow for qualified OTC opportunities.",
+      title: "OTC Exchange Services",
+      description: "Crypto based currency exchange, USDT exchange services, FIU registered ISO certified partnerships and KYC verification for OTC transactions.",
       company: "Ractysh OTC Exchange",
-      tags: ["OTC Exchange", "Private Deals", "Counterparty Workflow"]
+      tags: ["OTC Exchange", "Crypto Exchange", "USDT", "FIU Registered", "KYC Verification"]
     }
   ],
   projects: [
@@ -186,7 +203,7 @@ export const fallbackContent: SiteContent = {
       title: "Turnkey Commercial Interior",
       category: "Construction",
       location: "India",
-      summary: "End-to-end construction, MEP, furnishing and premium finish delivery.",
+      summary: "End-to-end construction, MEP, furnishing, interior works and premium finish delivery.",
       year: "2025"
     },
     {
@@ -206,8 +223,8 @@ export const fallbackContent: SiteContent = {
   ],
   stats: [
     { label: "Business verticals", value: 5, suffix: "" },
-    { label: "Service capabilities", value: 32, suffix: "+" },
-    { label: "Enterprise workflows", value: 20, suffix: "+" },
+    { label: "Service capabilities", value: 52, suffix: "+" },
+    { label: "Enterprise workflows", value: 30, suffix: "+" },
     { label: "Unified delivery model", value: 1, suffix: "" }
   ],
   testimonials: [
@@ -348,7 +365,7 @@ export const fallbackContent: SiteContent = {
       title: "Construction Division",
       eyebrow: "Ractysh Construction",
       description:
-        "Execution-first construction systems for civil works, structural delivery, MEP coordination and turnkey project governance.",
+        "Full-spectrum construction systems for civil engineering, MEP, commercial & residential buildings, PEB, turnkey, interiors, landscape, swimming pools, lifts, mega structures, government tenders, project management, surveys, soil testing, and building stability.",
       image:
         "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=84",
       href: "/construction",
@@ -357,23 +374,23 @@ export const fallbackContent: SiteContent = {
         { label: "Site control", value: "Live" },
         { label: "QA checkpoints", value: "Multi" }
       ],
-      highlights: ["Site execution", "Structural delivery", "MEP tracking", "Turnkey reporting"]
+      highlights: ["Civil & MEP Engineering", "Commercial & Residential", "Turnkey Projects", "PEB & Mega Structures"]
     },
     {
       id: "real-estate",
       title: "Real Estate Division",
       eyebrow: "Ractysh Real Estate",
       description:
-        "Asset positioning, development advisory, investor presentation and sales readiness for premium property opportunities.",
+        "Land and building promotion, villa projects, plotted developments, residential and commercial buildings, row houses, gated communities and government-approved lands and plots.",
       image:
         "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1400&q=84",
       href: "/real-estate",
       cta: "Explore Real Estate",
       metrics: [
-        { label: "Asset view", value: "360" },
-        { label: "Market layer", value: "Premium" }
+        { label: "Properties", value: "Premium" },
+        { label: "Coverage", value: "End-to-End" }
       ],
-      highlights: ["Asset positioning", "Development advisory", "Sales readiness", "Investor presentation"]
+      highlights: ["Land & Building Promoters", "Villas & Plots", "Residential & Commercial", "Gated Communities"]
     },
     {
       id: "import-export",
@@ -396,16 +413,16 @@ export const fallbackContent: SiteContent = {
       title: "OTC Exchange Division",
       eyebrow: "Ractysh OTC Exchange",
       description:
-        "Private counterparty coordination, deal-room documentation and transaction-readiness workflows for qualified OTC opportunities.",
+        "Crypto based currency exchange, USDT currency exchange, FIU registered ISO certified partnerships and KYC verification for OTC transactions.",
       image:
         "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1400&q=84",
       href: "/otc-exchange",
       cta: "Explore OTC",
       metrics: [
-        { label: "Counterparty", value: "Qualified" },
-        { label: "Workflow", value: "Private" }
+        { label: "Exchange", value: "Crypto & USDT" },
+        { label: "Compliance", value: "FIU Registered" }
       ],
-      highlights: ["Private intake", "Deal-room coordination", "Documentation workflow", "Transaction readiness"]
+      highlights: ["Crypto Based Exchange", "USDT Exchange", "FIU Registered Partnerships", "KYC Verification"]
     }
   ],
   locations: [
@@ -613,7 +630,7 @@ export const fallbackContent: SiteContent = {
   ],
   partners: [
     { name: "Architecture Studios", description: "Design, visualization and documentation partners." },
-    { name: "Construction Vendors", description: "Construction, MEP, PEB and material sourcing networks." },
+    { name: "Construction Vendors", description: "Civil, MEP, PEB, interiors, landscaping, swimming pool and material sourcing networks." },
     { name: "Real Estate Partners", description: "Asset, leasing, sales and development advisory support." },
     { name: "Trade Networks", description: "Supplier, documentation and market-access support." },
     { name: "Enterprise Advisors", description: "Professional support for premium client and private exchange requirements." }

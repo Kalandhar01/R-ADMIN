@@ -105,8 +105,8 @@ const services = [
   },
   {
     eyebrow: "OTC Exchange",
-    title: "Private transaction coordination",
-    body: "Counterparty intake, deal-room discipline and documentation readiness for qualified mandates.",
+    title: "Crypto & USDT Exchange",
+    body: "Crypto based currency exchange, USDT services, FIU registered ISO certified partnerships and KYC verification for OTC transactions.",
     href: "/otc-exchange",
     image: "/visualization/systems-model.webp",
     Icon: ShieldCheck

@@ -429,8 +429,7 @@ export function TurnkeyProjectsExperience() {
               transition={{ duration: 1, delay: 0.38, ease }}
               className="mt-7 max-w-[590px] text-[1rem] leading-7 text-[#5f594f] md:text-[1.08rem]"
             >
-              From planning and sourcing to execution and handover, Ractysh manages turnkey construction systems with
-              operational clarity.
+            From civil works, MEP, interiors and finishing to landscape, swimming pools, lifts and handover, Ractysh manages turnkey construction systems with operational clarity.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 50 }}
@@ -451,6 +450,14 @@ export function TurnkeyProjectsExperience() {
                 className="group inline-flex min-h-12 items-center justify-center gap-2.5 rounded-[0.7rem] border border-[#2c281e]/14 bg-white/58 px-5 text-[0.9rem] font-semibold text-[#171512] shadow-[0_18px_50px_rgba(57,48,31,0.08)] transition duration-300 hover:-translate-y-1 hover:border-[#d6b45f]/38 hover:bg-white/78"
               >
                 View Workflow
+                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+              <Link
+                href="#"
+                target="_blank"
+                className="group inline-flex min-h-12 items-center justify-center gap-2.5 rounded-[0.7rem] border border-[#2c281e]/14 bg-white/58 px-5 text-[0.9rem] font-semibold text-[#171512] shadow-[0_18px_50px_rgba(57,48,31,0.08)] transition duration-300 hover:-translate-y-1 hover:border-[#d6b45f]/38 hover:bg-white/78"
+              >
+                For More Details, Check This
                 <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             </motion.div>

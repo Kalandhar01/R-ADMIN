@@ -32,6 +32,7 @@ import {
   Inbox,
   LayoutDashboard,
   LogOut,
+  MessageCircle,
   Pencil,
   RefreshCw,
   Search,
@@ -56,6 +57,7 @@ import type {
   AuditLogRow,
   BlogRow,
   BusinessRow,
+  ChatbotQueryRow,
   ContactRow,
   DocumentRow,
   DomainMappingRow,
@@ -124,8 +126,7 @@ type Column<T> = ColumnDef<T, unknown> & {
 
 const views: Array<{ key: AdminView; label: string; icon: React.ComponentType<{ className?: string }> }> = [
   { key: "overview", label: "Dashboard", icon: LayoutDashboard },
-  { key: "businesses", label: "Businesses", icon: Building2 },
-  { key: "domains", label: "Domains", icon: Globe2 },
+
   { key: "command", label: "Command Center", icon: Activity },
   { key: "leads", label: "Leads", icon: Inbox },
   { key: "projects", label: "Projects", icon: FolderKanban },
@@ -136,6 +137,7 @@ const views: Array<{ key: AdminView; label: string; icon: React.ComponentType<{ 
   { key: "newsletter", label: "Newsletter", icon: Send },
   { key: "analytics", label: "Analytics", icon: BarChart3 },
   { key: "notifications", label: "Notifications", icon: Bell },
+  { key: "chatbot", label: "Chatbot", icon: MessageCircle },
   { key: "audit", label: "Audit Logs", icon: Archive },
   { key: "settings", label: "Settings", icon: Settings },
 ];
@@ -721,7 +723,7 @@ function ProjectSwitcher({
   return (
     <div className="flex min-w-0 items-center gap-3">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border border-[#232323] bg-[#111111]">
-        <ShieldCheck className="h-5 w-5 text-[#B71C24]" />
+        <ShieldCheck className="h-5 w-5 text-[#b8860b]" />
       </div>
       <div className="min-w-0">
         <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9B9B9B]">Division</p>
@@ -812,7 +814,7 @@ function BarChart({ series }: { series: AnalyticsSeries }) {
               <span className="font-semibold text-[#F5F5F5]">{formatMetricValue(point.value, series.format)}</span>
             </div>
             <div className="h-2 rounded-full bg-[#080808]">
-              <div className="h-2 rounded-full bg-[#8F1118]" style={{ width: `${Math.max(3, (point.value / max) * 100)}%` }} />
+              <div className="h-2 rounded-full bg-gradient-to-r from-[#b8860b] to-[#d4a843]" style={{ width: `${Math.max(3, (point.value / max) * 100)}%` }} />
             </div>
           </div>
         ))
@@ -844,7 +846,7 @@ function QuickActions({ setActiveView }: { setActiveView: (view: AdminView) => v
               onClick={() => setActiveView(action.view)}
               className="flex h-9 items-center gap-2 rounded-[8px] px-3 text-left text-xs font-semibold text-[#F5F5F5] transition hover:bg-[#151515]"
             >
-              <Icon className="h-4 w-4 text-[#B71C24]" />
+              <Icon className="h-4 w-4 text-[#b8860b]" />
               {action.label}
             </button>
           );
@@ -936,23 +938,23 @@ function OpeningExperience({ data, active }: { data: AdminCommandCenterData; act
         }}
       />
       <motion.div
-        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#B71C24] to-transparent"
-        animate={{ x: ["-20%", "20%", "-20%"], opacity: [0.25, 0.7, 0.25] }}
+        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#b8860b] to-transparent"
+        animate={{ x: ["-20%", "20%", "-20%"], opacity: [0.25, 0.6, 0.25] }}
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute bottom-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-[#c7a15a] to-transparent"
-        animate={{ x: ["18%", "-18%", "18%"], opacity: [0.15, 0.45, 0.15] }}
+        className="absolute bottom-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-[#d4a843] to-transparent"
+        animate={{ x: ["18%", "-18%", "18%"], opacity: [0.15, 0.4, 0.15] }}
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       />
-      <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(143,17,24,.18),transparent_24%,transparent_72%,rgba(183,28,36,.12))]" />
-      <div className="absolute inset-x-0 top-1/3 h-56 bg-[linear-gradient(90deg,transparent,rgba(143,17,24,.16),transparent)] blur-3xl" />
+      <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(184,134,11,.12),transparent_24%,transparent_72%,rgba(212,168,67,.08))]" />
+      <div className="absolute inset-x-0 top-1/3 h-56 bg-[linear-gradient(90deg,transparent,rgba(184,134,11,.10),transparent)] blur-3xl" />
       {particles.map((particle) => (
         <motion.span
           key={particle.id}
-          className="absolute h-1 w-1 rounded-[2px] bg-[#B71C24]/45"
+          className="absolute h-1 w-1 rounded-[2px] bg-[#b8860b]/40"
           style={{ left: particle.left, top: particle.top }}
-          animate={{ y: [-12, 16, -12], opacity: [0.08, 0.55, 0.08], scale: [0.8, 1.25, 0.8] }}
+          animate={{ y: [-12, 16, -12], opacity: [0.08, 0.5, 0.08], scale: [0.8, 1.25, 0.8] }}
           transition={{ duration: particle.duration, delay: particle.delay, repeat: Infinity, ease: "easeInOut" }}
         />
       ))}
@@ -965,8 +967,8 @@ function OpeningExperience({ data, active }: { data: AdminCommandCenterData; act
             transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
             className="mx-auto grid max-w-3xl justify-items-center text-center"
           >
-            <div className="flex h-24 w-24 items-center justify-center rounded-[8px] border border-[#8F1118]/45 bg-[#111111] shadow-[0_0_80px_rgba(143,17,24,.24)]">
-              <ShieldCheck className="h-12 w-12 text-[#B71C24]" />
+            <div className="flex h-24 w-24 items-center justify-center rounded-[12px] border border-[#b8860b]/40 bg-gradient-to-br from-[#141414] to-[#0d0d0d] shadow-[0_0_80px_rgba(184,134,11,.24)]">
+              <ShieldCheck className="h-12 w-12 text-[#b8860b]" />
             </div>
             <h1 className="mt-6 font-display text-5xl font-semibold leading-[0.95] tracking-tight text-[#F5F5F5] sm:text-7xl">Ractysh Command Center</h1>
             <p className="mt-4 text-sm font-semibold uppercase tracking-[0.24em] text-[#9B9B9B]">Enterprise Operations Network</p>
@@ -982,7 +984,7 @@ function OpeningExperience({ data, active }: { data: AdminCommandCenterData; act
                   transition={{ duration: 0.62, delay: 0.55 + index * 0.22, ease: [0.22, 1, 0.36, 1] }}
                   className="flex items-center gap-3 rounded-[8px] border border-[#232323]/80 bg-[#111111]/75 px-4 py-3 backdrop-blur"
                 >
-                  <span className="h-px w-8 bg-[#B71C24]" />
+                  <span className="h-px w-8 bg-[#b8860b]" />
                   <span className="text-lg font-semibold text-[#F5F5F5]">{division}</span>
                 </motion.div>
               ))}
@@ -1010,7 +1012,7 @@ function OpeningExperience({ data, active }: { data: AdminCommandCenterData; act
                       initial={false}
                     >
                       <motion.span
-                        className="block h-full rounded-full bg-[#8F1118]"
+                        className="block h-full rounded-full bg-gradient-to-r from-[#b8860b] to-[#d4a843]"
                         initial={{ width: "0%" }}
                         animate={{ width: "100%" }}
                         transition={{ duration: 0.7, delay: 0.62 + index * 0.28, ease: "easeOut" }}
@@ -1204,9 +1206,11 @@ export function AdminCommandCenter({
                   title={item.label}
                   aria-label={`Navigation ${item.label}`}
                   onClick={() => setActiveView(item.key)}
-                  className={cn(
+                    className={cn(
                     "flex h-11 w-11 items-center justify-center gap-2 rounded-[8px] border text-[#9B9B9B] transition lg:w-full lg:justify-start lg:px-3",
-                    active ? "border-[#8F1118] bg-[#8F1118] text-[#F5F5F5]" : "border-transparent hover:border-[#232323] hover:bg-[#111111]"
+                    active
+                      ? "border-[#b8860b] bg-gradient-to-r from-[#b8860b]/20 to-[#d4a843]/10 text-[#f5f5f5] shadow-[inset_0_1px_0_rgba(184,134,11,0.2)]"
+                      : "border-transparent hover:border-[#2a2a2a] hover:bg-[#141414] hover:text-[#e0e0e0]"
                   )}
                 >
                   <Icon className="h-5 w-5" />
@@ -1237,7 +1241,7 @@ export function AdminCommandCenter({
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Search command center"
                     suppressHydrationWarning
-                    className="h-10 w-full rounded-[8px] border border-[#232323] bg-[#111111] pl-9 pr-3 text-sm text-[#F5F5F5] outline-none transition focus:border-[#8F1118]"
+                    className="h-10 w-full rounded-[8px] border border-[#232323] bg-[#111111] pl-9 pr-3 text-sm text-[#F5F5F5] outline-none transition focus:border-[#b8860b] focus:shadow-[0_0_0_3px_rgba(184,134,11,0.1)]"
                   />
                   {globalResults.length ? (
                     <div className="absolute left-0 right-0 top-12 z-50 overflow-hidden rounded-[8px] border border-[#232323] bg-[#111111] shadow-[0_24px_70px_rgba(0,0,0,0.5)]">
@@ -1258,7 +1262,7 @@ export function AdminCommandCenter({
                 <button
                   type="button"
                   onClick={() => setActiveView("notifications")}
-                  className="relative inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-[#232323] bg-[#111111] text-[#F5F5F5] transition hover:border-[#8F1118]"
+                  className="relative inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-[#232323] bg-[#111111] text-[#F5F5F5] transition hover:border-[#b8860b] hover:shadow-[0_0_0_3px_rgba(184,134,11,0.08)]"
                   aria-label="Notifications"
                   title="Notifications"
                 >
@@ -1272,9 +1276,9 @@ export function AdminCommandCenter({
                 <button
                   type="button"
                   onClick={() => setActiveView("command")}
-                  className="hidden h-10 items-center gap-2 rounded-[8px] border border-[#232323] bg-[#111111] px-3 text-sm text-[#F5F5F5] transition hover:border-[#8F1118] md:inline-flex"
+                  className="hidden h-10 items-center gap-2 rounded-[8px] border border-[#232323] bg-[#111111] px-3 text-sm text-[#F5F5F5] transition hover:border-[#b8860b] hover:bg-[#141414] md:inline-flex"
                 >
-                  <Activity className="h-4 w-4 text-[#B71C24]" />
+                  <Activity className="h-4 w-4 text-[#b8860b]" />
                   Activity Stream
                 </button>
                 <div className="hidden h-10 items-center gap-2 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-3 text-sm text-emerald-300 md:inline-flex">
@@ -1299,11 +1303,16 @@ export function AdminCommandCenter({
             className="mx-auto grid w-full max-w-[1440px] gap-5 px-4 py-5 sm:px-6"
             style={{ pointerEvents: showDashboard ? "auto" : "none" }}
           >
-            <div className="rounded-[8px] border border-[#232323] bg-[#111111] p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#B71C24]">Enterprise Workspace</p>
-              <h1 className="mt-2 font-display text-4xl font-semibold leading-[0.95] tracking-tight text-[#F5F5F5] sm:text-5xl">
-                {activeDashboardTitle}
-              </h1>
+            <div className="flex flex-wrap items-center justify-between gap-4 rounded-[8px] border border-[#232323] bg-[#111] px-5 py-4 sm:px-6">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#b8860b]">Enterprise Workspace</p>
+                <h1 className="mt-1 truncate text-xl font-semibold tracking-tight text-[#f5f5f5] sm:text-2xl">
+                  {activeDashboardTitle}
+                </h1>
+              </div>
+              <span className="hidden shrink-0 rounded-full bg-[#b8860b]/10 px-3 py-1 text-[11px] font-medium text-[#b8860b] sm:inline-block">
+                Live
+              </span>
             </div>
             {activeView === "overview" ? <Overview data={scoped} search={search} setActiveView={setActiveView} /> : null}
             {activeView === "businesses" ? <BusinessManagement data={scoped} search={search} runIntent={runIntent} pending={pending} /> : null}
@@ -1320,6 +1329,7 @@ export function AdminCommandCenter({
             {activeView === "notifications" ? <NotificationsView data={scoped} runIntent={runIntent} pending={pending} /> : null}
             {activeView === "settings" ? <SettingsManager data={scoped} search={search} runIntent={runIntent} pending={pending} /> : null}
             {activeView === "audit" ? <AuditLogs data={scoped} search={search} /> : null}
+            {activeView === "chatbot" ? <ChatbotQueries data={scoped} search={search} /> : null}
           </motion.div>
           <QuickActions setActiveView={setActiveView} />
         </div>
@@ -1382,14 +1392,15 @@ function FounderHome({
             backgroundSize: "44px 44px"
           }}
         />
-        <div className="absolute -left-32 top-12 h-72 w-72 rounded-full bg-[#8F1118]/20 blur-3xl" />
-        <div className="absolute -right-24 bottom-8 h-64 w-64 rounded-full bg-[#B71C24]/10 blur-3xl" />
-        <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#c7a15a]/60 to-transparent" />
+        <div className="absolute -left-32 top-12 h-72 w-72 rounded-full bg-[#b8860b]/12 blur-3xl" />
+        <div className="absolute -right-24 bottom-8 h-64 w-64 rounded-full bg-[#d4a843]/8 blur-3xl" />
+        <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#b8860b]/50 to-transparent" />
+        <div className="absolute inset-x-8 bottom-0 h-px bg-gradient-to-r from-transparent via-[#d4a843]/30 to-transparent" />
 
         <div className="relative grid gap-8 xl:grid-cols-[minmax(0,1fr)_25rem] xl:items-stretch">
           <div className="flex min-h-[30rem] flex-col justify-between gap-8">
             <div className="max-w-4xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#B71C24]">Founder Command Center</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b8860b]">Founder Command Center</p>
               <h1 className="mt-5 max-w-4xl font-display text-5xl font-semibold leading-[0.95] tracking-tight text-[#F5F5F5] sm:text-7xl">
                 Good Morning, Fawaz.
               </h1>
@@ -1421,7 +1432,7 @@ function FounderHome({
             className="relative mt-14 overflow-hidden rounded-[8px] border border-[#8F1118]/30 bg-[#111111]/70 p-5 shadow-[0_32px_90px_rgba(0,0,0,.45)] backdrop-blur lg:mt-0"
           >
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#B71C24] to-transparent" />
-            <div className="absolute -right-20 top-10 h-40 w-40 rounded-full bg-[#8F1118]/20 blur-3xl" />
+            <div className="absolute -right-20 top-10 h-40 w-40 rounded-full bg-[#b8860b]/15 blur-3xl" />
             <div className="relative flex h-full flex-col justify-between gap-8">
               <div>
                 <div className="flex items-center justify-between gap-3">
@@ -1452,7 +1463,7 @@ function FounderHome({
       <section className="grid gap-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#B71C24]">Project Ecosystem</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b8860b]">Project Ecosystem</p>
             <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight text-[#F5F5F5]">Choose an operating division</h2>
           </div>
           <p className="max-w-xl text-sm leading-6 text-[#9B9B9B]">Each command center opens with the same login, the same Prisma data layer, and a scoped view of enterprise operations.</p>
@@ -1471,7 +1482,7 @@ function FounderHome({
               className="group relative min-h-64 overflow-hidden rounded-[8px] border border-[#232323] bg-[#111111] p-5 text-left transition hover:-translate-y-0.5 hover:border-[#8F1118]/80 hover:bg-[#151515]"
             >
               <div className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-[#8F1118]/70 to-transparent opacity-0 transition group-hover:opacity-100" />
-              <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-[#8F1118]/0 blur-3xl transition group-hover:bg-[#8F1118]/20" />
+              <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-[#b8860b]/0 blur-3xl transition group-hover:bg-[#b8860b]/15" />
               <div className="relative flex h-full flex-col justify-between gap-8">
                 <div>
                   <span className="inline-flex items-center gap-2 rounded-[8px] border border-emerald-500/15 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-300">
@@ -1483,7 +1494,7 @@ function FounderHome({
                 </div>
                 <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#F5F5F5]">
                   Open Command Center
-                  <ArrowRight className="h-4 w-4 text-[#B71C24] transition group-hover:translate-x-1" />
+                  <ArrowRight className="h-4 w-4 text-[#b8860b] transition group-hover:translate-x-1" />
                 </span>
               </div>
             </motion.button>
@@ -1495,7 +1506,7 @@ function FounderHome({
         <section className="rounded-[8px] border border-[#232323] bg-[#111111] p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#B71C24]">Quick Overview</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b8860b]">Quick Overview</p>
               <h2 className="mt-2 font-display text-xl font-semibold tracking-tight text-[#F5F5F5]">Enterprise pulse</h2>
             </div>
             <span className="text-xs text-[#9B9B9B]">Generated {formatDate(data.generatedAt)}</span>
@@ -1506,7 +1517,7 @@ function FounderHome({
               return (
                 <div key={metric.label} className="rounded-[8px] border border-[#232323] bg-[#151515] p-4">
                   <div className="flex items-center justify-between gap-3">
-                    <Icon className="h-4 w-4 text-[#B71C24]" />
+                    <Icon className="h-4 w-4 text-[#b8860b]" />
                     <p className="text-2xl font-semibold text-[#F5F5F5]">{formatNumber(metric.value)}</p>
                   </div>
                   <p className="mt-4 text-sm text-[#9B9B9B]">{metric.label}</p>
@@ -1517,7 +1528,7 @@ function FounderHome({
         </section>
 
         <section className="rounded-[8px] border border-[#232323] bg-[#111111] p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#B71C24]">Executive Shortcuts</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b8860b]">Executive Shortcuts</p>
           <div className="mt-5 grid gap-2">
             {shortcuts.map((shortcut) => {
               const Icon = shortcut.icon;
@@ -1529,7 +1540,7 @@ function FounderHome({
                   className="flex h-11 items-center justify-between gap-3 rounded-[8px] border border-[#232323] bg-[#151515] px-3 text-left text-sm font-semibold text-[#F5F5F5] transition hover:border-[#8F1118]"
                 >
                   <span className="inline-flex items-center gap-2">
-                    <Icon className="h-4 w-4 text-[#B71C24]" />
+                    <Icon className="h-4 w-4 text-[#b8860b]" />
                     {shortcut.label}
                   </span>
                   <ArrowRight className="h-4 w-4 text-[#9B9B9B]" />
@@ -1543,7 +1554,7 @@ function FounderHome({
       <section className="rounded-[8px] border border-[#232323] bg-[#111111] p-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#B71C24]">Recent Activity</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b8860b]">Recent Activity</p>
             <h2 className="mt-2 font-display text-xl font-semibold tracking-tight text-[#F5F5F5]">Live enterprise feed</h2>
           </div>
           <button
@@ -1551,7 +1562,7 @@ function FounderHome({
             onClick={() => setActiveView("command")}
             className="inline-flex h-10 items-center gap-2 rounded-[8px] border border-[#232323] bg-[#151515] px-4 text-sm font-semibold text-[#F5F5F5] transition hover:border-[#8F1118]"
           >
-            <Activity className="h-4 w-4 text-[#B71C24]" />
+            <Activity className="h-4 w-4 text-[#b8860b]" />
             Activity Stream
           </button>
         </div>
@@ -1620,13 +1631,13 @@ function Overview({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-sm text-[#9B9B9B]">Generated {formatDate(data.generatedAt)}</p>
-              <h1 className="mt-2 font-display text-3xl font-semibold leading-[0.95] tracking-tight text-[#F5F5F5] sm:text-5xl">{adminGreeting()}, Admin.</h1>
+              <h1 className="mt-2 font-display text-3xl font-semibold leading-[0.95] tracking-tight text-[#F5F5F5] sm:text-5xl">{adminGreeting()}, {data.admin.name}.</h1>
               <p className="mt-3 max-w-xl text-sm leading-6 text-[#9B9B9B]">Enterprise ecosystem operational.</p>
             </div>
-            <button
+             <button
               type="button"
               onClick={() => setActiveView("leads")}
-              className="inline-flex h-10 items-center gap-2 rounded-[8px] bg-[#8F1118] px-4 text-sm font-semibold text-[#F5F5F5] transition hover:bg-[#B71C24]"
+              className="inline-flex h-10 items-center gap-2 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d] shadow-[0_4px_16px_rgba(184,134,11,0.25)] transition hover:from-[#c7971a] hover:to-[#e0b450] active:scale-[0.97]"
             >
               <Inbox className="h-4 w-4" />
               Lead Center
@@ -1667,7 +1678,7 @@ function Overview({
                 </div>
                 <div className="h-2 rounded-full bg-[#080808]">
                   <div
-                    className="h-2 rounded-full bg-[#8F1118]"
+                    className="h-2 rounded-full bg-gradient-to-r from-[#b8860b] to-[#d4a843]"
                     style={{ width: `${Math.max(2, (item.value / maxPipeline) * 100)}%` }}
                   />
                 </div>
@@ -1717,7 +1728,7 @@ function CommandCenterView({ data, setActiveView }: { data: AdminCommandCenterDa
             <button
               type="button"
               onClick={() => setActiveView("notifications")}
-              className="inline-flex h-10 items-center gap-2 rounded-[8px] bg-[#8F1118] px-4 text-sm font-semibold text-[#F5F5F5] transition hover:bg-[#B71C24]"
+              className="inline-flex h-10 items-center gap-2 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d] shadow-[0_4px_16px_rgba(184,134,11,0.25)] transition hover:from-[#c7971a] hover:to-[#e0b450] active:scale-[0.97]"
             >
               <Bell className="h-4 w-4" />
               {data.unreadNotifications} unread
@@ -1767,7 +1778,7 @@ function CommandCenterView({ data, setActiveView }: { data: AdminCommandCenterDa
                   <span className="font-semibold text-[#F5F5F5]">{formatNumber(item.value)}</span>
                 </div>
                 <div className="h-2 rounded-full bg-[#080808]">
-                  <div className="h-2 rounded-full bg-[#8F1118]" style={{ width: `${Math.max(2, (item.value / maxApplications) * 100)}%` }} />
+                  <div className="h-2 rounded-full bg-gradient-to-r from-[#b8860b] to-[#d4a843]" style={{ width: `${Math.max(2, (item.value / maxApplications) * 100)}%` }} />
                 </div>
               </div>
             ))}
@@ -1805,7 +1816,7 @@ function ProjectsView({ data, search }: { data: AdminCommandCenterData; search: 
         meta: { width: "7rem" },
         cell: ({ row }) =>
           row.original.url ? (
-            <a className="text-[#B71C24] underline" href={row.original.url} target="_blank" rel="noreferrer">
+            <a className="text-[#b8860b] underline" href={row.original.url} target="_blank" rel="noreferrer">
               View
             </a>
           ) : (
@@ -1872,7 +1883,7 @@ function AnalyticsView({ data }: { data: AdminCommandCenterData }) {
               onClick={() => setActiveChart(item.key)}
               className={cn(
                 "flex h-10 items-center justify-between rounded-[8px] border px-3 text-left text-sm transition",
-                activeChart === item.key ? "border-[#8F1118] bg-[#8F1118] text-[#F5F5F5]" : "border-[#232323] bg-[#151515] text-[#9B9B9B]"
+                activeChart === item.key ? "border-[#b8860b] bg-gradient-to-r from-[#b8860b] to-[#d4a843] text-[#0d0d0d]" : "border-[#232323] bg-[#151515] text-[#9B9B9B]"
               )}
             >
               {item.label}
@@ -2048,9 +2059,9 @@ function BusinessManagement({
             <option value="inactive">Inactive</option>
             <option value="archived">Archived</option>
           </select>
-          <input className={fieldClass} type="number" {...form.register("position")} />
+            <input className={fieldClass} type="number" {...form.register("position")} />
           <div className="flex gap-2">
-            <button className="h-10 flex-1 rounded-[8px] bg-[#8F1118] px-4 text-sm font-semibold text-[#F5F5F5]" disabled={pending}>
+            <button className="h-10 flex-1 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]" disabled={pending}>
               Save
             </button>
             {editing ? (
@@ -2157,7 +2168,7 @@ function DomainManagement({
             Primary domain
           </label>
           <div className="flex gap-2">
-            <button className="h-10 flex-1 rounded-[8px] bg-[#8F1118] px-4 text-sm font-semibold text-[#F5F5F5]" disabled={pending}>
+            <button className="h-10 flex-1 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]" disabled={pending}>
               Save
             </button>
             {editing ? (
@@ -2237,7 +2248,7 @@ function LeadCenter({
               onClick={() => setFilter(item)}
               className={cn(
                 "h-9 rounded-[8px] border px-3 text-sm transition",
-                filter === item ? "border-[#8F1118] bg-[#8F1118] text-[#F5F5F5]" : "border-[#232323] bg-[#151515] text-[#9B9B9B]"
+                filter === item ? "border-[#b8860b] bg-gradient-to-r from-[#b8860b] to-[#d4a843] text-[#0d0d0d]" : "border-[#232323] bg-[#151515] text-[#9B9B9B]"
               )}
             >
               {item}
@@ -2429,7 +2440,7 @@ function BlogManager({
             Featured
           </label>
           <div className="flex gap-2">
-            <button className="h-10 flex-1 rounded-[8px] bg-[#8F1118] px-4 text-sm font-semibold text-[#F5F5F5]" disabled={pending}>
+            <button className="h-10 flex-1 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]" disabled={pending}>
               {editing ? "Save" : "Create"}
             </button>
             {editing ? (
@@ -2444,7 +2455,7 @@ function BlogManager({
             <p className="text-xs font-semibold uppercase text-[#9B9B9B]">SEO Preview</p>
             <p className="mt-2 truncate text-sm text-[#F5F5F5]">{blogPreview.seoTitle || blogPreview.title || "Untitled blog"}</p>
             <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#9B9B9B]">{blogPreview.seoDescription || blogPreview.excerpt || "No description set."}</p>
-            <p className="mt-2 truncate text-[11px] text-[#B71C24]">ractysh.com/blog/{blogPreview.slug || "draft-slug"}</p>
+            <p className="mt-2 truncate text-[11px] text-[#b8860b]">ractysh.com/blog/{blogPreview.slug || "draft-slug"}</p>
           </div>
           <div className="overflow-hidden rounded-[8px] border border-[#232323] bg-[#151515]">
             {blogPreview.coverImage ? (
@@ -2589,7 +2600,7 @@ function NewsletterManager({
             <option value="archived">Archived</option>
           </select>
           <input className={fieldClass} type="datetime-local" {...form.register("publishDate")} />
-          <button className="h-10 rounded-[8px] bg-[#8F1118] px-4 text-sm font-semibold text-[#F5F5F5]" disabled={pending}>
+          <button className="h-10 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]" disabled={pending}>
             Schedule
           </button>
         </form>
@@ -2795,7 +2806,7 @@ function ServiceManager({
             <option value="archived">Archived</option>
           </select>
           <input className={fieldClass} type="number" {...form.register("position")} />
-          <button className="h-10 rounded-[8px] bg-[#8F1118] px-4 text-sm font-semibold text-[#F5F5F5]" disabled={pending}>
+          <button className="h-10 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]" disabled={pending}>
             {editing ? "Save" : "Create"}
           </button>
         </form>
@@ -2920,7 +2931,7 @@ function MediaLibrary({
               ))}
             </select>
             <input name="file" type="file" className={fieldClass} />
-            <button className="inline-flex h-10 items-center justify-center gap-2 rounded-[8px] bg-[#8F1118] px-4 text-sm font-semibold text-[#F5F5F5]" disabled={uploading}>
+            <button className="inline-flex h-10 items-center justify-center gap-2 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]" disabled={uploading}>
               <Upload className="h-4 w-4" />
               Upload
             </button>
@@ -2969,7 +2980,7 @@ function MediaLibrary({
                 onClick={() => setFolderFilter(folder)}
                 className={cn(
                   "h-9 rounded-[8px] border px-3 text-sm transition",
-                  folderFilter === folder ? "border-[#8F1118] bg-[#8F1118] text-[#F5F5F5]" : "border-[#232323] bg-[#151515] text-[#9B9B9B]"
+                  folderFilter === folder ? "border-[#b8860b] bg-gradient-to-r from-[#b8860b] to-[#d4a843] text-[#0d0d0d]" : "border-[#232323] bg-[#151515] text-[#9B9B9B]"
                 )}
               >
                 {folder}
@@ -3072,7 +3083,7 @@ function CareersManager({
         meta: { width: "8rem" },
         cell: ({ row }) =>
           row.original.resumeUrl ? (
-            <a className="text-[#B71C24] underline" href={row.original.resumeUrl} target="_blank" rel="noreferrer">
+            <a className="text-[#b8860b] underline" href={row.original.resumeUrl} target="_blank" rel="noreferrer">
               View
             </a>
           ) : (
@@ -3139,7 +3150,7 @@ function CareersManager({
             <option value="draft">Draft</option>
             <option value="archived">Archived</option>
           </select>
-          <button className="h-10 rounded-[8px] bg-[#8F1118] px-4 text-sm font-semibold text-[#F5F5F5]" disabled={pending}>
+          <button className="h-10 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]" disabled={pending}>
             {editing ? "Save" : "Create"}
           </button>
         </form>
@@ -3173,7 +3184,7 @@ function CareersManager({
                       className={cn(
                         "flex h-10 items-center justify-center gap-2 rounded-[8px] border px-2 text-xs transition",
                         selectedApplication.status === status
-                          ? "border-[#8F1118] bg-[#8F1118] text-[#F5F5F5]"
+                          ? "border-[#b8860b] bg-gradient-to-r from-[#b8860b] to-[#d4a843] text-[#0d0d0d]"
                           : "border-[#232323] bg-[#151515] text-[#9B9B9B]"
                       )}
                     >
@@ -3187,7 +3198,7 @@ function CareersManager({
                   type="button"
                   disabled={pending}
                   onClick={() => runIntent({ intent: "application.update", id: selectedApplication.id, status: selectedApplication.status, notes: applicationNotes }, "Application notes saved.")}
-                  className="h-10 rounded-[8px] bg-[#8F1118] px-4 text-sm font-semibold text-[#F5F5F5]"
+                  className="h-10 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]"
                 >
                   Save Notes
                 </button>
@@ -3197,7 +3208,7 @@ function CareersManager({
                   <p className="text-xs font-semibold uppercase text-[#9B9B9B]">Resume Viewer</p>
                   {selectedApplication.resumeUrl ? (
                     <a href={selectedApplication.resumeUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex h-9 items-center gap-2 rounded-[8px] border border-[#232323] px-3 text-sm text-[#F5F5F5]">
-                      <FileText className="h-4 w-4 text-[#B71C24]" />
+                      <FileText className="h-4 w-4 text-[#b8860b]" />
                       Open resume
                     </a>
                   ) : (
@@ -3362,11 +3373,76 @@ function SettingsEditor({
               toast.error("Settings JSON is invalid.");
             }
           }}
-          className="h-10 rounded-[8px] bg-[#8F1118] px-4 text-sm font-semibold text-[#F5F5F5]"
+          className="h-10 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]"
         >
           Save Settings
         </button>
       </div>
+    </Panel>
+  );
+}
+
+function ChatbotQueries({ data, search }: { data: AdminCommandCenterData; search: string }) {
+  const [expanded, setExpanded] = React.useState<string | null>(null);
+  const items = data.chatbotQueries.filter(
+    (q) =>
+      !search ||
+      q.question.toLowerCase().includes(search.toLowerCase()) ||
+      q.answer.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <Panel title={`Chatbot Queries (${data.chatbotQueries.length})`}>
+      {items.length === 0 ? (
+        <div className="rounded-[8px] border border-dashed border-[#232323] p-8 text-center text-sm text-[#666]">
+          {search ? "No matching queries." : "No queries yet. Ask the chatbot something on the website."}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {items.map((q) => (
+            <div
+              key={q.id}
+              className="cursor-pointer overflow-hidden rounded-[8px] border border-[#232323] transition-colors"
+              style={{ borderColor: expanded === q.id ? "#8F1118" : "#232323" }}
+              onClick={() => setExpanded(expanded === q.id ? null : q.id)}
+            >
+              <div className="flex items-center justify-between px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded bg-[#8F1118] px-2 py-0.5 text-[0.65rem] font-semibold text-white">Q</span>
+                    <span className="truncate text-sm text-[#f5f5f5]">{q.question}</span>
+                  </div>
+                  <div className="mt-1 flex gap-3 text-[0.7rem] text-[#666]">
+                    <span>{formatDate(q.createdAt)}</span>
+                    {q.pageUrl && <span className="truncate">{q.pageUrl}</span>}
+                  </div>
+                </div>
+                <span className="ml-3 text-[0.7rem] text-[#555]">{expanded === q.id ? "▲" : "▼"}</span>
+              </div>
+              {expanded === q.id && (
+                <div className="border-t border-[#232323] px-4 py-3">
+                  <div className="flex flex-col gap-3">
+                    <div>
+                      <div className="mb-1.5 flex items-center gap-2">
+                        <span className="rounded bg-[#8F1118] px-2 py-0.5 text-[0.65rem] font-semibold text-white">Q</span>
+                        <span className="text-xs text-[#888]">User asked</span>
+                      </div>
+                      <div className="rounded-[8px] border border-[#232323] bg-[#080808] px-3 py-2 text-sm text-[#f5f5f5]">{q.question}</div>
+                    </div>
+                    <div>
+                      <div className="mb-1.5 flex items-center gap-2">
+                        <span className="rounded bg-[#1a6e3f] px-2 py-0.5 text-[0.65rem] font-semibold text-white">A</span>
+                        <span className="text-xs text-[#888]">Bot replied</span>
+                      </div>
+                      <div className="rounded-[8px] border border-[#232323] bg-[#080808] px-3 py-2 text-sm leading-relaxed text-[#d4d4d4] whitespace-pre-wrap">{q.answer}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </Panel>
   );
 }

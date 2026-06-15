@@ -16,7 +16,8 @@ export type AdminView =
   | "analytics"
   | "notifications"
   | "settings"
-  | "audit";
+  | "audit"
+  | "chatbot";
 
 export type LeadFilter = "New" | "Read" | "Responded" | "Archived";
 export type ProjectKey = string;
@@ -304,6 +305,14 @@ export type ApplicationRow = {
   createdAt: string;
 };
 
+export type ChatbotQueryRow = {
+  id: string;
+  question: string;
+  answer: string;
+  pageUrl: string | null;
+  createdAt: string;
+};
+
 export type ContactRow = {
   id: string;
   division: ProjectKey;
@@ -380,6 +389,7 @@ export type AdminCommandCenterData = {
   jobs: JobRow[];
   applications: ApplicationRow[];
   contacts: ContactRow[];
+  chatbotQueries: ChatbotQueryRow[];
   settings: SettingsRow[];
   auditLogs: AuditLogRow[];
   notifications: NotificationRow[];

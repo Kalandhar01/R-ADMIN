@@ -18,6 +18,9 @@ import {
   Ruler,
   ShieldCheck,
   Workflow,
+  DraftingCompass,
+  GanttChartSquare,
+  Trees,
   type LucideIcon
 } from "lucide-react";
 import { useLenis } from "@/components/providers/SmoothScrollProvider";
@@ -49,23 +52,43 @@ const capabilities: {
   Icon: LucideIcon;
 }[] = [
   {
-    title: "Infrastructure Development",
-    body: "Site enabling, civil works, structural delivery and public-facing infrastructure coordinated with strict controls.",
+    title: "Civil & MEP Engineering",
+    body: "Civil engineering works and consultations, MEP engineering works, electrical works, plumbing works — all coordinated under one technical umbrella.",
     Icon: Landmark
   },
   {
-    title: "Commercial Buildings",
-    body: "Modern offices, IT parks, mixed-use assets and corporate facilities built for scale, durability and finish quality.",
+    title: "Building Construction",
+    body: "Commercial building construction, residential building construction, building renovation, PEB structures and turnkey project delivery with quality control.",
     Icon: Building2
   },
   {
-    title: "Residential Developments",
-    body: "Premium towers, plotted communities and residential environments delivered through accountable site execution.",
+    title: "Interior & Finishing",
+    body: "Interior works, painting works, tiles work, turf construction and building material sourcing for premium finish quality.",
+    Icon: DraftingCompass
+  },
+  {
+    title: "Landscape & Special Structures",
+    body: "Landscape work, swimming pool works, lift execution and mega structure projects and construction for complex developments.",
+    Icon: Trees
+  },
+  {
+    title: "Government & Tender Works",
+    body: "Government building construction and tender works, project management consultation and building approval works.",
+    Icon: GanttChartSquare
+  },
+  {
+    title: "Labour & Contracts",
+    body: "Labour contracts for skilled and semi-skilled workforce, ensuring timely deployment across all project phases.",
     Icon: HardHat
   },
   {
-    title: "Turnkey Construction",
-    body: "Single-window construction management from planning, procurement and build-out to handover readiness.",
+    title: "Testing & Survey",
+    body: "Land and building survey works, soil testing and building stability testing for structural integrity and regulatory compliance.",
+    Icon: Ruler
+  },
+  {
+    title: "Turnkey & Project Management",
+    body: "End-to-end turnkey projects with full project management consultation, from initial planning to final handover.",
     Icon: Workflow
   }
 ];
@@ -101,15 +124,15 @@ const executionSteps = [
   },
   {
     title: "Engineer",
-    body: "Structural, MEP, procurement and vendor packages are aligned with drawings, safety gates and quality checkpoints."
+    body: "Civil, structural, MEP, procurement and vendor packages are aligned with drawings, safety gates and quality checkpoints."
   },
   {
     title: "Build",
-    body: "Site progress, labor coordination, concrete cycles, steel works and machinery movement are managed in rhythm."
+    body: "Site progress, labor coordination, concrete cycles, steel works, interiors, finishes and machinery movement are managed in rhythm."
   },
   {
     title: "Deliver",
-    body: "Snag closure, handover documentation, compliance checks and client readiness are prepared with accountability."
+    body: "Snag closure, handover documentation, compliance checks, testing reports and client readiness are prepared with accountability."
   }
 ];
 
@@ -125,7 +148,7 @@ const assuranceBlocks: {
   },
   {
     title: "Quality Control",
-    body: "Concrete, reinforcement, alignment, finish and MEP checks routed through documented approval gates.",
+    body: "Concrete, reinforcement, alignment, finish, MEP, tiling, painting and welding checks routed through documented approval gates.",
     Icon: Ruler
   },
   {
@@ -306,8 +329,7 @@ export function ConstructionServiceCommandCenter() {
               data-csc-hero-copy
               className="mt-7 max-w-[37rem] text-[1rem] font-medium leading-8 text-[#5c5148] md:text-[1.08rem]"
             >
-              Ractysh Group delivers infrastructure, commercial buildings, residential developments and turnkey
-              construction services with disciplined planning, site governance and enterprise-grade execution control.
+               Ractysh Group delivers civil &amp; MEP engineering, commercial &amp; residential buildings, PEB structures, turnkey projects, interior works, landscape, swimming pools, lifts, mega structures, government tenders, labour contracts, project management, surveys, soil testing and building stability testing — all with disciplined execution control.
             </p>
             <div data-csc-hero-copy className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link
@@ -324,13 +346,21 @@ export function ConstructionServiceCommandCenter() {
                 <span className="relative z-10">Contact Service Desk</span>
                 <ArrowRight className="relative z-10 h-4 w-4 transition duration-300 group-hover:translate-x-1" />
               </Link>
+              <Link
+                href="#"
+                target="_blank"
+                className="construction-service-button group inline-flex min-h-12 items-center justify-center gap-3 overflow-hidden rounded-[8px] border border-[#C9A45C]/34 bg-[#F8F4EE]/90 px-6 py-3 text-[0.78rem] font-bold uppercase tracking-[0] text-[#8B1118] shadow-[0_18px_46px_rgba(22,22,22,0.06)] backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:border-[#8B1118]/40 hover:bg-white"
+              >
+                <span className="relative z-10">For More Details, Check This</span>
+                <ArrowRight className="relative z-10 h-4 w-4 transition duration-300 group-hover:translate-x-1" />
+              </Link>
             </div>
 
             <div
               data-csc-hero-copy
               className="mt-10 grid max-w-[40rem] grid-cols-2 gap-3 text-[0.76rem] font-bold uppercase leading-none tracking-[0] text-[#6a5a45] sm:grid-cols-4"
             >
-              {["Infrastructure", "Commercial", "Residential", "Turnkey"].map((item) => (
+              {["Civil & MEP", "Buildings", "Interiors", "Turnkey", "Mega Structures"].map((item) => (
                 <span key={item} className="border-l border-[#C9A45C]/54 pl-3">
                   {item}
                 </span>
@@ -401,16 +431,16 @@ export function ConstructionServiceCommandCenter() {
                 Construction Scope
               </p>
               <h2 className="mt-5 font-display text-[3rem] font-semibold leading-[0.94] tracking-[0] text-[#161616] sm:text-[4rem] lg:text-[5.25rem]">
-                Built for complex Indian development programs.
+                25+ services across the full construction spectrum.
               </h2>
             </div>
             <p className="max-w-[34rem] text-[1rem] font-medium leading-8 text-[#5c5148]">
-              The division supports large infrastructure, premium commercial assets and residential programs that need
-              predictable execution from ground preparation to final handover.
+              From civil engineering and MEP to turnkey delivery, interiors, landscape, swimming pools, lifts, mega
+              structures, government tenders and building stability testing — all under one accountable system.
             </p>
           </div>
 
-          <div className="mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-12 grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
             {capabilities.map(({ title, body, Icon }) => (
               <article
                 key={title}
@@ -426,6 +456,17 @@ export function ConstructionServiceCommandCenter() {
                 <p className="mt-5 text-[0.95rem] font-medium leading-7 text-[#5d5248]">{body}</p>
               </article>
             ))}
+          </div>
+
+          <div data-csc-reveal className="mt-12 flex justify-center">
+            <Link
+              href="#"
+              target="_blank"
+              className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-[8px] border border-[#C9A45C] bg-[#8B1118] px-8 py-3 text-[0.78rem] font-bold uppercase tracking-[0] text-[#F8F4EE] shadow-[0_20px_56px_rgba(139,17,24,0.2)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#761015]"
+            >
+              <span className="relative z-10">For More Services</span>
+              <ArrowRight className="relative z-10 h-4 w-4 transition duration-300 group-hover:translate-x-1" />
+            </Link>
           </div>
         </div>
       </section>
@@ -569,11 +610,11 @@ export function ConstructionServiceCommandCenter() {
                 Safety, Quality, Schedule
               </p>
               <h2 className="mt-5 font-display text-[3rem] font-semibold leading-[0.94] tracking-[0] text-[#161616] sm:text-[4rem] lg:text-[5.1rem]">
-                Construction discipline at enterprise scale.
+                25+ construction capabilities at enterprise scale.
               </h2>
               <p className="mt-7 max-w-[34rem] text-[1rem] font-medium leading-8 text-[#5c5148]">
-                Ractysh construction teams align field activity with inspection gates, procurement readiness, safety
-                routines and transparent client reporting.
+                Ractysh construction teams align civil, MEP, building, interior, landscape and testing workstreams
+                with inspection gates, procurement readiness, safety routines and transparent client reporting.
               </p>
             </div>
 
@@ -620,10 +661,11 @@ export function ConstructionServiceCommandCenter() {
             Build With Ractysh
           </p>
           <h2 className="mt-5 max-w-[62rem] font-display text-[3.2rem] font-semibold leading-[0.92] tracking-[0] text-[#F8F4EE] sm:text-[4.4rem] lg:text-[6rem]">
-            Start your next landmark with disciplined construction control.
+            Start your next project with 25+ construction capabilities.
           </h2>
           <p className="mt-7 max-w-[38rem] text-[1rem] font-medium leading-8 text-[#d8cbb7]">
-            Share project requirements, site context and delivery expectations with the Ractysh construction team.
+            Share your project requirements — civil, MEP, building, interior, landscape, testing or turnkey — with
+            the Ractysh construction team.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Link
@@ -638,6 +680,14 @@ export function ConstructionServiceCommandCenter() {
               className="construction-service-button group inline-flex min-h-12 items-center justify-center gap-3 overflow-hidden rounded-[8px] border border-[#C9A45C]/58 bg-[#F8F4EE] px-6 py-3 text-[0.78rem] font-bold uppercase tracking-[0] text-[#161616] transition duration-300 hover:-translate-y-0.5 hover:border-[#C9A45C] hover:bg-white"
             >
               <span className="relative z-10">Contact Service Desk</span>
+              <ArrowRight className="relative z-10 h-4 w-4 transition duration-300 group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="#"
+              target="_blank"
+              className="construction-service-button group inline-flex min-h-12 items-center justify-center gap-3 overflow-hidden rounded-[8px] border border-[#C9A45C]/34 bg-[#F8F4EE]/10 px-6 py-3 text-[0.78rem] font-bold uppercase tracking-[0] text-[#C9A45C] transition duration-300 hover:-translate-y-0.5 hover:border-[#C9A45C]/70 hover:bg-[#F8F4EE]/20"
+            >
+              <span className="relative z-10">For More Details, Check This</span>
               <ArrowRight className="relative z-10 h-4 w-4 transition duration-300 group-hover:translate-x-1" />
             </Link>
           </div>

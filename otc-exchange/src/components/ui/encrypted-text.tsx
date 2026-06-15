@@ -97,6 +97,7 @@ export const EncryptedText: React.FC<EncryptedTextProps> = ({
     let currentChars = initial.split("");
     const startTime = performance.now();
     let lastFlipTime = startTime;
+    let lastRevealCount = direction === "reveal" ? 0 : text.length;
     let animationFrameId: number | null = null;
 
     let isCancelled = false;
@@ -124,6 +125,7 @@ export const EncryptedText: React.FC<EncryptedTextProps> = ({
       const timeSinceLastFlip = now - lastFlipTime;
       const shouldFlip = timeSinceLastFlip >= Math.max(0, flipDelayMs);
       const nextChars = currentChars.slice();
+      let hasChanged = currentRevealCount !== lastRevealCount;
 
       for (let index = 0; index < totalLength; index += 1) {
         if (index < currentRevealCount) {
@@ -131,16 +133,20 @@ export const EncryptedText: React.FC<EncryptedTextProps> = ({
         } else if (shouldFlip) {
           nextChars[index] =
             text[index] === " " ? " " : generateRandomCharacter(charset);
+          hasChanged = true;
         }
       }
 
-      currentChars = nextChars;
-      setAnimationState({
-        text,
-        direction,
-        revealCount: currentRevealCount,
-        chars: nextChars,
-      });
+      if (hasChanged) {
+        currentChars = nextChars;
+        lastRevealCount = currentRevealCount;
+        setAnimationState({
+          text,
+          direction,
+          revealCount: currentRevealCount,
+          chars: nextChars,
+        });
+      }
 
       if (
         (direction === "reveal" && currentRevealCount >= totalLength) ||

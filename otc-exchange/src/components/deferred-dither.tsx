@@ -18,8 +18,16 @@ type IdleWindow = Window &
     cancelIdleCallback?: (handle: number) => void;
   };
 
-export default function DeferredDither(props: DitherProps) {
+type DeferredDitherProps = DitherProps & {
+  pauseWhenPastHero?: boolean;
+};
+
+export default function DeferredDither({
+  pauseWhenPastHero = false,
+  ...props
+}: DeferredDitherProps) {
   const [ready, setReady] = useState(false);
+  const [isNearHero, setIsNearHero] = useState(true);
 
   useEffect(() => {
     const browserWindow = window as IdleWindow;
@@ -36,5 +44,33 @@ export default function DeferredDither(props: DitherProps) {
     return () => browserWindow.clearTimeout(timeoutId);
   }, []);
 
-  return ready ? <Dither {...props} /> : null;
+  useEffect(() => {
+    if (!pauseWhenPastHero) return;
+
+    let frameId = 0;
+
+    const updateHeroProximity = () => {
+      frameId = 0;
+      setIsNearHero(window.scrollY < window.innerHeight + 360);
+    };
+
+    const scheduleUpdate = () => {
+      if (frameId) return;
+      frameId = window.requestAnimationFrame(updateHeroProximity);
+    };
+
+    updateHeroProximity();
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+
+    return () => {
+      if (frameId) window.cancelAnimationFrame(frameId);
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+    };
+  }, [pauseWhenPastHero]);
+
+  const isActive = !pauseWhenPastHero || isNearHero;
+
+  return ready && isActive ? <Dither {...props} active={isActive} /> : null;
 }

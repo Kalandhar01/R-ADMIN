@@ -84,7 +84,7 @@ export default function TestimonialsMarqueeGrid() {
         <p className="mx-auto mb-4 inline-flex rounded-full border border-red-200 bg-white/70 px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-red-800 shadow-sm shadow-red-950/5 backdrop-blur-md">
           Project voices
         </p>
-        <h2 className="mx-auto max-w-3xl text-balance text-3xl font-semibold leading-tight text-slate-950 sm:text-4xl lg:text-5xl">
+        <h2 className="mx-auto max-w-3xl text-balance text-3xl font-bold leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-5xl">
           What clients feel when the project has one clear command rhythm.
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">

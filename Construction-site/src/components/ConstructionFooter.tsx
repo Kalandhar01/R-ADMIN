@@ -8,6 +8,7 @@ const footerColumns = [
       { title: "Home", href: "#home" },
       { title: "Idea", href: "#intro" },
       { title: "Work", href: "#works" },
+      { title: "Services", href: "#services" },
       { title: "Contact", href: "#contact" },
       { title: "Start a brief", href: "mailto:hello@ractysh.com" },
     ],
@@ -15,18 +16,18 @@ const footerColumns = [
   {
     title: "Services",
     links: [
-      { title: "Project planning", href: "#intro" },
-      { title: "Site execution", href: "#works" },
-      { title: "Vendor coordination", href: "#info-1" },
-      { title: "Handover control", href: "#contact" },
+      { title: "Civil & MEP engineering", href: "#services" },
+      { title: "Turnkey construction", href: "#services" },
+      { title: "PMC & approvals", href: "#services" },
+      { title: "Infrastructure projects", href: "#services" },
     ],
   },
   {
     title: "Company",
     links: [
-      { title: "Approval mapping", href: "#info-1" },
+      { title: "Approval mapping", href: "#services" },
       { title: "Execution control", href: "#info-2" },
-      { title: "Quality evidence", href: "#info-2" },
+      { title: "Quality assurance", href: "#services" },
       { title: "Closeout readiness", href: "#contact" },
     ],
   },
@@ -58,8 +59,8 @@ export default function ConstructionFooter() {
             </span>
           </a>
           <p className="mt-4 max-w-xs leading-6 text-neutral-400">
-            Project command, site coordination, quality visibility, and
-            handover readiness for disciplined construction work.
+            Premium design-build construction, engineering, project management,
+            approvals, quality visibility, and handover readiness.
           </p>
           <div className="mt-5 flex max-w-xs items-start gap-3 rounded-xl border border-white/10 bg-white/[0.035] px-4 py-3 backdrop-blur-sm">
             <MapPin className="mt-0.5 size-4 shrink-0 text-red-300" />

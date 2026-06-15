@@ -21,20 +21,21 @@ export function FounderWelcomeScreen() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#080808] px-5 py-8 text-[#F5F5F5] sm:px-8">
       <div
-        className="absolute inset-0 opacity-[0.14]"
+        className="absolute inset-0 opacity-[0.12]"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(245,245,245,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(245,245,245,.08) 1px, transparent 1px)",
-          backgroundSize: "56px 56px"
+            "linear-gradient(rgba(184,134,11,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(184,134,11,.06) 1px, transparent 1px)",
+          backgroundSize: "48px 48px"
         }}
       />
       <motion.div
         aria-hidden="true"
-        className="absolute left-1/2 top-[-22rem] h-[44rem] w-[44rem] -translate-x-1/2 rounded-full bg-[#c7a15a]/10 blur-3xl"
-        animate={{ opacity: [0.32, 0.55, 0.32], scale: [0.98, 1.03, 0.98] }}
+        className="absolute left-1/2 top-[-22rem] h-[44rem] w-[44rem] -translate-x-1/2 rounded-full bg-[#b8860b]/10 blur-3xl"
+        animate={{ opacity: [0.28, 0.5, 0.28], scale: [0.98, 1.03, 0.98] }}
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
-      <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#c7a15a]/60 to-transparent" />
+      <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#b8860b]/50 to-transparent" />
+      <div className="absolute inset-x-8 bottom-0 h-px bg-gradient-to-r from-transparent via-[#d4a843]/30 to-transparent" />
 
       <section className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-7xl flex-col items-center justify-center py-10 text-center">
         <motion.div
@@ -43,10 +44,10 @@ export function FounderWelcomeScreen() {
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="flex flex-col items-center"
         >
-          <div className="flex h-24 w-24 items-center justify-center rounded-[8px] border border-[#c7a15a]/35 bg-[#111111] shadow-[0_0_90px_rgba(199,161,90,0.14)]">
-            <Landmark className="h-12 w-12 text-[#c7a15a]" />
+          <div className="flex h-24 w-24 items-center justify-center rounded-[12px] border border-[#b8860b]/30 bg-gradient-to-br from-[#141414] to-[#0d0d0d] shadow-[0_0_90px_rgba(184,134,11,0.14)]">
+            <Landmark className="h-12 w-12 text-[#b8860b]" />
           </div>
-          <p className="mt-5 text-xs font-semibold uppercase tracking-[0.3em] text-[#c7a15a]">Ractysh Group</p>
+          <p className="mt-5 text-xs font-bold uppercase tracking-[0.3em] text-[#b8860b]">Ractysh Group</p>
         </motion.div>
 
         <motion.div
@@ -80,10 +81,10 @@ export function FounderWelcomeScreen() {
               >
                 <Link
                   href={project.href}
-                  className="group flex min-h-[13rem] flex-col justify-between rounded-[8px] border border-[#232323] bg-[#111111]/88 p-5 text-left shadow-[0_28px_90px_rgba(0,0,0,0.28)] transition duration-300 hover:border-[#c7a15a]/70 hover:bg-[#151515]"
+                  className="group flex min-h-[13rem] flex-col justify-between rounded-[8px] border border-[#232323] bg-[#111111]/88 p-5 text-left shadow-[0_28px_90px_rgba(0,0,0,0.28)] transition duration-300 hover:border-[#b8860b]/60 hover:bg-gradient-to-br hover:from-[#151515] hover:to-[#111111]"
                 >
                   <div>
-                    <div className="flex h-11 w-11 items-center justify-center rounded-[8px] border border-[#c7a15a]/24 bg-[#080808] text-[#c7a15a]">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-[8px] border border-[#b8860b]/30 bg-gradient-to-br from-[#0d0d0d] to-[#111] text-[#b8860b]">
                       <Icon className="h-5 w-5" />
                     </div>
                     <h2 className="mt-6 font-display text-3xl font-medium leading-none tracking-tight text-[#F5F5F5]">
@@ -91,7 +92,7 @@ export function FounderWelcomeScreen() {
                     </h2>
                     <p className="mt-4 max-w-sm text-sm leading-6 text-[#9B9B9B]">{project.description}</p>
                   </div>
-                  <span className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-[#c7a15a]">
+                  <span className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-[#b8860b]">
                     Open Command Center
                     <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
                   </span>

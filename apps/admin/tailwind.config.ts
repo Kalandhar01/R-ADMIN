@@ -19,7 +19,10 @@ const config: Config = {
           primary: "#D6B45F",
           accent: "#D6B45F",
           text: "#FAFAFA",
-          muted: "#A1A1AA"
+          muted: "#A1A1AA",
+          gold: "#b8860b",
+          "gold-light": "#d4a843",
+          "gold-dark": "#9a7209",
         }
       },
       boxShadow: {}

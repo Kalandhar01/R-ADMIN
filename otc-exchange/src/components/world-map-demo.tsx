@@ -33,7 +33,6 @@ const otcRoutes = [
 export default function WorldMapDemo() {
   return (
     <section
-      id="routes"
       className="relative z-20 overflow-hidden bg-transparent px-5 py-20 text-white sm:px-8 lg:px-10 lg:py-28"
     >
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(189,121,29,0.025),rgba(4,7,6,0)_44%)]" />

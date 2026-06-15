@@ -14,10 +14,13 @@
     "@ractysh/db": "*",
     "framer-motion": "^12.0.1",
     "gsap": "^3.15.0",
+    "face-api.js": "^0.22.2",
     "lucide-react": "^0.471.1",
+    "postprocessing": "^6.36.0",
     "next": "^15.5.18",
     "ogl": "^1.0.11",
     "react": "^19.0.0",
+    "three": "^0.167.1",
     "react-dom": "^19.0.0",
     "resend": "^6.12.3"
   },

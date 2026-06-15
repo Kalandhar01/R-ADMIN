@@ -120,42 +120,42 @@ const locationArcs = [
 
 export default function SymmetricBentoGrid() {
   return (
-    <div className="mx-auto my-20 w-full max-w-7xl px-4 md:px-8">
+    <div className="mx-auto mt-20 w-full max-w-7xl px-4 md:px-8">
       <Header />
       <p className="mx-auto mt-4 max-w-lg text-center text-sm text-neutral-600 dark:text-neutral-400">
-        A single project rhythm for owners, site teams, vendors, and handover
-        teams, built around clarity instead of guesswork.
+        25 integrated construction and engineering services delivered with a
+        single standard — quality, schedule, and transparency.
       </p>
 
       <div className="cols-1 mt-20 grid gap-4 md:auto-rows-[25rem] md:grid-cols-5">
         <BentoCard className="md:col-span-3">
           <DeploymentSkeleton />
           <CardCopy
-            title="One project command chain"
-            description="Approvals, drawings, procurement, crew flow, and quality proof stay connected from first brief to final handover."
+            title="25 integrated services, one partner"
+            description="Civil, MEP, PMC, PEB, surveys, interiors, approvals — every capability under a single contract with unified accountability."
           />
         </BentoCard>
 
         <BentoCard className="md:col-span-2">
           <CardCopy
-            title="Readable owner updates"
-            description="Progress, blockers, spend-sensitive decisions, and next actions are written for fast review, not confusing reports."
+            title="500+ projects delivered"
+            description="From luxury residences and commercial towers to government infrastructure and industrial campuses — proven execution across scale."
           />
           <DashboardPanel />
         </BentoCard>
 
-        <BentoCard className="min-h-[32rem] md:col-span-2 md:min-h-0">
+        <BentoCard className="min-h-[34rem] md:col-span-2">
           <CardCopy
-            title="City-aware execution"
-            description="Site intelligence stays connected to local teams, suppliers, access windows, and project locations."
+            title="Licensed across all disciplines"
+            description="Certified civil engineers, structural designers, MEP specialists, and project managers with deep regulatory and regional expertise."
           />
           <GlobeSkeleton />
         </BentoCard>
 
         <BentoCard className="md:col-span-3">
           <CardCopy
-            title="Handover without panic"
-            description="Snags, documents, vendor dependencies, and client readiness stay visible until the project is closed."
+            title="End-to-end project delivery"
+            description="From soil testing and structural design to finishing, handover, and compliance — managed end-to-end without gaps or coordination lapses."
           />
           <DashboardPanel />
         </BentoCard>
@@ -197,7 +197,7 @@ function Header() {
           ),
         )}
       </motion.div>
-      <h2 className="mx-auto w-fit text-center font-sans text-xl font-bold tracking-tight text-neutral-800 md:text-4xl dark:text-neutral-100">
+            <h2 className="mx-auto w-fit text-center text-xl font-bold tracking-tight text-neutral-800 md:text-4xl dark:text-neutral-100">
         Why choose <span className="text-red-700 dark:text-red-400">Ractysh</span>
       </h2>
     </div>
@@ -404,9 +404,9 @@ function DashboardPanel() {
 
 function GlobeSkeleton() {
   return (
-    <div className="relative min-h-[22rem] w-full flex-1 overflow-hidden md:h-full md:min-h-0">
+    <div className="relative min-h-[24rem] w-full flex-1 overflow-hidden md:min-h-0 md:h-full">
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 h-32 bg-gradient-to-b from-transparent to-white dark:to-neutral-900" />
-      <div className="absolute inset-x-0 -bottom-14 z-10 h-[23rem] origin-bottom scale-105 sm:-bottom-16 sm:h-[24rem] md:-bottom-24 md:h-[27rem] md:scale-110">
+      <div className="absolute inset-x-0 bottom-0 z-10 h-[24rem] origin-bottom scale-105 sm:h-[26rem] md:-bottom-8 md:h-[28rem] md:scale-110">
         <World data={locationArcs} globeConfig={globeConfig} />
       </div>
     </div>

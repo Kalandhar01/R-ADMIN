@@ -12,6 +12,7 @@ import type {
   AuditLogRow,
   BlogRow,
   BusinessRow,
+  ChatbotQueryRow,
   ContactRow,
   DocumentRow,
   DomainMappingRow,
@@ -981,6 +982,15 @@ export async function getAdminCommandCenterData(admin: AdminSessionUser): Promis
     createdAt: application.createdAt.toISOString()
   }));
 
+  const rawQueries = await prisma.chatbotQuery.findMany({ orderBy: { createdAt: "desc" }, take: 200 });
+  const chatbotQueryRows: ChatbotQueryRow[] = rawQueries.map((q) => ({
+    id: q.id,
+    question: q.question,
+    answer: q.answer,
+    pageUrl: q.pageUrl,
+    createdAt: q.createdAt.toISOString()
+  }));
+
   const contactRows: ContactRow[] = contacts.map((contact) => ({
     id: contact.id,
     division: resolveDivision(contact.division, contact.service, contact.company, contact.subject, contact.message),
@@ -1343,6 +1353,7 @@ export async function getAdminCommandCenterData(admin: AdminSessionUser): Promis
     jobs: jobRows,
     applications: applicationRows,
     contacts: contactRows,
+    chatbotQueries: chatbotQueryRows,
     settings: settingRows,
     auditLogs: auditRows,
     notifications: notificationRows,

@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useEffect, useRef } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import {
   Canvas,
   type ThreeEvent,
@@ -213,6 +213,58 @@ interface DitheredWavesProps {
   mouseRadius: number;
 }
 
+function useDocumentVisible() {
+  const [isVisible, setIsVisible] = useState(
+    () => typeof document === "undefined" || !document.hidden,
+  );
+
+  useEffect(() => {
+    const updateVisibility = () => setIsVisible(!document.hidden);
+
+    updateVisibility();
+    document.addEventListener("visibilitychange", updateVisibility);
+    return () =>
+      document.removeEventListener("visibilitychange", updateVisibility);
+  }, []);
+
+  return isVisible;
+}
+
+function CappedFrameInvalidator({
+  enabled,
+  fps,
+}: {
+  enabled: boolean;
+  fps: number;
+}) {
+  const { invalidate } = useThree();
+
+  useEffect(() => {
+    if (!enabled) {
+      invalidate();
+      return;
+    }
+
+    let frameId = 0;
+    let lastFrame = 0;
+    const frameInterval = 1000 / Math.max(1, fps);
+
+    const tick = (now: number) => {
+      if (!document.hidden && now - lastFrame >= frameInterval) {
+        lastFrame = now;
+        invalidate();
+      }
+
+      frameId = window.requestAnimationFrame(tick);
+    };
+
+    frameId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frameId);
+  }, [enabled, fps, invalidate]);
+
+  return null;
+}
+
 function DitheredWaves({
   waveSpeed,
   waveFrequency,
@@ -227,7 +279,7 @@ function DitheredWaves({
   const mesh = useRef<THREE.Mesh>(null);
   const shaderMaterial = useRef<THREE.ShaderMaterial>(null);
   const mouseRef = useRef(new THREE.Vector2());
-  const { viewport, size, gl } = useThree();
+  const { viewport, size, gl, invalidate } = useThree();
 
   const waveUniformsRef = useRef<WaveUniforms>({
     time: new THREE.Uniform(0),
@@ -302,6 +354,7 @@ function DitheredWaves({
       (event.clientX - rect.left) * dpr,
       (event.clientY - rect.top) * dpr,
     );
+    invalidate();
   };
 
   return (
@@ -316,7 +369,7 @@ function DitheredWaves({
         />
       </mesh>
 
-      <EffectComposer>
+      <EffectComposer multisampling={0}>
         <RetroEffect colorNum={colorNum} pixelSize={pixelSize} />
       </EffectComposer>
 
@@ -343,6 +396,8 @@ export interface DitherProps {
   disableAnimation?: boolean;
   enableMouseInteraction?: boolean;
   mouseRadius?: number;
+  active?: boolean;
+  maxFps?: number;
 }
 
 export default function Dither({
@@ -355,19 +410,28 @@ export default function Dither({
   disableAnimation = false,
   enableMouseInteraction = true,
   mouseRadius = 1,
+  active = true,
+  maxFps = 30,
 }: DitherProps) {
+  const isDocumentVisible = useDocumentVisible();
+  const isActive = active && isDocumentVisible;
+  const shouldAnimate = isActive && !disableAnimation;
+
   return (
     <Canvas
       className="h-full w-full relative"
       camera={{ position: [0, 0, 6] }}
       dpr={1}
-      frameloop="always"
+      frameloop="demand"
       gl={{
         antialias: false,
         powerPreference: "high-performance",
         preserveDrawingBuffer: false,
+        stencil: false,
+        depth: false,
       }}
     >
+      <CappedFrameInvalidator enabled={shouldAnimate} fps={maxFps} />
       <DitheredWaves
         waveSpeed={waveSpeed}
         waveFrequency={waveFrequency}
@@ -375,8 +439,8 @@ export default function Dither({
         waveColor={waveColor}
         colorNum={colorNum}
         pixelSize={pixelSize}
-        disableAnimation={disableAnimation}
-        enableMouseInteraction={enableMouseInteraction}
+        disableAnimation={!shouldAnimate}
+        enableMouseInteraction={isActive && enableMouseInteraction}
         mouseRadius={mouseRadius}
       />
     </Canvas>

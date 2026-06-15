@@ -24,7 +24,7 @@ const heroImage = "/services/otc-exchange-private-desk.webp";
 const imageSizes = "(min-width: 1280px) 48vw, (min-width: 768px) 88vw, 100vw";
 const heroImageSizes = "(min-width: 1280px) 52vw, (min-width: 1024px) 48vw, 100vw";
 
-const valueSignals = ["Private Desk", "Verified Records", "Settlement Governance"] as const;
+const valueSignals = ["Crypto Exchange", "USDT Services", "FIU Registered"] as const;
 
 const operationSections: Array<{
   id: string;
@@ -40,60 +40,60 @@ const operationSections: Array<{
   points: readonly [string, string, string];
 }> = [
   {
-    id: "private-exchange-coordination",
+    id: "crypto-currency-exchange",
     eyebrow: "Section 01",
-    title: "Private Exchange Coordination",
+    title: "Crypto Based Currency Exchange",
     description:
-      "Qualified mandates are received through a controlled desk, with principal roles, transaction intent and communication paths organized before movement begins.",
+      "Secure crypto-to-fiat and crypto-to-crypto exchange services with real-time pricing, deep liquidity and institutional-grade settlement for qualified counterparties.",
     image: "/services/otc-exchange-private-desk.webp",
-    imageAlt: "Executive boardroom prepared for private exchange coordination",
-    label: "Mandate Intake",
-    signal: "Controlled",
+    imageAlt: "Crypto currency exchange desk for OTC transactions",
+    label: "Crypto Exchange",
+    signal: "Live",
     tone: "light",
     Icon: BriefcaseBusiness,
-    points: ["Principal role", "Mandate context", "Private sequence"]
+    points: ["Real-time pricing", "Deep liquidity", "Secure settlement"]
   },
   {
-    id: "counterparty-verification",
+    id: "usdt-currency-exchange",
     eyebrow: "Section 02",
-    title: "Counterparty Verification",
+    title: "USDT Currency Exchange",
     description:
-      "Authority, identity, documentation maturity and commercial seriousness are reviewed before introductions, data-room access or sensitive transaction movement.",
+      "USDT-to-fiat and USDT-to-crypto exchange services with competitive rates, fast settlement and transparent transaction tracking for institutional and retail clients.",
     image: "/services/otc-exchange-verification-documents.webp",
-    imageAlt: "Private verification documents arranged for counterparty review",
-    label: "Verification Gate",
-    signal: "Reviewed",
+    imageAlt: "USDT currency exchange transaction processing",
+    label: "USDT Desk",
+    signal: "Active",
     tone: "light",
     Icon: ShieldCheck,
-    points: ["Authority check", "Document review", "Suitability gate"]
+    points: ["Competitive rates", "Fast settlement", "Transparent tracking"]
   },
   {
-    id: "settlement-management",
+    id: "fiu-registered-partnerships",
     eyebrow: "Section 03",
-    title: "Settlement Management",
+    title: "FIU Registered & ISO Certified Partnerships",
     description:
-      "Terms, close conditions, advisor handoffs and operational responsibilities are sequenced around settlement readiness, documentation control and accountable next steps.",
+      "Our company is partnered with FIU registered and ISO certified institutions, ensuring regulatory compliance, operational excellence and client trust across all OTC operations.",
     image: "/services/showcase-otc-exchange.webp",
-    imageAlt: "Institutional trading environment used for settlement management review",
-    label: "Settlement Desk",
-    signal: "Ready",
+    imageAlt: "FIU registered and ISO certified partnership documentation",
+    label: "Certified",
+    signal: "Compliant",
     tone: "dark",
     Icon: Landmark,
-    points: ["Term sequence", "Close conditions", "Handover path"]
+    points: ["FIU registered", "ISO certified", "Regulatory compliance"]
   },
   {
-    id: "governance-compliance",
+    id: "kyc-verification-otc",
     eyebrow: "Section 04",
-    title: "Governance & Compliance",
+    title: "KYC Verification for OTC",
     description:
-      "Engagement records, verification checkpoints and professional compliance inputs keep each OTC mandate aligned with private-market discipline.",
+      "Comprehensive KYC verification for OTC transactions — identity verification, document review and compliance screening for qualified counterparties before transaction processing.",
     image: "/contact/enterprise-architecture-workspace.webp",
-    imageAlt: "Private banking office used for governance and compliance review",
-    label: "Governance Layer",
-    signal: "Documented",
+    imageAlt: "KYC verification documents for OTC compliance",
+    label: "Verification",
+    signal: "Verified",
     tone: "light",
     Icon: Scale,
-    points: ["Written engagement", "Review trail", "Compliance inputs"]
+    points: ["Identity verification", "Document review", "Compliance screening"]
   }
 ] as const;
 
@@ -322,7 +322,7 @@ export function OtcExchangeServiceExperience() {
               transition={{ duration: 0.9, delay: 0.35, ease }}
               className="mt-7 max-w-[38rem] text-[1rem] font-medium leading-8 text-[#5d5348] md:text-[1.08rem]"
             >
-              Private transaction coordination, settlement governance and institutional exchange management.
+               Crypto based currency exchange, USDT exchange services, FIU registered ISO certified partnerships and KYC verification for OTC transactions.
             </motion.p>
 
             <motion.div
@@ -333,6 +333,7 @@ export function OtcExchangeServiceExperience() {
             >
               <ButtonLink href="/book-consultation">Book Consultation</ButtonLink>
               <ButtonLink href="/contact" variant="light">Contact Service Desk</ButtonLink>
+              <ButtonLink href="#" variant="light">For More Details, Check This</ButtonLink>
             </motion.div>
 
             <div data-reveal className="mt-12 hidden max-w-[39rem] grid-cols-3 border-y border-[#d8c59d]/62 py-5 md:grid">
@@ -446,6 +447,7 @@ export function OtcExchangeServiceExperience() {
                   <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                     <ButtonLink href="/book-consultation">Book Consultation</ButtonLink>
                     <ButtonLink href="/contact" variant="light">Contact Service Desk</ButtonLink>
+                    <ButtonLink href="#" variant="light">For More Details, Check This</ButtonLink>
                   </div>
                 ) : null}
               </div>

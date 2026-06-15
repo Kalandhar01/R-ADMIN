@@ -20,13 +20,13 @@ export default function WobbleCardDemo() {
         transition={{ duration: 0.92, ease }}
       >
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-red-700">
-          Project idea
+          Who we are
         </p>
-        <h2 className="text-4xl font-black tracking-normal text-slate-950 sm:text-5xl lg:text-6xl">
-          Construction control for every moving part
+        <h2 className="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+          Built by engineers. Led by builders.
         </h2>
         <p className="mt-4 text-base/7 font-medium text-slate-600 sm:text-lg/8">
-          Ractysh is built for projects where approvals, procurement, site execution, quality checks, and client updates must stay visible from day one.
+          Ractysh is a construction-control partner founded on the belief that every project deserves one accountable rhythm — from first drawing to final handover.
         </p>
       </motion.div>
 
@@ -41,20 +41,20 @@ export default function WobbleCardDemo() {
           <WobbleCard containerClassName="h-full min-h-[430px] bg-[#7f1d1d] sm:min-h-[500px] lg:min-h-[320px]">
             <div className="relative z-10 max-w-[18rem] sm:max-w-xs">
               <p className="mb-4 text-left text-xs font-semibold uppercase tracking-[0.16em] text-red-100">
-                Project command team
+                Our founding story
               </p>
               <h2 className="text-left text-base font-semibold text-balance text-white md:text-xl lg:text-3xl">
-                We keep the owner, consultant, contractor, and site crew working from the same plan.
+                From site engineers to project-control partners serving across India.
               </h2>
               <p className="mt-4 text-left text-base/6 text-red-50/85">
-                Every scope decision is tied to drawings, materials, access, manpower, safety, and the next field action.
+                What started as a field operations team is now a full-scope construction division managing residential, commercial, infrastructure, and industrial projects.
               </p>
             </div>
             <Image
               src="/images/construction/our-work-commercial-complex-site-01.webp"
               width={500}
               height={500}
-              alt="Ractysh construction site coordination"
+              alt="Ractysh construction team on site"
               className="pointer-events-none absolute -bottom-4 right-0 z-0 h-[10rem] w-full rounded-2xl object-cover opacity-15 grayscale filter sm:-right-12 sm:-bottom-12 sm:h-[21rem] sm:w-[28rem] sm:opacity-100 lg:-right-[30%]"
             />
           </WobbleCard>
@@ -68,13 +68,13 @@ export default function WobbleCardDemo() {
         >
           <WobbleCard containerClassName="h-full min-h-[320px] bg-[#111827]">
               <p className="mb-4 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">
-              What the idea solves
+              What drives us
             </p>
             <h2 className="max-w-80 text-left text-base font-semibold text-balance text-white md:text-xl lg:text-3xl">
-              No more scattered site updates, unclear ownership, or last-minute handover panic.
+              One standard — zero fragmentation in how projects are run.
             </h2>
             <p className="mt-4 max-w-[26rem] text-left text-base/6 text-slate-200">
-              Ractysh turns daily site movement into readable progress, so decisions happen early and risks stay visible.
+              We believe clear communication, documented decisions, and shared timelines are not extras — they are the foundation of every build.
             </p>
           </WobbleCard>
         </motion.div>
@@ -88,20 +88,20 @@ export default function WobbleCardDemo() {
           <WobbleCard containerClassName="h-full min-h-[420px] bg-[#3b0d0d] sm:min-h-[520px] lg:min-h-[600px] xl:min-h-[320px]">
             <div className="relative z-10 max-w-sm">
               <p className="mb-4 text-left text-xs font-semibold uppercase tracking-[0.16em] text-red-100">
-                How the model works
+                Where we operate
               </p>
               <h2 className="max-w-sm text-left text-base font-semibold text-balance text-white md:max-w-lg md:text-xl lg:text-3xl">
-                One execution rhythm from concept approval to keys-in-hand handover.
+                Pan-India presence with deep local site intelligence.
               </h2>
               <p className="mt-4 max-w-[26rem] text-left text-base/6 text-red-50/85">
-                We coordinate supervision, technical follow-up, vendor movement, client communication, and closeout evidence into one project workflow.
+                From metropolitan towers to regional infrastructure, our teams bring national construction standards to every location we work.
               </p>
             </div>
             <Image
               src="/images/construction/construction-service-command-center-construction-india-infrastructure-viaduct-03.webp"
               width={500}
               height={500}
-              alt="Ractysh infrastructure execution"
+              alt="Ractysh infrastructure project reach"
               className="pointer-events-none absolute -bottom-4 right-0 z-0 h-[10rem] w-full rounded-2xl object-cover opacity-15 sm:-right-10 sm:-bottom-12 sm:h-[22rem] sm:w-[34rem] sm:opacity-100 md:-right-[32%] lg:-right-[12%]"
             />
           </WobbleCard>

@@ -1,11 +1,13 @@
 import ConstructionNavbar from "@/components/ConstructionNavbar";
 import ConstructionFooter from "@/components/ConstructionFooter";
+import ConstructionServicesSection from "@/components/ConstructionServicesSection";
 import ContactSectionWithShader from "@/components/ContactSectionWithShader";
 import CircularGallery from "@/components/CircularGallery";
 import HeroCommandContent from "@/components/HeroCommandContent";
 import HeroParallaxDemo from "@/components/hero-parallax-demo";
-import HeroScrollDemo from "@/components/container-scroll-animation-demo";
-import GridScan from "@/components/GridScan";
+
+import { GridScan } from "@/components/GridScan";
+import GridBackground from "@/components/ui/grid-background";
 import MotionReveal from "@/components/MotionReveal";
 import SubscribeCharm from "@/components/SubscribeCharm";
 import SymmetricBentoGrid from "@/components/ui/symmetric-bento-grid";
@@ -35,70 +37,55 @@ export default function Home() {
       <SubscribeCharm />
       <section
         id="home"
-        className="relative isolate h-[100svh] overflow-hidden bg-[#05070c] text-white"
+        className="relative isolate h-[100svh] overflow-hidden bg-black"
       >
         <div className="absolute inset-0">
           <GridScan
             sensitivity={0.62}
-            lineThickness={1.1}
-            linesColor="#5f1717"
-            gridScale={0.085}
-            scanColor="#ef4444"
-            scanOpacity={0.48}
-            enablePost
-            bloomIntensity={0.72}
-            bloomThreshold={0.02}
-            bloomSmoothing={0.12}
-            chromaticAberration={0.0025}
-            noiseIntensity={0.012}
-            lineJitter={0.12}
+            lineThickness={1.2}
+            linesColor="#FFFFFF"
+            scanColor="#FFFFFF"
+            scanOpacity={0.4}
             scanDirection="pingpong"
-            scanGlow={0.82}
-            scanSoftness={2.1}
-            scanDuration={1.9}
-            scanDelay={1.2}
+            scanDuration={2.5}
+            scanDelay={3}
+            gridScale={0.07}
+            enablePost={false}
+            noiseIntensity={0}
+            lineJitter={0}
             scanOnClick
+            snapBackDelay={300}
           />
         </div>
-
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(153,27,27,0.25),transparent_33%),radial-gradient(circle_at_50%_105%,rgba(127,29,29,0.22),transparent_42%),linear-gradient(180deg,rgba(5,7,12,0.92)_0%,rgba(8,5,5,0.52)_45%,rgba(5,7,12,0.96)_100%)]" />
-        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#05070c] to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#05070c] to-transparent" />
 
         <div className="absolute inset-0 z-10 flex h-full items-center justify-center px-6 pt-24 pb-8 text-center sm:px-10 sm:pt-28 lg:px-16">
           <HeroCommandContent />
         </div>
       </section>
 
-      <MotionReveal id="intro" className="bg-white px-6 py-24 sm:px-10 lg:px-16">
-        <WobbleCardDemo />
-      </MotionReveal>
+      <GridBackground light>
+        <MotionReveal id="intro" className="px-6 py-24 sm:px-10 lg:px-16">
+          <WobbleCardDemo />
+        </MotionReveal>
 
-      <MotionReveal id="works" className="bg-white">
-        <HeroParallaxDemo />
-      </MotionReveal>
+        <ConstructionServicesSection />
 
-      <MotionReveal
-        id="info-1"
-        className="scroll-mt-36 border-y border-slate-200 bg-white md:scroll-mt-28"
-      >
-        <HeroScrollDemo />
-      </MotionReveal>
+        <MotionReveal id="works">
+          <HeroParallaxDemo />
+        </MotionReveal>
 
-      <MotionReveal
-        id="info-2"
-        className="bg-white"
-      >
-        <SymmetricBentoGrid />
-      </MotionReveal>
-
-      <MotionReveal as="div" amount={0.14}>
         <TestimonialsMarqueeGrid />
-      </MotionReveal>
 
-      <MotionReveal as="div" amount={0.12}>
-        <ContactSectionWithShader />
-      </MotionReveal>
+        <MotionReveal id="info-2">
+          <SymmetricBentoGrid />
+        </MotionReveal>
+      </GridBackground>
+
+      <GridBackground light>
+        <MotionReveal as="div" amount={0.12}>
+          <ContactSectionWithShader />
+        </MotionReveal>
+      </GridBackground>
 
       <div className="relative overflow-hidden bg-black bg-[radial-gradient(circle_at_20%_360px,rgba(153,27,27,0.28),transparent_34%),linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:auto,72px_72px,72px_72px] text-white sm:bg-[radial-gradient(circle_at_20%_440px,rgba(153,27,27,0.28),transparent_34%),linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] lg:bg-[radial-gradient(circle_at_20%_540px,rgba(153,27,27,0.28),transparent_34%),linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)]">
         <MotionReveal as="section" amount={0.18}>

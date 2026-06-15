@@ -45,8 +45,8 @@ const slides: WhoWeAreSlide[] = [
     image: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=2400&q=80",
     number: "02",
     objectPosition: "center center",
-    subtext: "Site execution, structural coordination and turnkey delivery controlled through one cadence.",
-    title: ["Construction control", "for complex sites", "and premium handover."]
+    subtext: "Civil & MEP engineering, buildings, interiors, landscape, turnkey and 25+ capabilities controlled through one cadence.",
+    title: ["25+ construction", "capabilities under", "one accountable system."]
   },
   {
     alt: "Premium real estate frontage and urban development",

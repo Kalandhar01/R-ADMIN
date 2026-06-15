@@ -90,7 +90,7 @@ export default function GlobeDemo() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
         >
-          <h2 className="text-center text-xl font-bold text-black dark:text-white md:text-4xl">
+          <h2 className="text-center text-xl font-bold tracking-tight text-black dark:text-white md:text-4xl">
             Ractysh project intelligence
           </h2>
           <p className="mx-auto mt-2 max-w-md text-center text-base font-normal text-neutral-700 dark:text-neutral-200 md:text-lg">

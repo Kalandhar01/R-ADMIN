@@ -58,7 +58,7 @@ const timelineSteps = [
     title: "Construction Division",
     eyebrow: "Construction execution",
     description:
-      "Turnkey construction, renovation, sourcing and delivery governance aligned under one accountable build platform.",
+      "Civil & MEP engineering, commercial & residential buildings, PEB, turnkey, interiors, landscape, swimming pools, lifts, mega structures, government tenders and testing under one accountable platform.",
     Icon: HardHat
   },
   {

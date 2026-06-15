@@ -46,7 +46,7 @@ const ecosystemObjects: EcosystemObject[] = [
   },
   {
     label: "Construction",
-    detail: "Delivery control",
+    detail: "25+ services",
     status: "Live",
     Icon: HardHat,
     className: "right-[4%] top-[17%] w-[3.4rem] sm:right-[5%] sm:top-[9%] sm:w-[10.8rem]",

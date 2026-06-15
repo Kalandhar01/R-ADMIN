@@ -133,11 +133,8 @@ export default function SiteFooter() {
 
   return (
     <footer className="relative z-20 overflow-hidden bg-[#020403] px-5 pt-20 pb-8 text-white sm:px-8 lg:px-10 lg:pt-24">
-      <div className="pointer-events-none absolute inset-0 z-0 bg-[#020403]" />
-      <div className="pointer-events-none absolute inset-0 z-[2] bg-[radial-gradient(circle_at_18%_18%,rgba(22,184,147,0.12),transparent_32%),radial-gradient(circle_at_84%_20%,rgba(243,201,135,0.1),transparent_34%),linear-gradient(180deg,rgba(2,4,3,0.2),rgba(2,4,3,0.5)_62%,#020403)]" />
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-[3] w-[44rem] bg-[linear-gradient(90deg,rgba(22,184,147,0.16),rgba(22,184,147,0.05)_42%,transparent_78%)]" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-[3] w-[44rem] bg-[linear-gradient(270deg,rgba(243,201,135,0.16),rgba(189,121,29,0.05)_42%,transparent_78%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-[4] h-36 bg-gradient-to-b from-[#040706] to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(22,184,147,0.08),transparent_40%),radial-gradient(circle_at_84%_20%,rgba(243,201,135,0.06),transparent_40%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#040706] to-transparent" />
 
       <div className="relative z-10 mx-auto max-w-[92rem]">
         <div className="grid gap-8 border-b border-white/10 pb-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-12">

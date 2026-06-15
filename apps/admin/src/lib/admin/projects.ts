@@ -22,16 +22,7 @@ export const adminProjectRoutes: AdminProjectRoute[] = [
     href: "/ractysh-group/dashboard",
     keywords: ["ractysh", "group", "enterprise", "ecosystem", "holding"]
   },
-  {
-    key: "infrastructure",
-    slug: "infrastructure",
-    label: "Infrastructure",
-    title: "Infrastructure Command Center",
-    description: "Infrastructure governance, execution intelligence and operational controls.",
-    href: "/infrastructure/dashboard",
-    keywords: ["infrastructure", "infra", "road", "bridge", "industrial"]
-  },
-  {
+{
     key: "architecture",
     slug: "architecture",
     label: "Architecture",

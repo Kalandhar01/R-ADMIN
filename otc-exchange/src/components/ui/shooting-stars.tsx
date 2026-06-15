@@ -24,6 +24,7 @@ interface ShootingStarsProps {
   starHeight?: number;
   starCount?: number;
   className?: string;
+  maxFps?: number;
 }
 
 const getRandomStartPoint = () => {
@@ -56,17 +57,39 @@ export const ShootingStars: React.FC<ShootingStarsProps> = ({
   starHeight = 1,
   starCount = 1,
   className,
+  maxFps = 30,
 }) => {
   const [stars, setStars] = useState<ShootingStar[]>([]);
   const timeoutRefs = useRef<number[]>([]);
   const starIdRef = useRef(0);
   const svgRef = useRef<SVGSVGElement>(null);
   const gradientId = useId().replace(/:/g, "");
+  const documentVisibleRef = useRef(true);
+
+  useEffect(() => {
+    const updateVisibility = () => {
+      documentVisibleRef.current = !document.hidden;
+    };
+
+    updateVisibility();
+    document.addEventListener("visibilitychange", updateVisibility);
+    return () =>
+      document.removeEventListener("visibilitychange", updateVisibility);
+  }, []);
 
   useEffect(() => {
     const activeStarCount = Math.max(1, Math.floor(starCount));
 
     const createStar = (laneIndex: number) => {
+      if (!documentVisibleRef.current) {
+        const hiddenDelay = Math.random() * (maxDelay - minDelay) + minDelay;
+        timeoutRefs.current[laneIndex] = window.setTimeout(
+          () => createStar(laneIndex),
+          hiddenDelay,
+        );
+        return;
+      }
+
       const { x, y, angle } = getRandomStartPoint();
       const newStar: ShootingStar = {
         id: Date.now() + starIdRef.current++,
@@ -102,38 +125,43 @@ export const ShootingStars: React.FC<ShootingStarsProps> = ({
 
   useEffect(() => {
     let animationFrame: number;
+    let lastFrame = 0;
+    const frameInterval = 1000 / Math.max(1, maxFps);
 
-    const moveStars = () => {
-      setStars((currentStars) => {
-        if (currentStars.length === 0) {
-          return currentStars;
-        }
+    const moveStars = (now: number) => {
+      if (documentVisibleRef.current && now - lastFrame >= frameInterval) {
+        lastFrame = now;
+        setStars((currentStars) => {
+          if (currentStars.length === 0) {
+            return currentStars;
+          }
 
-        return currentStars
-          .map((star) => {
-            const newX =
-              star.x + star.speed * Math.cos((star.angle * Math.PI) / 180);
-            const newY =
-              star.y + star.speed * Math.sin((star.angle * Math.PI) / 180);
-            const newDistance = star.distance + star.speed;
-            const newScale = 1 + newDistance / 100;
+          return currentStars
+            .map((star) => {
+              const newX =
+                star.x + star.speed * Math.cos((star.angle * Math.PI) / 180);
+              const newY =
+                star.y + star.speed * Math.sin((star.angle * Math.PI) / 180);
+              const newDistance = star.distance + star.speed;
+              const newScale = 1 + newDistance / 100;
 
-            return {
-              ...star,
-              x: newX,
-              y: newY,
-              distance: newDistance,
-              scale: newScale,
-            };
-          })
-          .filter(
-            (star) =>
-              star.x >= -40 &&
-              star.x <= window.innerWidth + 40 &&
-              star.y >= -40 &&
-              star.y <= window.innerHeight + 40,
-          );
-      });
+              return {
+                ...star,
+                x: newX,
+                y: newY,
+                distance: newDistance,
+                scale: newScale,
+              };
+            })
+            .filter(
+              (star) =>
+                star.x >= -40 &&
+                star.x <= window.innerWidth + 40 &&
+                star.y >= -40 &&
+                star.y <= window.innerHeight + 40,
+            );
+        });
+      }
 
       animationFrame = requestAnimationFrame(moveStars);
     };
@@ -141,7 +169,7 @@ export const ShootingStars: React.FC<ShootingStarsProps> = ({
     animationFrame = requestAnimationFrame(moveStars);
 
     return () => cancelAnimationFrame(animationFrame);
-  }, []);
+  }, [maxFps]);
 
   return (
     <svg

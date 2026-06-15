@@ -1,40 +1,30 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import type { Metadata, Viewport } from "next";
+import type { ReactNode } from "react";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Import Export Site",
+  title: "Ractysh Global Trade | Import, Export & Logistics Solutions",
   description:
-    "Component-first Next.js foundation for an import and export business website.",
+    "Premium international trading company connecting manufacturers, suppliers, distributors and businesses through reliable global sourcing, logistics and trade solutions.",
+  applicationName: "Ractysh Global Trade",
+  keywords: ["import export", "global trade", "logistics", "freight forwarding", "customs clearance", "supply chain"],
+  openGraph: {
+    title: "Ractysh Global Trade",
+    description: "Global Trade. Delivered With Precision.",
+    type: "website",
+  },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export const viewport: Viewport = {
+  themeColor: "#f8f7f4",
+  width: "device-width",
+  initialScale: 1,
+};
+
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">
-        <AppRouterCacheProvider>
-          <TooltipProvider>{children}</TooltipProvider>
-        </AppRouterCacheProvider>
-      </body>
+    <html lang="en">
+      <body>{children}</body>
     </html>
   );
 }

@@ -95,11 +95,29 @@ const isLightBehindNavbar = (navElement: HTMLElement | null) => {
   const previousPointerEvents = navElement?.style.pointerEvents;
   if (navElement) navElement.style.pointerEvents = "none";
 
-  const sampleY = Math.min(92, window.innerHeight - 1);
-  const element = document.elementFromPoint(window.innerWidth / 2, sampleY);
+  const navRect = navElement?.getBoundingClientRect();
+  const sampleTop = navRect ? Math.min(navRect.top + 12, window.innerHeight - 1) : 50;
+  const sampleMid = navRect ? Math.min(navRect.top + 48, window.innerHeight - 1) : 92;
+
+  const positions = [sampleTop, sampleMid].map((y) => {
+    const el = document.elementFromPoint(window.innerWidth / 2, y);
+    return detectSurfaceAtElement(el);
+  });
 
   if (navElement) navElement.style.pointerEvents = previousPointerEvents ?? "";
 
+  const darkCount = positions.filter((p) => p === "dark").length;
+  if (darkCount >= 1) return false;
+
+  const lightCount = positions.filter((p) => p === "light").length;
+  if (lightCount >= 2) return true;
+
+  return window.scrollY > window.innerHeight * 0.65;
+};
+
+function detectSurfaceAtElement(
+  element: Element | null,
+): "light" | "dark" | "unknown" {
   let current = element instanceof HTMLElement ? element : null;
 
   while (current && current !== document.documentElement) {
@@ -107,7 +125,7 @@ const isLightBehindNavbar = (navElement: HTMLElement | null) => {
     const backgroundColor = parseRgb(style.backgroundColor);
 
     if (backgroundColor && backgroundColor.a > 0.35) {
-      return luminance(backgroundColor) > 0.54;
+      return luminance(backgroundColor) > 0.54 ? "light" : "dark";
     }
 
     const backgroundColors = style.backgroundImage.match(/rgba?\([^)]+\)/g);
@@ -120,18 +138,18 @@ const isLightBehindNavbar = (navElement: HTMLElement | null) => {
         );
 
       if (visibleColors.length) {
-        const average =
+        const avgLuminance =
           visibleColors.reduce((sum, color) => sum + luminance(color), 0) /
           visibleColors.length;
-        return average > 0.54;
+        return avgLuminance > 0.54 ? "light" : "dark";
       }
     }
 
     current = current.parentElement;
   }
 
-  return window.scrollY > window.innerHeight * 0.65;
-};
+  return "unknown";
+}
 
 const NavLink = ({
   href,
@@ -427,14 +445,24 @@ export const NavbarLogo = ({
         priority
         unoptimized
       />
-      <span
-        className={cn(
-          "block whitespace-nowrap text-xs font-semibold leading-none sm:text-[13px]",
-          isLightSurface ? "text-slate-950" : "text-white",
-        )}
-      >
-        {label}
-      </span>
+      <div className="flex flex-col leading-tight">
+        <span
+          className={cn(
+            "whitespace-nowrap text-sm font-bold leading-none sm:text-base",
+            isLightSurface ? "text-slate-950" : "text-white",
+          )}
+        >
+          Ractysh
+        </span>
+        <span
+          className={cn(
+            "whitespace-nowrap text-[10px] font-medium uppercase tracking-wider leading-none sm:text-[11px]",
+            "text-[#C4A87C]",
+          )}
+        >
+          Construction
+        </span>
+      </div>
     </NavLink>
   );
 };

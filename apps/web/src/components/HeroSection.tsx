@@ -281,7 +281,6 @@ export function HeroSection({ hero, divisions }: HeroSectionProps) {
       };
 
       root.addEventListener("pointermove", onPointerMove);
-
       return () => root.removeEventListener("pointermove", onPointerMove);
     }, root);
 

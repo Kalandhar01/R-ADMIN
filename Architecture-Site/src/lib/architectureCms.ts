@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import type { ArchitectureLeadStatus, ArchitectureMediaKind, ArchitectureProjectStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { projects as staticArchitectureProjects } from "./architectureContent";
+import { heroSupportingContent } from "./architecturePremiumContent";
 
 export type ArchitectureHeroView = {
   heading: string;
@@ -121,8 +122,8 @@ export type ArchitectureAdminData = {
 };
 
 const preferredArchitectureHero = {
-  heading: "Architecture\nBuilt Beyond\nBlueprints.",
-  description: "Private villas, modern residences and composed spatial experiences shaped through light, proportion and restraint."
+  heading: heroSupportingContent.heading.join("\n"),
+  description: heroSupportingContent.description
 };
 
 const preferredHeroVideoUrl = "/videos/architecture/ractysh-architecture-hero.mp4";
@@ -132,10 +133,10 @@ const defaultHero: ArchitectureHeroView = {
   description: preferredArchitectureHero.description,
   videoUrl: preferredHeroVideoUrl,
   posterUrl: "/images/architecture/ractysh-built-beyond-blueprints-poster.avif",
-  primaryCtaText: "View Works",
-  primaryCtaHref: "#works",
-  secondaryCtaText: "Consultation",
-  secondaryCtaHref: "#consultation"
+  primaryCtaText: heroSupportingContent.primaryCta.label,
+  primaryCtaHref: heroSupportingContent.primaryCta.href,
+  secondaryCtaText: heroSupportingContent.secondaryCta.label,
+  secondaryCtaHref: heroSupportingContent.secondaryCta.href
 };
 
 function toIso(value: Date | null | undefined) {
@@ -157,7 +158,11 @@ function projectNumber(index: number) {
 }
 
 function isLegacyDesignHeading(value: string) {
-  return ["Let's Design Something Extraordinary.", "Crafting Timeless Architecture."].includes(value.replace(/\u2019/g, "'").replace(/\s+/g, " ").trim());
+  return [
+    "Let's Design Something Extraordinary.",
+    "Crafting Timeless Architecture.",
+    "Architecture Built Beyond Blueprints."
+  ].includes(value.replace(/\u2019/g, "'").replace(/\s+/g, " ").trim());
 }
 
 function toProjectView(project: {

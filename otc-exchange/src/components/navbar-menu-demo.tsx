@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
-import { useState, type MouseEvent } from "react";
+import { useState, useEffect, useRef, type MouseEvent } from "react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { label: "Desk", href: "#desk" },
-  { label: "Features", href: "#features" },
+  { label: "Services", href: "#otc-services" },
+  { label: "Process", href: "#otc-process" },
+  { label: "Trust", href: "#otc-trust" },
   { label: "Routes", href: "#routes" },
 ];
 
@@ -17,6 +18,26 @@ export default function NavbarDemo() {
 
 function Navbar({ className }: { className?: string }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [navVisible, setNavVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY < 40) {
+        setNavVisible(true);
+      } else if (currentScrollY > lastScrollY.current) {
+        setNavVisible(false);
+      } else {
+        setNavVisible(true);
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const mobileLinks = [...navLinks, { label: "Contact", href: "#contact" }];
 
   const handleAnchorClick = (
@@ -37,7 +58,8 @@ function Navbar({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "fixed inset-x-3 z-50 mx-auto max-w-6xl sm:inset-x-6",
+        "fixed inset-x-3 z-50 mx-auto max-w-6xl transition-all duration-500 sm:inset-x-6",
+        navVisible ? "translate-y-0 opacity-100" : "-translate-y-24 opacity-0",
         className,
       )}
     >

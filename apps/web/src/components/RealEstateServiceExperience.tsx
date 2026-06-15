@@ -22,80 +22,104 @@ const ease = [0.22, 1, 0.36, 1] as const;
 const investmentStories = [
   {
     number: "01",
-    title: "Residential",
-    caption: "Private living assets shaped around scarcity, lifestyle and resale demand.",
-    image: "/visualization/gallery-exterior.webp"
+    title: "Land & Building Promoters",
+    caption: "Strategic land identification, feasibility and end-to-end promotion for premium developments.",
+    image: "/services/showcase-real-estate.webp"
   },
   {
     number: "02",
-    title: "Commercial",
-    caption: "Business environments positioned for visibility, access and durable income.",
-    image: "/visualization/gallery-lobby.webp"
+    title: "Villas",
+    caption: "Premium villa projects with modern architecture, private outdoor spaces and luxury finishes.",
+    image: "/visualization/gallery-exterior.webp"
   },
   {
     number: "03",
-    title: "Mixed Use",
-    caption: "Development formats where living, work and destination value reinforce each other.",
-    image: "/visualization/hero-studio.webp"
+    title: "Plots",
+    caption: "Prime plotted developments with clear titles and infrastructure-ready land for investment.",
+    image: "/visualization/gallery-exterior.webp"
   },
   {
     number: "04",
-    title: "Investment Assets",
-    caption: "Curated holdings reviewed through timing, value creation and ownership logic.",
+    title: "Residential Buildings",
+    caption: "Apartments and multi-story residences designed for comfort, community and long-term value.",
+    image: "/visualization/gallery-lobby.webp"
+  },
+  {
+    number: "05",
+    title: "Commercial Buildings",
+    caption: "Office complexes and retail buildings positioned for visibility, access and income.",
+    image: "/visualization/hero-studio.webp"
+  },
+  {
+    number: "06",
+    title: "Row Houses",
+    caption: "Contemporary row house developments with shared amenities and individual identity.",
+    image: "/visualization/gallery-exterior.webp"
+  },
+  {
+    number: "07",
+    title: "Gated Community",
+    caption: "Secure communities with clubhouse, landscaping and 24/7 premium amenities.",
+    image: "/visualization/gallery-lobby.webp"
+  },
+  {
+    number: "08",
+    title: "Govt Approved Lands & Plots",
+    caption: "DTCP and CMDA approved lands with clear documentation and ready-to-build status.",
     image: "/services/showcase-real-estate.webp"
   }
 ] as const;
 
 const featuredProperties = [
   {
-    title: "Aurelia Penthouse",
-    type: "Penthouse",
-    location: "Waterfront District",
-    price: "From INR 31.5 Cr",
-    image: "/visualization/gallery-lobby.webp"
-  },
-  {
-    title: "Maris Villa Estate",
+    title: "Luxury Villa Estate",
     type: "Villa",
-    location: "Private Coastal Enclave",
-    price: "From INR 43 Cr",
+    location: "Premium Residential Enclave",
+    price: "From INR 2.5 Cr",
     image: "/visualization/gallery-exterior.webp"
   },
   {
-    title: "Meridian Tower",
-    type: "Commercial Tower",
-    location: "Central Business Corridor",
-    price: "From INR 104 Cr",
-    image: "/visualization/presentation-standards.webp"
+    title: "Prime Development Plots",
+    type: "Plots",
+    location: "Growth Corridor",
+    price: "From INR 25 Lakhs",
+    image: "/visualization/gallery-exterior.webp"
   },
   {
-    title: "The Executive Floor",
-    type: "Premium Office",
-    location: "Financial District",
-    price: "From INR 7.6 Cr",
+    title: "Premium Apartments",
+    type: "Residential",
+    location: "City Centre",
+    price: "From INR 85 Lakhs",
+    image: "/visualization/gallery-lobby.webp"
+  },
+  {
+    title: "Gated Community Villas",
+    type: "Gated Community",
+    location: "Integrated Township",
+    price: "From INR 1.8 Cr",
     image: "/services/showcase-real-estate.webp"
   }
 ] as const;
 
 const portfolioShowcase = [
   {
-    title: "Waterfront Villa Estate",
-    caption: "Low-density ownership setting",
+    title: "Land & Building Promotion",
+    caption: "End-to-end project development and promotion",
     image: "/visualization/gallery-exterior.webp"
   },
   {
-    title: "Private Residence Interior",
-    caption: "Luxury living presentation",
+    title: "Luxury Villa Projects",
+    caption: "Premium villa estates with modern design",
     image: "/services/showcase-real-estate.webp"
   },
   {
-    title: "Premium Commercial Asset",
-    caption: "Executive frontage and income posture",
+    title: "Plotted Developments",
+    caption: "Prime plots with clear titles and infrastructure",
     image: "/visualization/presentation-standards.webp"
   },
   {
-    title: "Executive Presentation",
-    caption: "Investor-ready property narrative",
+    title: "Gated Communities",
+    caption: "Secure living with premium shared amenities",
     image: "/visualization/gallery-lobby.webp"
   }
 ] as const;
@@ -457,6 +481,7 @@ export function RealEstateServiceExperience() {
             >
               <ButtonLink href="/book-consultation">Book Consultation</ButtonLink>
               <ButtonLink href="/contact" variant="light">Contact Service Desk</ButtonLink>
+              <ButtonLink href="#" variant="light">For More Details, Check This</ButtonLink>
             </motion.div>
             <div data-reveal className="mt-12 hidden max-w-[34rem] grid-cols-3 border-y border-[#d8c59d]/62 py-5 md:grid">
               {["Wealth", "Ownership", "Value"].map((item) => (

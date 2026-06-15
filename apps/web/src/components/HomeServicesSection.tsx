@@ -34,21 +34,21 @@ const serviceDivisions: ServiceDivision[] = [
   },
   {
     title: "Construction",
-    statement: "Executing projects with precision and accountability.",
+    statement: "Civil, MEP, buildings, interiors, landscape and turnkey — all under one accountable system.",
     href: "/construction",
     image: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=2600&q=95",
     imageClassName: "object-[50%_44%]",
     code: "CON",
-    capabilities: ["Site Management", "Structural Delivery", "Quality Control", "Project Coordination"]
+    capabilities: ["Civil & MEP", "Building Construction", "Interiors & Finishing", "Turnkey Projects"]
   },
   {
     title: "Real Estate",
-    statement: "Creating assets with long-term value.",
+    statement: "Land, buildings and communities with lasting value.",
     href: "/real-estate",
     image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=2600&q=95",
     imageClassName: "object-[50%_50%]",
     code: "REA",
-    capabilities: ["Property Development", "Asset Strategy", "Investment Planning", "Market Opportunities"]
+    capabilities: ["Land & Building Promoters", "Villas & Plots", "Residential & Commercial", "Gated Communities"]
   },
   {
     title: "Import & Export",
@@ -61,12 +61,12 @@ const serviceDivisions: ServiceDivision[] = [
   },
   {
     title: "OTC Exchange",
-    statement: "Building opportunities through enterprise networks.",
+    statement: "Crypto currency, USDT exchange and KYC-verified OTC services.",
     href: "/otc-exchange",
     image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=2600&q=95",
     imageClassName: "object-[50%_48%]",
     code: "OTC",
-    capabilities: ["Private Markets", "Strategic Exchange", "Business Opportunities", "Enterprise Network"]
+    capabilities: ["Crypto Currency Exchange", "USDT Exchange", "FIU Registered Partnerships", "KYC Verification"]
   }
 ];
 

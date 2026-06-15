@@ -32,6 +32,11 @@ const navItems = [
     homeLink: "#works",
     pageLink: "/#works",
   },
+  {
+    name: "Services",
+    homeLink: "#services",
+    pageLink: "/construction-services",
+  },
 ];
 
 export default function ConstructionNavbar() {

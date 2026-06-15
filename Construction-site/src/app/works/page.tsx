@@ -25,7 +25,7 @@ export default async function WorksPage() {
               <p className="mb-4 inline-flex border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-red-800">
                 Ractysh project work
               </p>
-              <h1 className="text-5xl font-semibold leading-none text-slate-950 sm:text-7xl">
+              <h1 className="text-5xl font-bold leading-tight tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
                 Project Work
               </h1>
             </div>

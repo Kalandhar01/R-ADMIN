@@ -2,7 +2,6 @@
 
 import { useMemo, useRef } from "react";
 import DottedMap from "dotted-map";
-import { motion } from "motion/react";
 import Image from "next/image";
 
 interface MapProps {
@@ -58,6 +57,7 @@ export default function WorldMap({
         width="1056"
         unoptimized
         draggable={false}
+        loading="lazy"
       />
       <svg
         ref={svgRef}
@@ -70,22 +70,11 @@ export default function WorldMap({
 
           return (
             <g key={`path-group-${i}`}>
-              <motion.path
+              <path
                 d={createCurvedPath(startPoint, endPoint)}
                 fill="none"
                 stroke="url(#path-gradient)"
                 strokeWidth="1"
-                initial={{
-                  pathLength: 0,
-                }}
-                animate={{
-                  pathLength: 1,
-                }}
-                transition={{
-                  duration: 1,
-                  delay: 0.5 * i,
-                  ease: "easeOut",
-                }}
               />
             </g>
           );
@@ -102,70 +91,18 @@ export default function WorldMap({
 
         {dots.map((dot, i) => (
           <g key={`points-group-${i}`}>
-            <g key={`start-${i}`}>
-              <circle
-                cx={projectPoint(dot.start.lat, dot.start.lng).x}
-                cy={projectPoint(dot.start.lat, dot.start.lng).y}
-                r="2"
-                fill={lineColor}
-              />
-              <circle
-                cx={projectPoint(dot.start.lat, dot.start.lng).x}
-                cy={projectPoint(dot.start.lat, dot.start.lng).y}
-                r="2"
-                fill={lineColor}
-                opacity="0.5"
-              >
-                <animate
-                  attributeName="r"
-                  from="2"
-                  to="8"
-                  dur="1.5s"
-                  begin="0s"
-                  repeatCount="indefinite"
-                />
-                <animate
-                  attributeName="opacity"
-                  from="0.5"
-                  to="0"
-                  dur="1.5s"
-                  begin="0s"
-                  repeatCount="indefinite"
-                />
-              </circle>
-            </g>
-            <g key={`end-${i}`}>
-              <circle
-                cx={projectPoint(dot.end.lat, dot.end.lng).x}
-                cy={projectPoint(dot.end.lat, dot.end.lng).y}
-                r="2"
-                fill={lineColor}
-              />
-              <circle
-                cx={projectPoint(dot.end.lat, dot.end.lng).x}
-                cy={projectPoint(dot.end.lat, dot.end.lng).y}
-                r="2"
-                fill={lineColor}
-                opacity="0.5"
-              >
-                <animate
-                  attributeName="r"
-                  from="2"
-                  to="8"
-                  dur="1.5s"
-                  begin="0s"
-                  repeatCount="indefinite"
-                />
-                <animate
-                  attributeName="opacity"
-                  from="0.5"
-                  to="0"
-                  dur="1.5s"
-                  begin="0s"
-                  repeatCount="indefinite"
-                />
-              </circle>
-            </g>
+            <circle
+              cx={projectPoint(dot.start.lat, dot.start.lng).x}
+              cy={projectPoint(dot.start.lat, dot.start.lng).y}
+              r="2"
+              fill={lineColor}
+            />
+            <circle
+              cx={projectPoint(dot.end.lat, dot.end.lng).x}
+              cy={projectPoint(dot.end.lat, dot.end.lng).y}
+              r="2"
+              fill={lineColor}
+            />
           </g>
         ))}
       </svg>

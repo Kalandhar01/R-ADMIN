@@ -5,6 +5,13 @@ import type { ConsultationRequest, SiteContent } from "@/lib/types";
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 export const INTERNAL_API_URL = process.env.INTERNAL_API_URL || API_URL;
 
+function normalizeImageUrl(url: string | null | undefined): string {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("/")) return `${API_URL}${url}`;
+  return url;
+}
+
 export class ApiRequestError extends Error {
   constructor(
     message: string,
@@ -143,7 +150,9 @@ function normalizeSiteContent(payload: Partial<SiteContent> | null | undefined):
     projects: content.projects?.length ? content.projects : fallbackContent.projects,
     stats: content.stats?.length ? content.stats : fallbackContent.stats,
     testimonials: content.testimonials?.length ? content.testimonials : fallbackContent.testimonials,
-    blogs: content.blogs?.length ? content.blogs : [],
+    blogs: content.blogs?.length
+      ? content.blogs.map((b) => ({ ...b, image: normalizeImageUrl(b.image) }))
+      : [],
     founder: content.founder || fallbackContent.founder,
     directors: content.directors?.length ? content.directors : fallbackContent.directors,
     businessDivisions: mergeById(content.businessDivisions, fallbackContent.businessDivisions),
@@ -252,7 +261,14 @@ export async function getBlogIndex(params: { page?: number; limit?: number; sear
     });
 
     if (!response.ok) return null;
-    return (await response.json()) as BlogListPayload;
+    const data = (await response.json()) as BlogListPayload;
+    return {
+      ...data,
+      blogs: data.blogs.map((b) => ({ ...b, coverImage: normalizeImageUrl(b.coverImage) })),
+      featured: data.featured ? { ...data.featured, coverImage: normalizeImageUrl(data.featured.coverImage) } : null,
+      latest: data.latest.map((b) => ({ ...b, coverImage: normalizeImageUrl(b.coverImage) })),
+      recentInsights: (data.recentInsights || []).map((b) => ({ ...b, coverImage: normalizeImageUrl(b.coverImage) })),
+    };
   } catch {
     return null;
   }
@@ -267,7 +283,8 @@ export async function getBlogBySlug(slug: string, options: { trackView?: boolean
     });
 
     if (!response.ok) return null;
-    return (await response.json()) as BlogSummary;
+    const blog = (await response.json()) as BlogSummary;
+    return { ...blog, coverImage: normalizeImageUrl(blog.coverImage) };
   } catch {
     return null;
   }
@@ -282,7 +299,7 @@ export async function getLatestBlogs(limit = 6): Promise<BlogSummary[]> {
 
     if (!response.ok) return [];
     const payload = (await response.json()) as { blogs: BlogSummary[] };
-    return payload.blogs || [];
+    return (payload.blogs || []).map((b) => ({ ...b, coverImage: normalizeImageUrl(b.coverImage) }));
   } catch {
     return [];
   }

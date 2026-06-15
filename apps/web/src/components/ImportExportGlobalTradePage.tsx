@@ -784,6 +784,14 @@ function HeroSection() {
               <span className="relative z-10">Contact Service Desk</span>
               <ArrowRight className="relative z-10 h-4 w-4" strokeWidth={2.1} />
             </Link>
+            <Link
+              href="#"
+              target="_blank"
+              className="trade-button inline-flex min-h-12 items-center justify-center gap-3 rounded-[8px] border border-[#C9A45C]/58 bg-[#fffaf0] px-6 py-3 text-[0.78rem] font-bold uppercase tracking-[0] text-[#8B1118] shadow-[0_18px_46px_rgba(22,22,22,0.08)] backdrop-blur-xl transition duration-300 hover:border-[#8B1118]/45 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#c6a45b]"
+            >
+              <span className="relative z-10">For More Details, Check This</span>
+              <ArrowRight className="relative z-10 h-4 w-4" strokeWidth={2.1} />
+            </Link>
           </div>
 
           <div data-hero-reveal className="trade-hero-corridor mt-12 grid gap-3 border-y border-[#c6a45b]/22 py-4 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-[#8b1118] sm:grid-cols-3">
@@ -1097,6 +1105,14 @@ function ContactCtaSection() {
             className="trade-button inline-flex min-h-12 items-center justify-center gap-3 rounded-[8px] border border-[#C9A45C]/58 bg-[#fffaf0] px-6 py-3 text-[0.78rem] font-bold uppercase tracking-[0] text-[#17120f] shadow-[0_18px_46px_rgba(22,22,22,0.08)] transition duration-300 hover:border-[#8B1118]/45 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#c6a45b]"
           >
             <span className="relative z-10">Contact Service Desk</span>
+            <ArrowRight className="relative z-10 h-4 w-4" strokeWidth={2.1} />
+          </Link>
+          <Link
+            href="#"
+            target="_blank"
+            className="trade-button inline-flex min-h-12 items-center justify-center gap-3 rounded-[8px] border border-[#C9A45C]/58 bg-[#fffaf0] px-6 py-3 text-[0.78rem] font-bold uppercase tracking-[0] text-[#8B1118] shadow-[0_18px_46px_rgba(22,22,22,0.08)] transition duration-300 hover:border-[#8B1118]/45 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#c6a45b]"
+          >
+            <span className="relative z-10">For More Details, Check This</span>
             <ArrowRight className="relative z-10 h-4 w-4" strokeWidth={2.1} />
           </Link>
         </div>

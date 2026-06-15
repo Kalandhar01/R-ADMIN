@@ -46,7 +46,7 @@ const ecosystemLinks: DirectoryLink[] = [
   { label: "Construction", href: "/construction", description: "Construction execution, site control and turnkey delivery systems." },
   { label: "Real Estate", href: "/real-estate", description: "Asset positioning, development advisory and investor-ready property workflows." },
   { label: "Export & Import", href: "/import-export", description: "Enterprise trade coordination and supplier network systems." },
-  { label: "OTC Exchange", href: "/otc-exchange", description: "Private counterparty and OTC transaction coordination workflows." },
+  { label: "OTC Exchange", href: "/otc-exchange", description: "Crypto currency exchange, USDT services and KYC-verified OTC transactions." },
   { label: "Ractysh Design", href: "/ractysh-design", description: "The expanding design studio ecosystem." },
   { label: "Ractysh Construction", href: "/construction", description: "The construction and delivery operating layer." },
   { label: "Ractysh Import & Export", href: "/ractysh-import-export", description: "The expanding global trade operating layer." }

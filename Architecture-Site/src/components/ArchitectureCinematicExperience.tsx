@@ -4,9 +4,21 @@ import { FormEvent, MouseEvent, useCallback, useEffect, useRef, useState, type R
 import { AnimatePresence, motion, useInView, useReducedMotion, useScroll, useTransform, type HTMLMotionProps, type Variants } from "framer-motion";
 import Link from "next/link";
 import { ArrowUpRight, Check, ChevronLeft, ChevronRight, Loader2, Mail, X } from "lucide-react";
-import { editorialPanels, storyBlocks, studioMetrics } from "@/lib/architectureContent";
+import { editorialPanels } from "@/lib/architectureContent";
+import { cn } from "@/lib/utils";
 import type { ArchitectureHeroView, ArchitectureProjectView } from "@/lib/architectureCms";
 import { OptimizedImage as Image } from "@/components/OptimizedImage";
+import ArchitecturePremiumSections from "@/components/ArchitecturePremiumSections";
+import { ArchitectureTestimonials } from "@/components/ArchitectureTestimonials";
+import { ArchitectureStudioAccessWidget } from "@/components/ArchitectureStudioAccessWidget";
+import { ProjectTypeSelect } from "@/components/ProjectTypeSelect";
+import {
+  ctaSectionContent,
+  footerContent,
+  heroSupportingContent,
+  processContent,
+  statisticsContent
+} from "@/lib/architecturePremiumContent";
 
 const easeOut = [0.22, 1, 0.36, 1] as const;
 const power4Out = [0.16, 1, 0.3, 1] as const;
@@ -334,61 +346,20 @@ function BrandLogo() {
 }
 
 type DeskState = "idle" | "submitting" | "success" | "error";
-type NavSectionId = "studio" | "works" | "consultation";
+type NavSectionId = "works" | "consultation" | "";
 
 const navItems: { id: NavSectionId; label: string }[] = [
-  { id: "studio", label: "Studio" },
   { id: "works", label: "Works" },
   { id: "consultation", label: "Consultation" }
 ];
 
-const contactPillars = [
-  {
-    title: "Spatial Intelligence",
-    body: "Every project begins with a deep understanding of context, movement, proportion and experience.",
-    image: "/images/architecture/ractysh-coimbatore-linear-house.avif"
-  },
-  {
-    title: "Timeless Design",
-    body: "Architecture designed to remain relevant, functional and beautiful for years to come.",
-    image: "/images/architecture/ractysh-editorial-stone-residence.avif"
-  },
-  {
-    title: "End-to-End Coordination",
-    body: "From concept and visualization to execution guidance, every stage remains connected.",
-    image: "/images/architecture/ractysh-executive-work-pavilion.avif"
-  }
-] as const;
+const architectureFooterColumns = [footerContent.studio, footerContent.services, footerContent.locations, footerContent.contact] as const;
+const architectureFooterStatement = ["Built Beyond", "Blueprints.", "Designed to Endure."] as const;
 
-const architectureFooterColumns = [
-  {
-    title: "Studio",
-    items: [
-      { label: "Studio", href: "#studio" },
-      { label: "Works", href: "#works" },
-      { label: "Consultation", href: "#architecture-consultation-desk" }
-    ]
-  },
-  {
-    title: "Locations",
-    items: [
-      { label: "Coimbatore" },
-      { label: "Palani" },
-      { label: "Dindigul" }
-    ]
-  },
-  {
-    title: "Contact",
-    items: [
-      { label: "hello@ractysh.com", href: "mailto:hello@ractysh.com" },
-      { label: "Architecture Consultation", href: "#architecture-consultation-desk" },
-      { label: "Project Inquiries", href: "#architecture-consultation-desk" }
-    ]
-  }
-] as const;
-
-const architectureFooterStatement = ["Crafting", "Timeless", "Architecture."] as const;
-
+const consultationSectionId = "consultation";
+const consultationDeskId = "architecture-consultation-desk";
+const contactPageAliases = new Set(["/contact", "/contact-us", "/consultation", "/schedule", "/request-schedule"]);
+const contactHashAliases = new Set(["contact", "contact-us", "schedule", "request-schedule", "architecture-contact", "architecture-consultation"]);
 const navSectionIds = navItems.map((item) => item.id);
 const navScrollDuration = 1.35;
 const navScrollEase = (time: number) => (time < 0.5 ? 4 * time * time * time : 1 - Math.pow(-2 * time + 2, 3) / 2);
@@ -469,6 +440,27 @@ function useArchitectureGsap(rootRef: RefObject<HTMLElement | null>, reduceMotio
       gsap.registerPlugin(ScrollTrigger);
 
       context = gsap.context(() => {
+        gsap.utils.toArray<HTMLElement>("[data-metric-counter]", root).forEach((counter) => {
+          const finalValue = parseInt(counter.dataset.value || "0", 10);
+          if (isNaN(finalValue)) return;
+          
+          gsap.fromTo(
+            counter,
+            { innerHTML: "0" },
+            {
+              innerHTML: finalValue,
+              duration: 2.5,
+              ease: "power3.out",
+              snap: { innerHTML: 1 },
+              scrollTrigger: {
+                trigger: counter,
+                start: "top 85%",
+                once: true
+              }
+            }
+          );
+        });
+
         gsap.utils.toArray<HTMLElement>("[data-parallax-text]", root).forEach((item) => {
           gsap.to(item, {
             y: -34,
@@ -604,13 +596,41 @@ function navOffset() {
   return Math.round((nav?.getBoundingClientRect().height || 74) + 18);
 }
 
+function normalizePathname(pathname: string) {
+  const normalized = pathname.replace(/\/+$/, "");
+  return normalized || "/";
+}
+
+function targetIdFromHash(hash: string) {
+  const targetId = decodeURIComponent(hash.replace(/^#/, "")).trim();
+  if (!targetId) return null;
+
+  return contactHashAliases.has(targetId.toLowerCase()) ? consultationDeskId : targetId;
+}
+
 function navIdFromHash(hash: string) {
+  if (hash === consultationDeskId || contactHashAliases.has(hash.toLowerCase())) return consultationSectionId;
   return navSectionIds.includes(hash as NavSectionId) ? (hash as NavSectionId) : null;
 }
 
 function scrollTargetFromHref(href: string) {
-  if (!href.startsWith("#")) return null;
-  return href.slice(1);
+  const trimmedHref = href.trim();
+  if (!trimmedHref) return null;
+  if (trimmedHref.startsWith("#")) return targetIdFromHash(trimmedHref);
+
+  try {
+    const url = new URL(trimmedHref, window.location.href);
+    if (url.origin !== window.location.origin) return null;
+
+    if (url.hash) return targetIdFromHash(url.hash);
+
+    const targetPath = normalizePathname(url.pathname);
+    if (contactPageAliases.has(targetPath)) return consultationDeskId;
+  } catch {
+    return null;
+  }
+
+  return null;
 }
 
 async function premiumScrollTo(target: HTMLElement, onComplete: () => void) {
@@ -633,15 +653,22 @@ async function premiumScrollTo(target: HTMLElement, onComplete: () => void) {
       }
     });
   } catch {
-    if (!architectureLenis) return;
-    architectureLenis.scrollTo(top, {
-      duration: navScrollDuration,
-      easing: navScrollEase,
-      onComplete,
-      lock: true
-    });
+    if (architectureLenis) {
+      architectureLenis.scrollTo(top, {
+        duration: navScrollDuration,
+        easing: navScrollEase,
+        onComplete,
+        lock: true
+      });
+      return;
+    }
+
+    window.scrollTo({ top, behavior: "smooth" });
+    window.setTimeout(onComplete, navScrollDuration * 1000);
   }
 }
+
+type AnchorNavigateHandler = (event: MouseEvent<HTMLAnchorElement>, href: string) => void;
 
 function useMobileHeroFrame() {
   const [isMobile, setIsMobile] = useState(false);
@@ -676,14 +703,19 @@ function HeroFilm({
 }: {
   hero: ArchitectureHeroView;
   onContentReveal: () => void;
-  onAnchorNavigate: (event: MouseEvent<HTMLAnchorElement>, href: string) => void;
+  onAnchorNavigate: AnchorNavigateHandler;
 }) {
   const ref = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const revealTriggeredRef = useRef(false);
   const reduceMotion = useReducedMotion();
   const isMobileHero = useMobileHeroFrame();
-  const [contentRevealed, setContentRevealed] = useState(false);
+  const [contentRevealed, setContentRevealed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("arch-intro-revealed") === "true";
+    }
+    return false;
+  });
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const videoY = useTransform(scrollYProgress, [0, 1], reduceMotion || isMobileHero ? ["0%", "0%"] : ["0%", "14%"]);
   const contentY = useTransform(scrollYProgress, [0, 1], reduceMotion ? ["0%", "0%"] : ["0%", "-12%"]);
@@ -694,6 +726,7 @@ function HeroFilm({
     revealTriggeredRef.current = true;
     setContentRevealed(true);
     onContentReveal();
+    try { sessionStorage.setItem("arch-intro-revealed", "true"); } catch { /* noop */ }
   }, [onContentReveal]);
 
   const handleSkipIntro = useCallback(
@@ -782,18 +815,18 @@ function HeroFilm({
         animate={{ opacity: contentRevealed ? 0.48 : 0.24 }}
         transition={{ duration: 1.15, ease: power4Out }}
       />
-      <motion.a
-        href="#architecture-hero-content"
-        className="arch-skip-intro"
-        onClick={handleSkipIntro}
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: contentRevealed ? 0 : 0.6, y: contentRevealed ? -8 : 0 }}
-        transition={{ duration: 0.55, ease: power4Out, delay: contentRevealed ? 0 : 0.2 }}
-        style={{ pointerEvents: contentRevealed ? "none" : "auto" }}
-        tabIndex={contentRevealed ? -1 : 0}
-      >
-        Skip Intro →
-      </motion.a>
+      {!contentRevealed && (
+        <motion.a
+          href="#architecture-hero-content"
+          className="arch-skip-intro"
+          onClick={handleSkipIntro}
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 0.6, y: 0 }}
+          transition={{ duration: 0.55, ease: power4Out, delay: 0.2 }}
+        >
+          Skip Intro →
+        </motion.a>
+      )}
       <motion.div
         id="architecture-hero-content"
         className="arch-hero-content relative z-10 mx-auto flex min-h-[100svh] max-w-7xl flex-col items-center justify-center px-5 py-28 text-center sm:px-8 lg:px-12"
@@ -807,7 +840,7 @@ function HeroFilm({
           variants={heroLogoReveal}
         >
           <BrandLogo />
-          <span className="brand-word">Ractysh Architecture</span>
+          <span className="brand-word">{heroSupportingContent.eyebrow}</span>
         </motion.div>
         <MaskRevealH1
           className="arch-hero-title mt-8 font-display"
@@ -832,7 +865,7 @@ function HeroFilm({
           animate={contentRevealed ? "visible" : "hidden"}
           variants={heroDescriptionReveal}
         >
-          {hero.description}
+          {isMobileHero ? heroSupportingContent.mobileDescription : hero.description}
         </ArchitecturalText>
         <motion.div
           className="arch-hero-actions"
@@ -840,16 +873,49 @@ function HeroFilm({
           animate={contentRevealed ? "visible" : "hidden"}
           variants={heroActionsReveal}
         >
-          <a href={hero.primaryCtaHref} className="arch-hero-cta is-primary" onClick={(event) => onAnchorNavigate(event, hero.primaryCtaHref)}>
-            <span>{hero.primaryCtaText}</span>
-            <ArrowUpRight aria-hidden="true" />
-          </a>
-          <a href={hero.secondaryCtaHref} className="arch-hero-cta" onClick={(event) => onAnchorNavigate(event, hero.secondaryCtaHref)}>
-            <span>{hero.secondaryCtaText}</span>
-            <ArrowUpRight aria-hidden="true" />
-          </a>
+          {isMobileHero ? (
+            <a href="#works" className="arch-hero-cta is-primary" onClick={(event) => onAnchorNavigate(event, "#works")}>
+              <span>View Works</span>
+              <ArrowUpRight aria-hidden="true" />
+            </a>
+          ) : (
+            <>
+              <a href={hero.primaryCtaHref} className="arch-hero-cta is-primary" onClick={(event) => onAnchorNavigate(event, hero.primaryCtaHref)}>
+                <span>{hero.primaryCtaText}</span>
+                <ArrowUpRight aria-hidden="true" />
+              </a>
+              <a href={hero.secondaryCtaHref} className="arch-hero-cta" onClick={(event) => onAnchorNavigate(event, hero.secondaryCtaHref)}>
+                <span>{hero.secondaryCtaText}</span>
+                <ArrowUpRight aria-hidden="true" />
+              </a>
+            </>
+          )}
         </motion.div>
+        {!isMobileHero ? (
+          <motion.p
+            className="mt-6 max-w-2xl text-sm leading-7 text-white/68"
+            initial="hidden"
+            animate={contentRevealed ? "visible" : "hidden"}
+            variants={heroDescriptionReveal}
+          >
+            {heroSupportingContent.caption}
+          </motion.p>
+        ) : null}
       </motion.div>
+      {isMobileHero ? (
+        <motion.a
+          href={`#${consultationDeskId}`}
+          className="arch-hero-floating-cta"
+          onClick={(event) => onAnchorNavigate(event, `#${consultationDeskId}`)}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: contentRevealed ? 1 : 0, y: contentRevealed ? 0 : 16 }}
+          transition={{ duration: 0.6, ease: power4Out, delay: contentRevealed ? 0.65 : 0 }}
+          style={{ pointerEvents: contentRevealed ? "auto" : "none" }}
+        >
+          <span>Consultation</span>
+          <ArrowUpRight aria-hidden="true" />
+        </motion.a>
+      ) : null}
       <motion.div
         className="arch-scroll-line absolute bottom-8 left-1/2 z-10 h-16 w-px -translate-x-1/2 overflow-hidden"
         initial={{ opacity: 0 }}
@@ -862,102 +928,7 @@ function HeroFilm({
   );
 }
 
-function WhoWeAreSection() {
-  const ref = useRef<HTMLElement>(null);
-  const reduceMotion = useReducedMotion();
-  const [sectionEntered, setSectionEntered] = useState(false);
-  const sectionVisible = sectionEntered || reduceMotion === true;
 
-  useEffect(() => {
-    if (sectionEntered) return;
-
-    const target = ref.current;
-    if (!target) return;
-
-    let frame = 0;
-
-    const checkVisibility = () => {
-      frame = 0;
-      const rect = target.getBoundingClientRect();
-      const entersViewport = rect.top < window.innerHeight * 0.88 && rect.bottom > window.innerHeight * 0.08;
-
-      if (entersViewport) {
-        setSectionEntered(true);
-      }
-    };
-
-    const scheduleCheck = () => {
-      if (frame) return;
-      frame = window.requestAnimationFrame(checkVisibility);
-    };
-
-    checkVisibility();
-    window.addEventListener("scroll", scheduleCheck, { passive: true });
-    window.addEventListener("resize", scheduleCheck);
-
-    return () => {
-      if (frame) window.cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", scheduleCheck);
-      window.removeEventListener("resize", scheduleCheck);
-    };
-  }, [sectionEntered]);
-
-  return (
-    <section ref={ref} id="studio" className="arch-studio-section bg-white text-nearblack" data-arch-section>
-      <div className="arch-studio-spread mx-auto grid max-w-7xl gap-14 px-5 py-24 sm:px-8 sm:py-28 lg:grid-cols-[0.86fr_1.14fr] lg:px-12 lg:py-36">
-        <motion.div className="arch-sticky-copy lg:sticky lg:top-28 lg:h-fit" initial="hidden" animate={sectionVisible ? "visible" : "hidden"} variants={staggerReveal}>
-          <motion.p className="arch-kicker text-executive-red" variants={reveal}>
-            Studio
-          </motion.p>
-          <MaskRevealH2 className="arch-section-title mt-5 font-display" data-parallax-text>
-            A studio for spaces that feel inevitable.
-          </MaskRevealH2>
-          <motion.div className="arch-metrics mt-10" variants={staggerReveal}>
-            {studioMetrics.map(([value, label]) => (
-              <motion.div key={label} variants={reveal}>
-                <span>{value}</span>
-                <small>{label}</small>
-              </motion.div>
-            ))}
-          </motion.div>
-        </motion.div>
-
-        <motion.div className="arch-story-rows" initial="hidden" animate={sectionVisible ? "visible" : "hidden"} variants={delayedStaggerReveal}>
-          {storyBlocks.map((block, index) => {
-            const image = studioStoryImages[index];
-            const layoutClass = index === 0 ? "is-featured" : "is-image-left";
-
-            return (
-              <motion.article key={block.number} className={`arch-story-chapter ${layoutClass}`} variants={staggerReveal} data-studio-story>
-                <motion.div className="arch-story-media" variants={studioImageReveal} data-studio-story-media>
-                  <motion.div className="arch-story-media-plane" variants={studioImageScaleReveal} data-studio-story-image>
-                    <Image
-                      src={image.src}
-                      alt={image.alt}
-                      fill
-                      sizes={index === 0 ? "(min-width: 1024px) 58vw, 100vw" : "(min-width: 1024px) 32vw, 100vw"}
-                      className="object-cover"
-                    />
-                  </motion.div>
-                </motion.div>
-                <motion.div className="arch-story-content" variants={staggerReveal} data-studio-story-copy>
-                  <motion.span className="arch-story-number" variants={reveal}>
-                    {block.number}
-                  </motion.span>
-                  <motion.p className="arch-kicker text-warm-gold" variants={reveal}>
-                    {block.eyebrow}
-                  </motion.p>
-                  <MaskRevealH3 className="font-display">{block.title}</MaskRevealH3>
-                  <ArchitecturalText>{block.body}</ArchitecturalText>
-                </motion.div>
-              </motion.article>
-            );
-          })}
-        </motion.div>
-      </div>
-    </section>
-  );
-}
 
 function portfolioCardClass(project: ArchitectureProjectView, index: number) {
   if (index === 0) return "is-featured";
@@ -1348,7 +1319,7 @@ function ProjectDetailModal({
             <span>Start Similar Project</span>
             <h4 className="font-display">Schedule Consultation</h4>
             <p>Share the site, ambition and atmosphere you want the space to hold.</p>
-            <a href="#consultation" onClick={onConsultationClick}>
+            <a href={`#${consultationDeskId}`} onClick={onConsultationClick}>
               <span>Schedule Consultation</span>
               <ArrowUpRight aria-hidden="true" />
             </a>
@@ -1432,11 +1403,11 @@ function WorksSection({ projects }: { projects: ArchitectureProjectView[] }) {
     setSelectedProject(null);
 
     window.requestAnimationFrame(() => {
-      const target = document.getElementById("consultation");
+      const target = document.getElementById(consultationDeskId);
       if (!target) return;
 
       void premiumScrollTo(target, () => undefined);
-      window.history.replaceState(null, "", "#consultation");
+      window.history.replaceState(null, "", `#${consultationDeskId}`);
     });
   }, []);
 
@@ -1483,7 +1454,7 @@ function EditorialPositionSection() {
   const panelY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [38, -38]);
 
   return (
-    <section ref={ref} className="arch-editorial-position bg-warm-100 text-nearblack" data-arch-section>
+    <section ref={ref} id="editorial" className="arch-editorial-position bg-warm-100 text-nearblack" data-arch-section>
       <div className="mx-auto grid max-w-7xl gap-14 px-5 py-24 sm:px-8 sm:py-28 lg:grid-cols-[0.78fr_1.22fr] lg:px-12 lg:py-36">
         <motion.div className="lg:sticky lg:top-28 lg:h-fit" style={{ y: headingY }} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.32 }} variants={staggerReveal}>
           <motion.p className="arch-kicker text-executive-red" variants={reveal}>
@@ -1506,7 +1477,7 @@ function EditorialPositionSection() {
   );
 }
 
-function ContactSection() {
+function ContactSection({ onAnchorNavigate }: { onAnchorNavigate: AnchorNavigateHandler }) {
   const [state, setState] = useState<DeskState>("idle");
   const [message, setMessage] = useState("Every private brief is reviewed by the Ractysh architecture desk.");
   const reduceMotion = useReducedMotion();
@@ -1591,22 +1562,161 @@ function ContactSection() {
           </div>
           <h2 className="arch-contact-hero-title font-display" data-contact-reveal>
             <span>Begin Your</span>
-            <span>Architectural</span>
-            <span>Journey.</span>
+            <span>Next</span>
+            <span>Commission.</span>
           </h2>
           <p data-contact-reveal>
-            Private residences, contemporary spaces and architectural environments thoughtfully designed around your vision.
+            Whether private residence, commercial environment, interior transformation or brand-led space, the studio reviews every brief with discretion, technical clarity and senior design leadership from the first exchange.
           </p>
-          <a href="#architecture-consultation-desk" className="arch-contact-hero-cta" data-contact-reveal>
-            <span>Request Consultation</span>
+          <a
+            href={`#${consultationDeskId}`}
+            className="arch-contact-hero-cta"
+            data-contact-reveal
+            onClick={(event) => onAnchorNavigate(event, `#${consultationDeskId}`)}
+          >
+            <span>{ctaSectionContent.primary.label}</span>
             <ArrowUpRight aria-hidden="true" />
           </a>
         </motion.div>
         <div className="arch-contact-hero-meta" data-contact-reveal>
           <span>Architecture Desk</span>
-          <span>Kerala / Tamil Nadu / Private Commissions</span>
+          <span>India / International Commissions / Senior-Led Review</span>
         </div>
       </div>
+
+      <motion.div
+        className="arch-contact-trust-panel mx-auto max-w-[1400px] px-5 py-24 sm:px-8 sm:py-32 lg:px-12 lg:py-40"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.16 }}
+        variants={staggerReveal}
+      >
+        <div className="flex flex-col gap-16 lg:gap-24">
+          {/* Top: Editorial Headline */}
+          <motion.div variants={staggerReveal} className="max-w-4xl">
+            <div className="flex items-center gap-4">
+              <div className="h-px w-12 bg-executive-red" />
+              <motion.p className="text-[0.7rem] font-black uppercase tracking-[0.4em] text-executive-red" variants={reveal}>
+                {statisticsContent.kicker}
+              </motion.p>
+            </div>
+            <MaskRevealH2 className="mt-8 font-display text-[4rem] font-light leading-[0.88] tracking-tighter sm:text-[5.5rem] lg:text-[7rem]" data-parallax-text>
+              {statisticsContent.title.map((line, i) => (
+                <span key={i} className="block whitespace-nowrap">
+                  {i % 2 !== 0 ? <span className="italic text-executive-red/90">{line}</span> : line}
+                </span>
+              ))}
+            </MaskRevealH2>
+            <motion.p className="mt-10 max-w-xl text-lg leading-relaxed text-nearblack/60 sm:text-xl" variants={reveal}>
+              Built across residences, workplaces and specialist commissions, our portfolio is measured by long-term trust, technical precision and the consistency of delivery from brief to handover.
+            </motion.p>
+          </motion.div>
+
+          {/* Bottom: Compact Metrics Row */}
+          <motion.div 
+            className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:flex lg:flex-wrap lg:gap-6" 
+            variants={delayedStaggerReveal}
+          >
+            {statisticsContent.metrics.map((metric, idx) => (
+              <motion.article 
+                key={metric.label} 
+                className="group relative flex min-h-[180px] flex-1 flex-col justify-between overflow-hidden rounded-[1rem] border border-nearblack/5 bg-stone-50 p-6 transition-all duration-700 hover:border-executive-red/30 hover:bg-white lg:min-w-[200px] lg:p-7"
+                variants={reveal}
+                whileHover={{ y: -4 }}
+              >
+                {/* Background Blueprint Texture */}
+                <div className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-1000 group-hover:opacity-[0.03]">
+                  <svg width="100%" height="100%" className="text-nearblack">
+                    <pattern id={`metric-pattern-${idx}`} x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
+                      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="currentColor" strokeWidth="1" />
+                      <circle cx="30" cy="30" r="1.5" fill="currentColor" />
+                    </pattern>
+                    <rect width="100%" height="100%" fill={`url(#metric-pattern-${idx})`} />
+                  </svg>
+                </div>
+                
+                {/* Spotlight Gradient on Hover */}
+                <div className="absolute inset-0 z-0 bg-gradient-to-br from-executive-red/[0.03] to-transparent opacity-0 transition-opacity duration-700 group-hover:opacity-100" />
+
+                {/* Content */}
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                  <div>
+                    <div className="flex items-end gap-1 overflow-hidden">
+                      <span 
+                        className="font-display text-[3.5rem] font-light leading-[0.8] tracking-tighter text-nearblack transition-transform duration-700 group-hover:-translate-y-1 sm:text-[4rem]"
+                        data-metric-counter
+                        data-value={metric.value}
+                      >
+                        {metric.value}
+                      </span>
+                      <span className="font-display text-[2rem] font-light text-executive-red transition-transform duration-700 group-hover:-translate-y-2 sm:text-[2.5rem]">
+                        {metric.suffix}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4">
+                    <div className="mb-3 h-px w-6 bg-executive-red/30 transition-all duration-700 group-hover:w-12 group-hover:bg-executive-red" />
+                    <h3 className="font-display text-base font-medium tracking-tight text-nearblack sm:text-lg">
+                      {metric.label}
+                    </h3>
+                  </div>
+                </div>
+                
+                {/* Luxury Border Reveal */}
+                <div className="absolute inset-0 pointer-events-none rounded-[1rem]">
+                  <div className="absolute left-6 top-0 h-px w-0 bg-executive-red/40 transition-all duration-700 group-hover:w-[calc(100%-3rem)]" />
+                  <div className="absolute bottom-6 left-0 h-0 w-px bg-executive-red/40 transition-all duration-700 group-hover:h-[calc(100%-3rem)]" />
+                </div>
+              </motion.article>
+            ))}
+          </motion.div>
+        </div>
+      </motion.div>
+
+      <motion.div
+        className="mx-auto max-w-7xl px-5 py-24 sm:px-8 sm:py-28 lg:px-12 lg:py-36"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.16 }}
+        variants={staggerReveal}
+      >
+        <div className="arch-contact-process grid gap-14 lg:grid-cols-[0.72fr_1.28fr]">
+          <motion.div className="lg:sticky lg:top-28 lg:h-fit" variants={staggerReveal}>
+            <motion.p className="arch-kicker text-executive-red" variants={reveal}>
+              {processContent.kicker}
+            </motion.p>
+            <MaskRevealH2 className="arch-section-title mt-5 font-display" data-parallax-text>
+              {processContent.title}
+            </MaskRevealH2>
+            <motion.p className="mt-6 max-w-xl text-base leading-8 text-nearblack/66 sm:text-lg" variants={reveal}>
+              {processContent.body}
+            </motion.p>
+          </motion.div>
+
+          <motion.div className="arch-contact-process-list" variants={delayedStaggerReveal}>
+            <motion.span
+              className="arch-contact-process-line"
+              variants={{
+                hidden: { scaleY: 0, opacity: 0 },
+                visible: { scaleY: 1, opacity: 1, transition: { duration: 1, ease: power4Out } }
+              }}
+            />
+            {processContent.steps.map((step) => (
+              <motion.article key={step.number} variants={reveal}>
+                <span>{step.number}</span>
+                <div>
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-executive-red/90">{step.summary}</p>
+                  <h3 className="font-display">{step.name}</h3>
+                  <p>{step.body}</p>
+                </div>
+              </motion.article>
+            ))}
+          </motion.div>
+        </div>
+      </motion.div>
+
+      <FinalContactCTA onAnchorNavigate={onAnchorNavigate} />
 
       <div id="architecture-consultation-desk" className="arch-consultation-private-grid mx-auto grid max-w-7xl gap-12 px-5 py-24 sm:px-8 sm:py-28 lg:grid-cols-[0.95fr_1.05fr] lg:px-12 lg:py-36">
         <motion.div className="arch-consultation-editorial" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.16 }} variants={staggerReveal}>
@@ -1636,9 +1746,9 @@ function ContactSection() {
               <h3 className="font-display">
                 <span>Architecture</span>
                 <span>Begins With</span>
-                <span>Vision.</span>
+                <span>Clarity.</span>
               </h3>
-              <span>Share the site, intent, budget and atmosphere you want the space to hold. The architecture desk will review the brief privately.</span>
+              <span>Share the site, ambition, budget and the atmosphere you want the project to hold. The architecture desk will review the brief privately and respond with senior direction.</span>
             </motion.div>
             <motion.div className="arch-consultation-field-grid grid gap-4 md:grid-cols-2" variants={staggerReveal}>
               <motion.label variants={formFieldReveal}>
@@ -1653,18 +1763,10 @@ function ContactSection() {
                 <span>Phone</span>
                 <input name="phone" type="tel" autoComplete="tel" placeholder="+91 contact number" />
               </motion.label>
-              <motion.label variants={formFieldReveal}>
-                <span>Project Type</span>
-                <select name="projectType" defaultValue="Private residence">
-                  <option>Private residence</option>
-                  <option>Luxury villa</option>
-                  <option>Courtyard home</option>
-                  <option>Waterfront residence</option>
-                  <option>Commercial architecture</option>
-                  <option>Industrial design</option>
-                  <option>Architectural visualization</option>
-                </select>
-              </motion.label>
+              <motion.div className="arch-projecttype-field" variants={formFieldReveal}>
+                <span className="arch-projecttype-label">Project Type</span>
+                <ProjectTypeSelect name="projectType" defaultValue="Architectural Design" />
+              </motion.div>
               <motion.label variants={formFieldReveal}>
                 <span>Location</span>
                 <input name="location" placeholder="City / site region" />
@@ -1711,63 +1813,12 @@ function ContactSection() {
         </motion.div>
       </div>
 
-      <motion.div className="arch-contact-pillars arch-contact-editorial-pillars mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-24 lg:px-12" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.16 }} variants={staggerReveal}>
-        <motion.div className="arch-contact-section-head" variants={staggerReveal}>
-          <motion.p className="arch-kicker arch-consultation-label" variants={reveal}>
-            Why Work With Us
-          </motion.p>
-          <MaskRevealH2 className="arch-section-title arch-contact-editorial-title mt-5 font-display" data-parallax-text>
-            Three principles behind every commission.
-          </MaskRevealH2>
-        </motion.div>
-        <motion.div className="arch-contact-pillar-editorial-list" variants={delayedStaggerReveal}>
-          {contactPillars.map((pillar, index) => (
-            <ContactPillarBlock key={pillar.title} pillar={pillar} index={index} />
-          ))}
-        </motion.div>
-      </motion.div>
-
-      <FinalContactCTA />
-      <ArchitectureJournalFooter />
+      <ArchitectureJournalFooter onAnchorNavigate={onAnchorNavigate} />
     </section>
   );
 }
 
-function ContactPillarBlock({ pillar, index }: { pillar: (typeof contactPillars)[number]; index: number }) {
-  const ref = useRef<HTMLElement>(null);
-  const reduceMotion = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const imageY = useTransform(scrollYProgress, [0, 1], reduceMotion ? ["0%", "0%"] : ["-8%", "8%"]);
-  const copyY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [28, -28]);
-  const isReverse = index % 2 === 1;
-
-  return (
-    <motion.article
-      ref={ref}
-      className={`arch-contact-pillar-block ${isReverse ? "is-reverse" : ""}`}
-      variants={staggerReveal}
-    >
-      <motion.div className="arch-contact-pillar-media" variants={imageReveal}>
-        <motion.div className="arch-contact-pillar-image" style={{ y: imageY }} variants={imageScaleReveal}>
-          <Image
-            src={pillar.image}
-            alt={`${pillar.title} architectural atmosphere`}
-            fill
-            sizes="(min-width: 1024px) 42vw, 100vw"
-            className="object-cover"
-          />
-        </motion.div>
-      </motion.div>
-      <motion.div className="arch-contact-pillar-copy" style={{ y: copyY }} variants={staggerReveal}>
-        <motion.span variants={reveal}>{String(index + 1).padStart(2, "0")}</motion.span>
-        <MaskRevealH3 className="font-display">{pillar.title}</MaskRevealH3>
-        <ArchitecturalText variants={formFieldReveal}>{pillar.body}</ArchitecturalText>
-      </motion.div>
-    </motion.article>
-  );
-}
-
-function FinalContactCTA() {
+function FinalContactCTA({ onAnchorNavigate }: { onAnchorNavigate: AnchorNavigateHandler }) {
   return (
     <motion.div
       className="arch-contact-final-cta mx-auto max-w-7xl px-5 py-24 sm:px-8 sm:py-28 lg:px-12 lg:py-36"
@@ -1777,25 +1828,35 @@ function FinalContactCTA() {
       variants={staggerReveal}
     >
       <motion.p className="arch-kicker arch-consultation-label" variants={reveal}>
-        Begin The Conversation
+        {ctaSectionContent.kicker}
       </motion.p>
       <MaskRevealH2 className="arch-contact-final-title font-display" data-parallax-text>
-        <span className="arch-title-line">Let&apos;s Create</span>
-        <span className="arch-title-line">Something</span>
-        <span className="arch-title-line">Timeless.</span>
+        <span className="arch-title-line">The right project begins</span>
+        <span className="arch-title-line">with the right</span>
+        <span className="arch-title-line">conversation.</span>
       </MaskRevealH2>
       <ArchitecturalText className="arch-contact-final-copy" variants={formFieldReveal}>
-        Whether you&apos;re planning a private residence, a commercial environment or an architectural transformation, our team is ready to begin the conversation.
+        {ctaSectionContent.body}
       </ArchitecturalText>
-      <motion.a className="arch-contact-final-button" href="#architecture-consultation-desk" variants={formFieldReveal}>
-        <span>Schedule Consultation</span>
-        <ArrowUpRight aria-hidden="true" />
-      </motion.a>
+      <motion.div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row" variants={staggerReveal}>
+        <motion.a
+          className="arch-contact-final-button"
+          href={ctaSectionContent.primary.href}
+          variants={formFieldReveal}
+          onClick={(event) => onAnchorNavigate(event, ctaSectionContent.primary.href)}
+        >
+          <span>{ctaSectionContent.primary.label}</span>
+          <ArrowUpRight aria-hidden="true" />
+        </motion.a>
+      </motion.div>
+      <motion.p className="mt-5 text-[0.78rem] font-semibold uppercase tracking-[0.24em] text-nearblack/52" variants={formFieldReveal}>
+        {ctaSectionContent.reassurance}
+      </motion.p>
     </motion.div>
   );
 }
 
-function ArchitectureJournalFooter() {
+function ArchitectureJournalFooter({ onAnchorNavigate }: { onAnchorNavigate: AnchorNavigateHandler }) {
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterState, setNewsletterState] = useState<DeskState>("idle");
   const [newsletterMessage, setNewsletterMessage] = useState("");
@@ -1887,7 +1948,7 @@ function ArchitectureJournalFooter() {
             <BrandLogo />
             <span>
               <span aria-hidden="true">&#10022;</span>
-              Ractysh Architecture
+              {heroSupportingContent.eyebrow}
             </span>
           </motion.div>
           <motion.a
@@ -1898,10 +1959,14 @@ function ArchitectureJournalFooter() {
             variants={heroLogoReveal}
           >
             <span>Ractysh Group</span>
-            <small>Enterprise Ecosystem</small>
+            <small>{footerContent.legal.notes}</small>
             <ArrowUpRight aria-hidden="true" />
           </motion.a>
         </motion.div>
+
+        <motion.p className="max-w-3xl text-sm leading-8 text-white/66" variants={reveal}>
+          {footerContent.brandStatement}
+        </motion.p>
 
         <motion.h2 className="arch-journal-footer-statement font-display" variants={staggerReveal}>
           {architectureFooterStatement.map((line) => (
@@ -1988,7 +2053,13 @@ function ArchitectureJournalFooter() {
               <motion.div variants={delayedStaggerReveal}>
                 {column.items.map((item) =>
                   "href" in item && item.href ? (
-                    <motion.a key={item.label} className="arch-journal-footer-link" href={item.href} variants={formFieldReveal}>
+                    <motion.a
+                      key={item.label}
+                      className="arch-journal-footer-link"
+                      href={item.href}
+                      variants={formFieldReveal}
+                      onClick={(event) => onAnchorNavigate(event, item.href)}
+                    >
                       {item.label}
                     </motion.a>
                   ) : (
@@ -2003,11 +2074,11 @@ function ArchitectureJournalFooter() {
         </motion.div>
 
         <motion.div className="arch-journal-footer-strip" variants={reveal}>
-          <span>Ractysh Architecture</span>
+          <span>{heroSupportingContent.eyebrow}</span>
           <span>
-            Coimbatore <span aria-hidden="true">&bull;</span> Palani <span aria-hidden="true">&bull;</span> Dindigul
+            {footerContent.locations.items.map((item) => item.label).join(" • ")}
           </span>
-          <span>&copy; 2026</span>
+          <span>{footerContent.legal.copyright}</span>
         </motion.div>
       </div>
     </motion.footer>
@@ -2023,9 +2094,35 @@ export function ArchitectureCinematicExperience({
 }) {
   const rootRef = useRef<HTMLElement>(null);
   const reduceMotion = useReducedMotion();
-  const [heroContentRevealed, setHeroContentRevealed] = useState(false);
-  const [activeSection, setActiveSection] = useState<NavSectionId>("studio");
+  const [heroContentRevealed, setHeroContentRevealed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("arch-intro-revealed") === "true";
+    }
+    return false;
+  });
+  const [activeSection, setActiveSection] = useState<NavSectionId>("");
   const [navOverLight, setNavOverLight] = useState(false);
+  const [navHidden, setNavHidden] = useState(false);
+  const lastScrollYRef = useRef(0);
+
+  useEffect(() => {
+    document.documentElement.classList.add("arch-intro-lock");
+    architectureLenis?.stop?.();
+    return () => {
+      document.documentElement.classList.remove("arch-intro-lock");
+      architectureLenis?.start?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (heroContentRevealed) {
+      document.documentElement.classList.remove("arch-intro-lock");
+      architectureLenis?.start?.();
+    } else {
+      document.documentElement.classList.add("arch-intro-lock");
+      architectureLenis?.stop?.();
+    }
+  }, [heroContentRevealed]);
 
   useArchitectureGsap(rootRef, reduceMotion);
 
@@ -2042,15 +2139,25 @@ export function ArchitectureCinematicExperience({
 
     const updateActiveSection = () => {
       frame = 0;
+      const scrollY = Math.max(window.scrollY, 0);
+      const scrollDelta = scrollY - lastScrollYRef.current;
       const offset = navOffset() + 120;
       const current = navSectionIds.reduce<NavSectionId>((active, id) => {
         const section = document.getElementById(id);
         if (!section) return active;
-        return section.offsetTop - offset <= window.scrollY ? id : active;
-      }, "studio");
+        return section.offsetTop - offset <= scrollY ? id : active;
+      }, "");
 
       setActiveSection(current);
-      setNavOverLight(window.scrollY > window.innerHeight * 0.72);
+      setNavOverLight(scrollY > window.innerHeight * 0.72);
+
+      if (scrollY < 32) {
+        setNavHidden(false);
+      } else if (Math.abs(scrollDelta) > 8) {
+        setNavHidden(scrollDelta > 0 && scrollY > 120);
+      }
+
+      lastScrollYRef.current = scrollY;
     };
 
     const scheduleUpdate = () => {
@@ -2079,6 +2186,7 @@ export function ArchitectureCinematicExperience({
     event.preventDefault();
     const navId = navIdFromHash(targetId);
     if (navId) setActiveSection(navId);
+    setNavHidden(false);
     void premiumScrollTo(target, () => {
       if (navId) setActiveSection(navId);
     });
@@ -2087,7 +2195,11 @@ export function ArchitectureCinematicExperience({
 
   const handleHeroContentReveal = useCallback(() => {
     setHeroContentRevealed(true);
+    setNavHidden(false);
+    try { sessionStorage.setItem("arch-intro-revealed", "true"); } catch { /* noop */ }
   }, []);
+
+  const navVisible = heroContentRevealed && !navHidden;
 
   return (
     <main ref={rootRef} className="architecture-site bg-white text-nearblack" data-arch-root>
@@ -2095,10 +2207,10 @@ export function ArchitectureCinematicExperience({
 
       <motion.header
         className={`architecture-nav fixed left-0 right-0 top-0 z-40 ${navOverLight ? "is-over-light" : ""}`}
-        initial={{ opacity: 0, y: -16 }}
-        animate={{ opacity: heroContentRevealed ? 1 : 0, y: heroContentRevealed ? 0 : -16 }}
-        transition={{ duration: 0.8, ease: power4Out, delay: heroContentRevealed ? 0.12 : 0 }}
-        style={{ pointerEvents: heroContentRevealed ? "auto" : "none" }}
+        initial={{ opacity: 0, y: -24 }}
+        animate={{ opacity: navVisible ? 1 : 0, y: navVisible ? 0 : -88 }}
+        transition={{ duration: navVisible ? 0.56 : 0.42, ease: power4Out, delay: heroContentRevealed && !navHidden ? 0.12 : 0 }}
+        style={{ pointerEvents: navVisible ? "auto" : "none" }}
       >
         <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8 lg:px-12" aria-label="Architecture navigation">
           <Link href="/" className="nav-mark" aria-label="Ractysh Architecture home">
@@ -2106,6 +2218,13 @@ export function ArchitectureCinematicExperience({
             <small>Ractysh Architecture</small>
           </Link>
           <div className="architecture-nav-links">
+            <a
+              href="#services"
+              className="architecture-nav-link"
+              onClick={(event) => handleAnchorNavigate(event, "#services")}
+            >
+              Services
+            </a>
             {navItems.map((item) => (
               <a
                 key={item.id}
@@ -2122,10 +2241,13 @@ export function ArchitectureCinematicExperience({
       </motion.header>
 
       <HeroFilm hero={hero} onContentReveal={handleHeroContentReveal} onAnchorNavigate={handleAnchorNavigate} />
-      <WhoWeAreSection />
+      <ArchitecturePremiumSections onAnchorNavigate={handleAnchorNavigate} />
       <WorksSection projects={projects} />
+      <ArchitectureTestimonials />
       <EditorialPositionSection />
-      <ContactSection />
+      <ContactSection onAnchorNavigate={handleAnchorNavigate} />
+
+      <ArchitectureStudioAccessWidget />
     </main>
   );
 }
