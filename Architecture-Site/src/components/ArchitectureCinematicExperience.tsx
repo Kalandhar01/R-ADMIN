@@ -685,14 +685,6 @@ function useMobileHeroFrame() {
 }
 
 function heroVideoSources(videoUrl: string) {
-  if (videoUrl === "/videos/architecture/ractysh-architecture-hero.mp4" || videoUrl === "/landingpage_bg-video.mp4") {
-    return [
-      { src: "/videos/architecture/ractysh-architecture-hero-mobile.mp4", type: "video/mp4", media: "(max-width: 720px)" },
-      { src: "/videos/architecture/ractysh-architecture-hero-tablet.mp4", type: "video/mp4", media: "(max-width: 1023px)" },
-      { src: "/videos/architecture/ractysh-architecture-hero.mp4", type: "video/mp4" }
-    ];
-  }
-
   return [{ src: videoUrl, type: videoUrl.endsWith(".webm") ? "video/webm" : "video/mp4" }];
 }
 
