@@ -684,7 +684,7 @@ function useMobileHeroFrame() {
   return isMobile;
 }
 
-function heroVideoSources(videoUrl: string) {
+function heroVideoSources(videoUrl: string): { src: string; type: string; media?: string }[] {
   return [{ src: videoUrl, type: videoUrl.endsWith(".webm") ? "video/webm" : "video/mp4" }];
 }
 
@@ -797,8 +797,8 @@ function HeroFilm({
         }}
         style={{ y: videoY }}
       >
-        {sources.map((source) => (
-          <source key={source.src} src={source.src} type={source.type} media={"media" in source ? source.media : undefined} />
+        {sources.map((source: { src: string; type: string; media?: string }) => (
+          <source key={source.src} src={source.src} type={source.type} media={source.media} />
         ))}
       </motion.video>
       <motion.div
