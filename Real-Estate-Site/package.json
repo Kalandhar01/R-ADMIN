@@ -3,15 +3,21 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "prisma:generate": "node scripts/generate-prisma-client.mjs",
+    "predev": "npm run prisma:generate",
     "dev": "next dev",
+    "prebuild": "npm run prisma:generate",
     "build": "next build",
     "start": "next start",
+    "pretypecheck": "npm run prisma:generate",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^6.19.3",
     "@prisma/client": "^6.19.3",
     "@react-map/india": "^1.0.21",
-    "@ractysh/db": "*",
+    "clsx": "^2.1.1",
+    "dotenv": "^16.6.1",
     "framer-motion": "^12.0.1",
     "gsap": "^3.15.0",
     "face-api.js": "^0.22.2",
@@ -22,7 +28,8 @@
     "react": "^19.0.0",
     "three": "^0.167.1",
     "react-dom": "^19.0.0",
-    "resend": "^6.12.3"
+    "resend": "^6.12.3",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",

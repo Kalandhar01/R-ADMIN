@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
-import { ensureRealEstateDefaults, prisma, realEstatePropertySeeds } from "@ractysh/db";
+import { prisma } from "@/lib/prisma";
+import { ensureRealEstateDefaults, realEstatePropertySeeds } from "@/lib/real-estate-defaults";
 
 const publicStatuses = ["available", "private_review", "reserved", "sold"] as const;
 

@@ -1,5 +1,5 @@
 import { after, NextResponse, type NextRequest } from "next/server";
-import { prisma } from "@ractysh/db";
+import { prisma } from "@/lib/prisma";
 import { sendConsultationEmails } from "@/lib/consultation-email";
 
 export const runtime = "nodejs";

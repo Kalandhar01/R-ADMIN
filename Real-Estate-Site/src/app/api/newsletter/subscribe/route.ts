@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { Prisma, type NewsletterSubscriber } from "@ractysh/db";
-import { prisma } from "@ractysh/db";
+import { Prisma, type NewsletterSubscriber } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
