@@ -9,8 +9,8 @@ import type { AdminSessionUser } from "@ractysh/types/admin";
 
 export const ADMIN_SESSION_COOKIE = SHARED_ADMIN_SESSION_COOKIE;
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
-const DEVELOPMENT_ADMIN_EMAIL = "admin@ractysh.com";
-const DEVELOPMENT_ADMIN_PASSWORD = "admin@123";
+const DEVELOPMENT_ADMIN_EMAIL = process.env.NODE_ENV === "development" ? "fawas" : undefined;
+const DEVELOPMENT_ADMIN_PASSWORD = process.env.NODE_ENV === "development" ? "admin123" : undefined;
 
 type AdminWithRoles = {
   id: string;
@@ -36,7 +36,7 @@ type SessionPayload = {
 export function adminSessionCookieOptions() {
   return {
     httpOnly: true,
-    sameSite: "lax" as const,
+    sameSite: "strict" as const,
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: SESSION_TTL_SECONDS
@@ -44,12 +44,9 @@ export function adminSessionCookieOptions() {
 }
 
 function sessionSecret(): string {
-  return (
-    process.env.ADMIN_SESSION_SECRET ||
-    process.env.AUTH_SECRET ||
-    process.env.NEXTAUTH_SECRET ||
-    "ractysh-development-admin-session-secret"
-  );
+  const secret = process.env.ADMIN_SESSION_SECRET || process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new Error("ADMIN_SESSION_SECRET environment variable is not set");
+  return secret;
 }
 
 function encodeBase64Url(value: string): string {
@@ -172,6 +169,7 @@ async function ensureEnterpriseOwnerRole() {
 }
 
 async function bootstrapDevelopmentAdmin(email: string, password: string): Promise<AdminWithRoles | null> {
+  if (process.env.NODE_ENV !== "development") return null;
   if (email !== DEVELOPMENT_ADMIN_EMAIL || password !== DEVELOPMENT_ADMIN_PASSWORD) return null;
 
   const role = await ensureEnterpriseOwnerRole();
@@ -229,7 +227,7 @@ export async function signInWithCredentials(input: {
 
   const validPassword =
     Boolean(admin?.passwordHash && verifyPassword(password, admin.passwordHash)) ||
-    (email === DEVELOPMENT_ADMIN_EMAIL && password === DEVELOPMENT_ADMIN_PASSWORD);
+    (process.env.NODE_ENV === "development" && email === DEVELOPMENT_ADMIN_EMAIL && password === DEVELOPMENT_ADMIN_PASSWORD);
 
   if (!admin?.active || !validPassword) return null;
 

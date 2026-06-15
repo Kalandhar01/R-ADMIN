@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Building2, DraftingCompass, Factory, Globe2, HardHat, Landmark, ShieldCheck } from "lucide-react";
@@ -16,6 +17,13 @@ const projectIcons: Partial<Record<ProjectKey, LucideIcon>> = {
   "import-export": Globe2,
   "otc-exchange": ShieldCheck
 };
+
+function adminGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
+}
 
 export function FounderWelcomeScreen() {
   return (
@@ -57,7 +65,7 @@ export function FounderWelcomeScreen() {
           className="mt-8 max-w-4xl"
         >
           <h1 className="font-display text-5xl font-semibold leading-[0.95] tracking-tight text-[#F5F5F5] sm:text-7xl">
-            Good Morning, Fawaz.
+            {adminGreeting()}.
           </h1>
           <p className="mx-auto mt-5 max-w-3xl text-xl font-medium leading-8 text-[#F5F5F5]/90 sm:text-2xl">
             Welcome to the Ractysh Enterprise Command Network.

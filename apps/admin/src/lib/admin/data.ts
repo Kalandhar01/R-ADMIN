@@ -776,7 +776,13 @@ function buildBusinessState(
   return { projectOptions, businesses, domainMappingRows };
 }
 
-export async function getAdminCommandCenterData(admin: AdminSessionUser): Promise<AdminCommandCenterData> {
+export async function getAdminCommandCenterData(
+  admin: AdminSessionUser,
+  division?: string
+): Promise<AdminCommandCenterData> {
+  const isFiltered = division && division !== groupProjectKey && division !== "all";
+  const dw = isFiltered ? { division } : {};
+
   await ensureEnterpriseAdminStorage();
 
   const [
@@ -809,26 +815,26 @@ export async function getAdminCommandCenterData(admin: AdminSessionUser): Promis
     domainMappings,
     pendingComments
   ] = await Promise.all([
-    prisma.contactInquiry.count(),
-    prisma.consultation.count(),
-    prisma.careerApplication.count(),
-    prisma.blog.count(),
-    prisma.blog.count({ where: { status: "published" } }),
-    prisma.serviceOffer.count({ where: { status: "published" } }),
-    prisma.contactInquiry.groupBy({ by: ["status"], _count: { _all: true } }),
-    prisma.consultation.groupBy({ by: ["status"], _count: { _all: true } }),
-    prisma.careerApplication.groupBy({ by: ["status"], _count: { _all: true } }),
-    prisma.blog.findMany({ orderBy: { updatedAt: "desc" }, take: 80 }),
-    prisma.newsletter.findMany({ orderBy: { updatedAt: "desc" }, take: 80 }),
-    prisma.newsletterSubscriber.findMany({ orderBy: { createdAt: "desc" }, take: 500 }),
-    prisma.subscriber.findMany({ orderBy: { createdAt: "desc" }, take: 500 }),
-    prisma.contactInquiry.findMany({ orderBy: { createdAt: "desc" }, take: 80 }),
-    prisma.consultation.findMany({ orderBy: { createdAt: "desc" }, take: 80 }),
-    prisma.careerApplication.findMany({ orderBy: { createdAt: "desc" }, take: 80 }),
-    prisma.serviceOffer.findMany({ include: { company: { select: { name: true } } }, orderBy: [{ position: "asc" }, { updatedAt: "desc" }] }),
-    prisma.mediaAsset.findMany({ orderBy: { updatedAt: "desc" }, take: 120 }),
-    prisma.careerJob.findMany({ orderBy: { updatedAt: "desc" }, take: 100 }),
-    prisma.settings.findMany({ orderBy: { key: "asc" } }),
+    prisma.contactInquiry.count({ where: dw }),
+    prisma.consultation.count({ where: dw }),
+    prisma.careerApplication.count({ where: dw }),
+    prisma.blog.count({ where: { ...dw } }),
+    prisma.blog.count({ where: { ...dw, status: "published" } }),
+    prisma.serviceOffer.count({ where: { ...dw, status: "published" } }),
+    prisma.contactInquiry.groupBy({ by: ["status"], where: dw, _count: { _all: true } }),
+    prisma.consultation.groupBy({ by: ["status"], where: dw, _count: { _all: true } }),
+    prisma.careerApplication.groupBy({ by: ["status"], where: dw, _count: { _all: true } }),
+    prisma.blog.findMany({ where: { ...dw }, orderBy: { updatedAt: "desc" }, take: 80 }),
+    prisma.newsletter.findMany({ where: { ...dw }, orderBy: { updatedAt: "desc" }, take: 80 }),
+    prisma.newsletterSubscriber.findMany({ where: { ...dw }, orderBy: { createdAt: "desc" }, take: 500 }),
+    prisma.subscriber.findMany({ where: { ...dw }, orderBy: { createdAt: "desc" }, take: 500 }),
+    prisma.contactInquiry.findMany({ where: { ...dw }, orderBy: { createdAt: "desc" }, take: 80 }),
+    prisma.consultation.findMany({ where: { ...dw }, orderBy: { createdAt: "desc" }, take: 80 }),
+    prisma.careerApplication.findMany({ where: { ...dw }, orderBy: { createdAt: "desc" }, take: 80 }),
+    prisma.serviceOffer.findMany({ where: { ...dw }, include: { company: { select: { name: true } } }, orderBy: [{ position: "asc" }, { updatedAt: "desc" }] }),
+    prisma.mediaAsset.findMany({ where: { ...dw }, orderBy: { updatedAt: "desc" }, take: 120 }),
+    prisma.careerJob.findMany({ where: { ...dw }, orderBy: { updatedAt: "desc" }, take: 100 }),
+    prisma.settings.findMany({ where: { ...dw }, orderBy: { key: "asc" } }),
     prisma.auditLog.findMany({
       include: { admin: { select: { email: true, name: true } } },
       orderBy: { createdAt: "desc" },
@@ -851,14 +857,15 @@ export async function getAdminCommandCenterData(admin: AdminSessionUser): Promis
       }
     }),
     prisma.project.findMany({
+      where: { ...dw },
       include: { company: { select: { name: true } } },
       orderBy: { updatedAt: "desc" },
       take: 120
     }),
-    prisma.ingestedProject.findMany({ orderBy: [{ updatedAt: "desc" }], take: 120 }),
-    prisma.ingestedDocument.findMany({ orderBy: { uploadDate: "desc" }, take: 120 }),
-    prisma.ingestionEvent.findMany({ orderBy: { createdAt: "desc" }, take: 120 }),
-    prisma.domainMapping.findMany({ orderBy: [{ primary: "desc" }, { domain: "asc" }] }),
+    prisma.ingestedProject.findMany({ where: { ...dw }, orderBy: [{ updatedAt: "desc" }], take: 120 }),
+    prisma.ingestedDocument.findMany({ where: { ...dw }, orderBy: { uploadDate: "desc" }, take: 120 }),
+    prisma.ingestionEvent.findMany({ where: { ...dw }, orderBy: { createdAt: "desc" }, take: 120 }),
+    prisma.domainMapping.findMany({ where: { ...dw }, orderBy: [{ primary: "desc" }, { domain: "asc" }] }),
     prisma.blogComment.findMany({
       where: { status: "pending" },
       include: { blog: { select: { title: true, category: true, division: true } } },
@@ -901,7 +908,7 @@ export async function getAdminCommandCenterData(admin: AdminSessionUser): Promis
   });
 
   const notificationRecords = await prisma.notification.findMany({
-    where: { adminId: admin.id },
+    where: { adminId: admin.id, ...dw },
     orderBy: { createdAt: "desc" },
     take: 160
   });

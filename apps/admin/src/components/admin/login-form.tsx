@@ -40,9 +40,9 @@ export function AdminLoginForm() {
         Email
         <input
           name="email"
-          type="email"
-          autoComplete="email"
-          defaultValue="admin@ractysh.com"
+          type="text"
+          autoComplete="username"
+          placeholder="fawas"
           className="h-11 rounded-[8px] border border-[#232323] bg-[#080808] px-3 text-sm text-[#F5F5F5] outline-none transition focus:border-[#8F1118]"
           required
         />
@@ -53,7 +53,7 @@ export function AdminLoginForm() {
           name="password"
           type="password"
           autoComplete="current-password"
-          defaultValue="admin@123"
+          placeholder="Enter password"
           className="h-11 rounded-[8px] border border-[#232323] bg-[#080808] px-3 text-sm text-[#F5F5F5] outline-none transition focus:border-[#8F1118]"
           required
         />

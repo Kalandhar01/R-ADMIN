@@ -22,7 +22,7 @@ export const adminProjectRoutes: AdminProjectRoute[] = [
     href: "/ractysh-group/dashboard",
     keywords: ["ractysh", "group", "enterprise", "ecosystem", "holding"]
   },
-{
+  {
     key: "architecture",
     slug: "architecture",
     label: "Architecture",
@@ -50,15 +50,6 @@ export const adminProjectRoutes: AdminProjectRoute[] = [
     keywords: ["real estate", "real-estate", "property", "development", "residential", "commercial"]
   },
   {
-    key: "import-export",
-    slug: "import-export",
-    label: "Import & Export",
-    title: "Import & Export Command Center",
-    description: "Trade coordination, documentation, media and market activity.",
-    href: "/import-export/dashboard",
-    keywords: ["import", "export", "trade", "logistics", "sourcing"]
-  },
-  {
     key: "otc-exchange",
     slug: "otc",
     label: "OTC Exchange",
@@ -66,12 +57,37 @@ export const adminProjectRoutes: AdminProjectRoute[] = [
     description: "Private transaction readiness, counterparty flow and exchange governance.",
     href: "/otc/dashboard",
     keywords: ["otc", "exchange", "crypto", "private desk", "liquidity"]
+  },
+  {
+    key: "import-export",
+    slug: "import-export",
+    label: "Import & Export",
+    title: "Import & Export Command Center",
+    description: "Trade coordination, documentation, media and market activity.",
+    href: "/import-export/dashboard",
+    keywords: ["import", "export", "trade", "logistics", "sourcing"]
   }
 ];
 
-export function adminProjectRouteByKey(project: ProjectKey): AdminProjectRoute | undefined {
-  return adminProjectRoutes.find((route) => route.key === project);
-}
+export type ProjectSwitcherItem = {
+  key: string;
+  slug: string;
+  label: string;
+  description: string;
+  href: string;
+  icon: string;
+  status: "active" | "maintenance" | "inactive";
+  favorite?: boolean;
+};
+
+export const projectSwitcherItems: ProjectSwitcherItem[] = [
+  { key: "ractysh-group", slug: "ractysh-group", label: "Ractysh Group", description: "Enterprise overview across all divisions", href: "/ractysh-group/dashboard", icon: "Landmark", status: "active" },
+  { key: "architecture", slug: "architecture", label: "Architecture", description: "Design operations and studio pipeline", href: "/architecture/dashboard", icon: "DraftingCompass", status: "active" },
+  { key: "construction", slug: "construction", label: "Construction", description: "Construction delivery and project execution", href: "/construction/dashboard", icon: "HardHat", status: "active" },
+  { key: "real-estate", slug: "real-estate", label: "Real Estate", description: "Asset and property intelligence", href: "/real-estate/dashboard", icon: "Building2", status: "active" },
+  { key: "otc-exchange", slug: "otc", label: "OTC Exchange", description: "Private transaction and exchange governance", href: "/otc/dashboard", icon: "ShieldCheck", status: "active" },
+  { key: "import-export", slug: "import-export", label: "Import & Export", description: "Trade coordination and logistics", href: "/import-export/dashboard", icon: "Globe2", status: "active" },
+];
 
 export function adminProjectRouteBySlug(slug: string): AdminProjectRoute | undefined {
   return adminProjectRoutes.find((route) => route.slug === slug);

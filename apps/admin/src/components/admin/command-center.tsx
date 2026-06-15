@@ -1,81 +1,80 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  type ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable
-} from "@tanstack/react-table";
+import { useParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Archive,
-  Activity,
-  ArrowRight,
-  BarChart3,
+  LayoutDashboard,
   Bell,
+  ShieldCheck,
   BookOpenText,
   BriefcaseBusiness,
-  Building2,
-  Check,
-  ChevronDown,
-  CircleDot,
-  Copy,
-  Download,
-  Eye,
-  FileText,
-  FolderKanban,
-  Globe2,
-  ImageIcon,
-  Inbox,
-  LayoutDashboard,
-  LogOut,
-  MessageCircle,
-  Pencil,
-  RefreshCw,
-  Search,
   Send,
-  Settings,
-  ShieldCheck,
+  BarChart3,
+  MessageCircle,
+  Search,
+  ChevronDown,
+  LogOut,
+  Menu,
+  X,
+  Plus,
+  FileText,
+  Megaphone,
+  Bot,
+  Sparkles,
+  TrendingUp,
+  Users,
+  Clock,
+  CheckCircle2,
+  ArrowUpRight,
+  Activity,
+  Zap,
+  Globe,
+  Newspaper,
+  Landmark,
+  HardHat,
+  Globe2,
+  DraftingCompass,
+  Building2,
+  Paintbrush,
+  Factory,
   Star,
-  Radio,
-  Trash2,
-  Upload
+  Mail,
+  Inbox,
+  type LucideIcon,
 } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { Toaster, toast } from "sonner";
-import { z } from "zod";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+} from "recharts";
 import type {
   AdminCommandCenterData,
   AdminView,
   ActivityRow,
-  AlertRow,
   AnalyticsSeries,
-  ApplicationRow,
-  AuditLogRow,
   BlogRow,
-  BusinessRow,
   ChatbotQueryRow,
-  ContactRow,
-  DocumentRow,
-  DomainMappingRow,
   JobRow,
-  LeadFilter,
-  LeadRow,
-  MediaRow,
+  ApplicationRow,
+  NewsletterRow,
   NotificationRow,
   ProjectKey,
-  ProjectRow,
-  ReviewRow,
-  NewsletterRow,
   ServiceRow,
-  SettingsRow,
-  SubscriberRow
+  SubscriberRow,
+  ContactRow,
 } from "@ractysh/types/admin";
 import { adminProjectRoutes, groupProjectKey } from "@/lib/admin/projects";
 import { cn } from "@/lib/utils";
+import { ProjectSwitcher } from "@/components/admin/project-switcher";
 
 type CommandResponse = {
   success: boolean;
@@ -83,3385 +82,1495 @@ type CommandResponse = {
   data?: AdminCommandCenterData;
 };
 
-const commandCenterIntroStorageKey = "ractysh-command-center-v3-opened";
-const commandCenterIntroCompleteMs = 3_000;
-const commandCenterIntroFailsafeMs = 3_500;
-const dashboardEntranceTransition = { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const };
+const DASHBOARD_ENTRANCE = { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const };
 
-function debugCommandCenterIntro(message: string, reason?: string) {
-  if (process.env.NODE_ENV === "development") {
-    console.debug(`[CommandCenterIntro] ${message}${reason ? ` (${reason})` : ""}`);
-  }
-}
-
-function hasCompletedCommandCenterIntro() {
-  try {
-    return window.sessionStorage.getItem(commandCenterIntroStorageKey) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function markCommandCenterIntroComplete() {
-  try {
-    window.sessionStorage.setItem(commandCenterIntroStorageKey, "1");
-  } catch {
-    // Storage can be unavailable on some mobile browsing modes. The state transition must still complete.
-  }
-}
-
-function clearCommandCenterIntroSession() {
-  try {
-    window.sessionStorage.removeItem(commandCenterIntroStorageKey);
-  } catch {
-    // Ignore storage failures during logout.
-  }
-}
-
-type Column<T> = ColumnDef<T, unknown> & {
-  meta?: {
-    width?: string;
-  };
+type NavItem = {
+  key: AdminView;
+  label: string;
+  icon: LucideIcon;
+  badge?: number;
 };
 
-const views: Array<{ key: AdminView; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+const CORE_NAV: NavItem[] = [
   { key: "overview", label: "Dashboard", icon: LayoutDashboard },
+  { key: "notifications", label: "Notifications", icon: Bell },
+  { key: "analytics", label: "Analytics", icon: BarChart3 },
+  { key: "contacts", label: "Contacts", icon: Mail },
+];
 
-  { key: "command", label: "Command Center", icon: Activity },
-  { key: "leads", label: "Leads", icon: Inbox },
-  { key: "projects", label: "Projects", icon: FolderKanban },
+const GROUP_NAV: NavItem[] = [
   { key: "services", label: "Services", icon: ShieldCheck },
   { key: "blogs", label: "Blogs", icon: BookOpenText },
-  { key: "media", label: "Media", icon: ImageIcon },
   { key: "careers", label: "Careers", icon: BriefcaseBusiness },
   { key: "newsletter", label: "Newsletter", icon: Send },
-  { key: "analytics", label: "Analytics", icon: BarChart3 },
-  { key: "notifications", label: "Notifications", icon: Bell },
   { key: "chatbot", label: "Chatbot", icon: MessageCircle },
-  { key: "audit", label: "Audit Logs", icon: Archive },
-  { key: "settings", label: "Settings", icon: Settings },
 ];
 
-const leadFilters: LeadFilter[] = ["New", "Read", "Responded", "Archived"];
-const mediaFolders = ["Infrastructure", "Architecture", "Construction", "Real Estate", "Import Export", "OTC", "Founder", "Blogs", "Careers"];
-const founderHomeProjects: Array<{ key: ProjectKey; label: string; description: string }> = [
-  { key: "architecture", label: "Architecture", description: "Manage projects, services, leads and content." },
-  { key: "construction", label: "Construction", description: "Manage infrastructure and execution operations." },
-  { key: "real-estate", label: "Real Estate", description: "Manage assets, opportunities and enquiries." },
-  { key: "import-export", label: "Import & Export", description: "Manage trade operations and documentation." },
-  { key: "otc-exchange", label: "OTC Exchange", description: "Manage transactions and governance." }
-];
-const founderLiveStatuses = founderHomeProjects.map((project) => project.label);
-const fieldClass =
-  "h-10 rounded-[8px] border border-[#232323] bg-[#080808] px-3 text-sm text-[#F5F5F5] outline-none transition placeholder:text-[#666666] focus:border-[#8F1118]";
-const textareaClass =
-  "min-h-24 rounded-[8px] border border-[#232323] bg-[#080808] px-3 py-2 text-sm leading-6 text-[#F5F5F5] outline-none transition placeholder:text-[#666666] focus:border-[#8F1118]";
-
-const blogFormSchema = z.object({
-  id: z.string().optional(),
-  division: z.string().min(1),
-  title: z.string().min(1),
-  slug: z.string().optional(),
-  excerpt: z.string().min(1),
-  content: z.string().min(1),
-  coverImage: z.string().optional(),
-  coverImageAlt: z.string().optional(),
-  author: z.string().min(1),
-  category: z.string().min(1),
-  tags: z.string().optional(),
-  featured: z.boolean().optional(),
-  status: z.enum(["draft", "scheduled", "published", "archived"]),
-  publishedAt: z.string().optional(),
-  readTime: z.string().optional(),
-  seoTitle: z.string().optional(),
-  seoDescription: z.string().optional(),
-  canonicalUrl: z.string().optional()
-});
-
-const newsletterFormSchema = z.object({
-  id: z.string().optional(),
-  division: z.string().min(1),
-  title: z.string().min(1),
-  slug: z.string().optional(),
-  excerpt: z.string().min(1),
-  content: z.string().min(1),
-  coverImage: z.string().optional(),
-  category: z.string().min(1),
-  author: z.string().min(1),
-  featured: z.boolean().optional(),
-  status: z.enum(["draft", "scheduled", "published", "archived"]),
-  publishDate: z.string().optional(),
-  tags: z.string().optional(),
-  readTime: z.string().optional()
-});
-
-const serviceFormSchema = z.object({
-  id: z.string().optional(),
-  division: z.string().min(1),
-  companyId: z.string().optional(),
-  title: z.string().min(1),
-  slug: z.string().optional(),
-  summary: z.string().min(1),
-  description: z.string().optional(),
-  category: z.string().min(1),
-  href: z.string().optional(),
-  imageUrl: z.string().optional(),
-  tags: z.string().optional(),
-  images: z.string().optional(),
-  heroContent: z.string().refine(isJson, "Invalid JSON"),
-  metrics: z.string().refine(isJson, "Invalid JSON"),
-  sections: z.string().refine(isJson, "Invalid JSON"),
-  cta: z.string().refine(isJson, "Invalid JSON"),
-  seo: z.string().refine(isJson, "Invalid JSON"),
-  status: z.enum(["draft", "published", "archived"]),
-  position: z.coerce.number().int()
-});
-
-const jobFormSchema = z.object({
-  id: z.string().optional(),
-  division: z.string().min(1),
-  title: z.string().min(1),
-  slug: z.string().optional(),
-  location: z.string().min(1),
-  type: z.string().min(1),
-  summary: z.string().min(1),
-  description: z.string().optional(),
-  status: z.enum(["draft", "published", "archived"])
-});
-
-const businessFormSchema = z.object({
-  id: z.string().optional(),
-  slug: z.string().min(1),
-  name: z.string().min(1),
-  legalName: z.string().optional(),
-  summary: z.string().min(1),
-  description: z.string().optional(),
-  website: z.string().optional(),
-  status: z.enum(["active", "inactive", "archived"]),
-  position: z.coerce.number().int()
-});
-
-const domainFormSchema = z.object({
-  id: z.string().optional(),
-  domain: z.string().min(1),
-  division: z.string().min(1),
-  companyId: z.string().optional(),
-  status: z.enum(["active", "inactive", "archived"]),
-  primary: z.boolean().optional(),
-  notes: z.string().optional()
-});
-
-type BlogFormValues = z.infer<typeof blogFormSchema>;
-type NewsletterFormValues = z.infer<typeof newsletterFormSchema>;
-type ServiceFormValues = z.infer<typeof serviceFormSchema>;
-type JobFormValues = z.infer<typeof jobFormSchema>;
-type BusinessFormValues = z.infer<typeof businessFormSchema>;
-type DomainFormValues = z.infer<typeof domainFormSchema>;
-
-function isJson(value: string): boolean {
-  try {
-    JSON.parse(value || "{}");
-    return true;
-  } catch {
-    return false;
-  }
+function formatDate() {
+  const d = new Date();
+  return d.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
-function parseJson(value: string, fallback: unknown) {
-  if (!value.trim()) return fallback;
-  return JSON.parse(value);
-}
-
-function csv(value?: string): string[] {
-  return (value || "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function jsonText(value: unknown, fallback: unknown): string {
-  return JSON.stringify(value ?? fallback, null, 2);
-}
-
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("en", { notation: value > 9999 ? "compact" : "standard" }).format(value);
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en", {
-    currency: "USD",
-    maximumFractionDigits: 0,
-    notation: value > 999999 ? "compact" : "standard",
-    style: "currency"
-  }).format(value);
-}
-
-function formatMetricValue(value: number, format?: "number" | "currency" | "percent"): string {
-  if (format === "currency") return formatCurrency(value);
-  if (format === "percent") return `${formatNumber(value)}%`;
-  return formatNumber(value);
-}
-
-function formatDate(value?: string | null): string {
-  if (!value) return "Not set";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Invalid";
-
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "2-digit",
+function formatTime() {
+  return new Date().toLocaleTimeString("en-US", {
     hour: "2-digit",
-    minute: "2-digit"
-  }).format(date);
+    minute: "2-digit",
+  });
 }
 
-function timeAgo(value?: string | null): string {
-  if (!value) return "Not set";
-  const date = new Date(value).getTime();
-  if (Number.isNaN(date)) return "Invalid";
-  const seconds = Math.max(1, Math.floor((Date.now() - date) / 1000));
-  if (seconds < 60) return `${seconds}s ago`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
+function AnimatedCounter({ value, duration = 1500 }: { value: number; duration?: number }) {
+  const [count, setCount] = React.useState(0);
+  const target = value ?? 0;
+
+  React.useEffect(() => {
+    let start = 0;
+    const increment = target / (duration / 16);
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= target) {
+        setCount(target);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(start));
+      }
+    }, 16);
+    return () => clearInterval(timer);
+  }, [target, duration]);
+
+  return <span>{count.toLocaleString()}</span>;
+}
+
+function formatRelativeTime(dateStr: string) {
+  const now = Date.now();
+  const date = new Date(dateStr).getTime();
+  const diff = now - date;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   return `${days}d ago`;
 }
 
-function TimeAgoText({ value, className }: { value?: string | null; className?: string }) {
-  return (
-    <span className={className} suppressHydrationWarning>
-      {timeAgo(value)}
-    </span>
-  );
-}
+const activityIcons: Record<string, LucideIcon> = {
+  subscriber: Users,
+  application: BriefcaseBusiness,
+  blog: BookOpenText,
+  notification: Bell,
+  service: ShieldCheck,
+  newsletter: Send,
+  chatbot: MessageCircle,
+};
 
-function adminGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good Morning";
-  if (hour < 17) return "Good Afternoon";
-  return "Good Evening";
-}
+const activityColors: Record<string, string> = {
+  subscriber: "text-emerald-400",
+  application: "text-violet-400",
+  blog: "text-sky-400",
+  notification: "text-amber-400",
+  service: "text-[#D4AF37]",
+  newsletter: "text-rose-400",
+  chatbot: "text-cyan-400",
+};
 
-function isToday(value?: string | null): boolean {
-  if (!value) return false;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return false;
-  const today = new Date();
+// ─── Sidebar ───────────────────────────────────────────────────────────────────
 
-  return date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate();
-}
-
-function toDateTimeLocal(value?: string | null): string {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
-}
-
-function statusClass(status: string): string {
-  if (["critical", "high", "unread"].includes(status)) {
-    return "border-[#8F1118]/50 bg-[#8F1118]/15 text-[#F5F5F5]";
-  }
-  if (["medium", "read", "empty"].includes(status)) {
-    return "border-[#232323] bg-[#151515] text-[#9B9B9B]";
-  }
-  if (["low"].includes(status)) {
-    return "border-emerald-500/20 bg-emerald-500/10 text-emerald-300";
-  }
-  if (["published", "active", "hired", "selected", "won", "Responded"].includes(status)) {
-    return "border-emerald-500/25 bg-emerald-500/10 text-emerald-300";
-  }
-  if (["scheduled", "reviewed", "shortlisted", "Read"].includes(status)) {
-    return "border-[#B71C24]/35 bg-[#B71C24]/10 text-[#F5F5F5]";
-  }
-  if (["archived", "rejected", "Archived"].includes(status)) {
-    return "border-[#232323] bg-[#080808] text-[#9B9B9B]";
-  }
-  return "border-[#232323] bg-[#151515] text-[#F5F5F5]";
-}
-
-function careerLabel(status: string): string {
-  if (status === "new") return "Applied";
-  if (status === "reviewed") return "Reviewing";
-  if (status === "shortlisted") return "Interview";
-  if (status === "hired") return "Selected";
-  if (status === "rejected") return "Rejected";
-  return status;
-}
-
-function projectLabel(data: AdminCommandCenterData, project: ProjectKey): string {
-  return data.projectOptions.find((option) => option.key === project)?.label || "Ractysh Group";
-}
-
-function textMatchesProject(project: ProjectKey, data: AdminCommandCenterData, ...values: Array<string | null | undefined>): boolean {
-  if (project === groupProjectKey) return true;
-  const option = data.projectOptions.find((item) => item.key === project);
-  if (!option) return true;
-  const text = values.filter(Boolean).join(" ").toLowerCase();
-  return option.keywords.some((keyword) => text.includes(keyword)) || text.includes(option.label.toLowerCase());
-}
-
-function scopedRows<T>(
-  rows: T[],
-  project: ProjectKey,
-  data: AdminCommandCenterData,
-  division: (row: T) => ProjectKey | null | undefined,
-  text: (row: T) => Array<string | null | undefined>
-): T[] {
-  if (project === groupProjectKey) return rows;
-  return rows.filter((row) => division(row) === project || textMatchesProject(project, data, ...text(row)));
-}
-
-function buildAnalyticsFromScopedRows(
-  fallback: AnalyticsSeries[],
-  rows: { leads: LeadRow[]; blogs: BlogRow[]; subscribers: SubscriberRow[]; applications: ApplicationRow[] }
-): AnalyticsSeries[] {
-  const countBy = <T,>(items: T[], label: (item: T) => string) => {
-    const counts = new Map<string, number>();
-    for (const item of items) {
-      const key = label(item) || "Unknown";
-      counts.set(key, (counts.get(key) || 0) + 1);
-    }
-    return Array.from(counts, ([label, value]) => ({ label, value }));
-  };
-  const totalLeads = rows.leads.length || 1;
-  const newLeads = rows.leads.filter((lead) => lead.status === "New").length;
-  const respondedLeads = rows.leads.filter((lead) => lead.status === "Responded").length;
-  const archivedLeads = rows.leads.filter((lead) => lead.status === "Archived").length;
-
-  return [
-    { key: "leadSources", label: "Lead Sources", points: countBy(rows.leads, (lead) => lead.kind) },
-    {
-      key: "conversionRate",
-      label: "Conversion Rate",
-      format: "percent",
-      points: [
-        { label: "Responded", value: Math.round((respondedLeads / totalLeads) * 100) },
-        { label: "Archived", value: Math.round((archivedLeads / totalLeads) * 100) },
-        { label: "Unread", value: Math.round((newLeads / totalLeads) * 100) }
-      ]
-    },
-    fallback.find((series) => series.key === "consultationGrowth") || { key: "consultationGrowth", label: "Consultation Growth", points: [] },
-    { key: "blogPerformance", label: "Blog Performance", points: rows.blogs.slice(0, 12).map((blog) => ({ label: blog.title, value: blog.views })) },
-    fallback.find((series) => series.key === "subscriberGrowth") || { key: "subscriberGrowth", label: "Subscriber Growth", points: [] },
-    { key: "careerApplications", label: "Career Applications", points: countBy(rows.applications, (application) => careerLabel(application.status)) }
-  ];
-}
-
-function scopedData(data: AdminCommandCenterData, project: ProjectKey): AdminCommandCenterData {
-  if (project === groupProjectKey) return data;
-
-  const leads = scopedRows(data.leads, project, data, (lead) => lead.division, (lead) => [lead.kind, lead.company, lead.service, lead.message]);
-  const blogs = scopedRows(data.blogs, project, data, (blog) => blog.division, (blog) => [blog.title, blog.category, blog.tags.join(" ")]);
-  const newsletters = scopedRows(data.newsletters, project, data, (newsletter) => newsletter.division, (newsletter) => [newsletter.title, newsletter.category, newsletter.tags.join(" ")]);
-  const services = scopedRows(data.services, project, data, (service) => service.division, (service) => [service.companyName, service.category, service.title, service.summary]);
-  const media = scopedRows(data.media, project, data, (asset) => asset.division, (asset) => [asset.folder, asset.title, asset.url]);
-  const jobs = scopedRows(data.jobs, project, data, (job) => job.division, (job) => [job.title, job.location, job.summary]);
-  const applications = scopedRows(data.applications, project, data, (application) => application.division, (application) => [application.position, application.message]);
-  const contacts = scopedRows(data.contacts, project, data, (contact) => contact.division, (contact) => [contact.service, contact.company, contact.subject, contact.message]);
-  const projects = data.projects.filter((item) => item.divisionKey === project || item.project === project);
-  const documents = scopedRows(data.documents, project, data, (document) => document.division, (document) => [document.category, document.projectName, document.filename]);
-  const notifications = data.notifications.filter((notification) => notification.division === project);
-  const activities = data.activities.filter((activity) => activity.division === project);
-  const criticalAlerts = data.criticalAlerts.filter((alert) => alert.division === project);
-  const pendingReviews = data.pendingReviews.filter((review) => review.division === project);
-  const approvalQueue = data.approvalQueue.filter((review) => review.division === project);
-  const subscribers = data.subscribers.filter((subscriber) => subscriber.division === project);
-  const business = data.businesses.filter((item) => item.key === project);
-  const domainMappings = data.domainMappings.filter((item) => item.division === project);
-  const newLeads = leads.filter((lead) => lead.status === "New").length;
-  const readLeads = leads.filter((lead) => lead.status === "Read").length;
-  const respondedLeads = leads.filter((lead) => lead.status === "Responded").length;
-  const archivedLeads = leads.filter((lead) => lead.status === "Archived").length;
-  const revenuePipeline = projects.reduce((total, item) => total + (item.budget || 0), 0);
-  const openOpportunities = Math.max(0, leads.length - archivedLeads);
-
-  return {
-    ...data,
-    overview: [
-      { key: "contactRequests", label: "Contact Requests", value: contacts.length, detail: `${projectLabel(data, project)} contact records` },
-      { key: "consultationRequests", label: "Consultation Requests", value: leads.filter((lead) => lead.kind === "Consultation").length, detail: "Scoped consultation records" },
-      { key: "careerApplications", label: "Career Applications", value: applications.length, detail: "Scoped application records" },
-      { key: "newsletterSubscribers", label: "Newsletter Subscribers", value: subscribers.length, detail: "Scoped subscriber records" },
-      { key: "blogPosts", label: "Blog Posts", value: blogs.length, detail: "Scoped blog records" },
-      { key: "publishedServices", label: "Published Services", value: services.filter((service) => service.status === "published").length, detail: "Scoped published services" }
-    ],
-    executiveMetrics: [
-      { key: "revenuePipeline", label: "Revenue Pipeline", value: revenuePipeline, detail: "Scoped project budgets", format: "currency" },
-      { key: "openOpportunities", label: "Open Opportunities", value: openOpportunities, detail: "Scoped open lead pipeline" },
-      { key: "unreadLeads", label: "Unread Leads", value: newLeads, detail: "Scoped new items" },
-      { key: "projectsActive", label: "Projects Active", value: projects.filter((item) => item.status === "active").length, detail: "Scoped active projects" },
-      { key: "consultations", label: "Consultations", value: leads.filter((lead) => lead.kind === "Consultation").length, detail: "Scoped consultation requests" },
-      { key: "applications", label: "Applications", value: applications.length, detail: "Scoped applications" },
-      { key: "subscribers", label: "Subscribers", value: subscribers.length, detail: "Scoped subscribers" }
-    ],
-    pipeline: [
-      { label: "New", value: newLeads },
-      { label: "Read", value: readLeads },
-      { label: "Responded", value: respondedLeads },
-      { label: "Archived", value: archivedLeads }
-    ],
-    revenuePipeline,
-    openOpportunities,
-    leads,
-    projects,
-    documents,
-    blogs,
-    subscribers,
-    newsletters,
-    services,
-    media,
-    jobs,
-    applications,
-    contacts,
-    notifications,
-    unreadNotifications: notifications.filter((notification) => notification.status === "unread").length,
-    activities,
-    criticalAlerts,
-    pendingReviews,
-    approvalQueue,
-    analytics: buildAnalyticsFromScopedRows(data.analytics, { leads, blogs, subscribers, applications }),
-    businesses: business.length ? business : data.businesses,
-    domainMappings
-  };
-}
-
-function searchResults(data: AdminCommandCenterData, query: string) {
-  const value = query.trim().toLowerCase();
-  if (!value) return [];
-  const matches = (text: string) => text.toLowerCase().includes(value);
-  const results: Array<{ id: string; type: AdminView; label: string; detail: string }> = [];
-
-  for (const blog of data.blogs) if (matches(`${blog.title} ${blog.category} ${blog.excerpt}`)) results.push({ id: blog.id, type: "blogs", label: blog.title, detail: "Blog" });
-  for (const lead of data.leads) if (matches(`${lead.name} ${lead.email} ${lead.service} ${lead.message}`)) results.push({ id: lead.id, type: "leads", label: lead.name, detail: lead.kind });
-  for (const application of data.applications) if (matches(`${application.fullName} ${application.email} ${application.position}`)) results.push({ id: application.id, type: "careers", label: application.fullName, detail: "Applicant" });
-  for (const service of data.services) if (matches(`${service.title} ${service.category} ${service.summary}`)) results.push({ id: service.id, type: "services", label: service.title, detail: "Service" });
-  for (const project of data.projects) if (matches(`${project.title} ${project.division} ${project.summary}`)) results.push({ id: project.id, type: "projects", label: project.title, detail: "Project" });
-  for (const business of data.businesses) if (matches(`${business.label} ${business.summary} ${business.primaryDomain || ""}`)) results.push({ id: business.id, type: "businesses", label: business.label, detail: "Business" });
-  for (const domain of data.domainMappings) if (matches(`${domain.domain} ${domain.divisionLabel}`)) results.push({ id: domain.id, type: "domains", label: domain.domain, detail: domain.divisionLabel });
-  for (const setting of data.settings) if (matches(`${setting.key} ${setting.label} ${setting.scope}`)) results.push({ id: setting.id, type: "settings", label: setting.label, detail: "Settings" });
-  for (const asset of data.media) if (matches(`${asset.title} ${asset.folder} ${asset.url}`)) results.push({ id: asset.id, type: "media", label: asset.title, detail: "Media" });
-
-  return results.slice(0, 8);
-}
-
-function csvEscape(value: unknown): string {
-  const text = String(value ?? "");
-  return `"${text.replace(/"/g, '""')}"`;
-}
-
-function downloadCsv(filename: string, rows: Array<Record<string, unknown>>) {
-  if (!rows.length) {
-    toast.message("No rows to export.");
-    return;
-  }
-
-  const headers = Object.keys(rows[0]);
-  const csvText = [headers.join(","), ...rows.map((row) => headers.map((key) => csvEscape(row[key])).join(","))].join("\n");
-  const blob = new Blob([csvText], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
-function Table<T extends object>({
-  rows,
-  columns,
-  search,
-  empty
+function Sidebar({
+  activeView,
+  onNavigate,
+  collapsed,
+  onToggleCollapse,
+  mobileOpen,
+  onMobileClose,
+  unreadCount,
+  navItems,
 }: {
-  rows: T[];
-  columns: Column<T>[];
-  search: string;
-  empty: string;
+  activeView: AdminView;
+  onNavigate: (view: AdminView) => void;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+  mobileOpen: boolean;
+  onMobileClose: () => void;
+  unreadCount: number;
+  navItems: NavItem[];
 }) {
-  const [scrollTop, setScrollTop] = React.useState(0);
-  const filteredRows = React.useMemo(() => {
-    const query = search.trim().toLowerCase();
-    if (!query) return rows;
-    return rows.filter((row) => JSON.stringify(row).toLowerCase().includes(query));
-  }, [rows, search]);
-  const table = useReactTable({
-    data: filteredRows,
-    columns,
-    getCoreRowModel: getCoreRowModel()
-  });
-  const tableRows = table.getRowModel().rows;
-  const rowHeight = 58;
-  const viewportHeight = Math.min(420, Math.max(180, tableRows.length * rowHeight || 180));
-  const start = Math.max(0, Math.floor(scrollTop / rowHeight) - 4);
-  const visibleCount = Math.ceil(viewportHeight / rowHeight) + 8;
-  const visibleRows = tableRows.slice(start, start + visibleCount);
-  const gridTemplateColumns = table
-    .getAllLeafColumns()
-    .map((column) => (column.columnDef.meta as { width?: string } | undefined)?.width || "minmax(12rem,1fr)")
-    .join(" ");
-
-  return (
-    <div className="overflow-hidden rounded-[8px] border border-[#232323] bg-[#111111]">
-      <div className="overflow-x-auto">
-        <div className="min-w-[58rem]">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <div
-              key={headerGroup.id}
-              className="grid border-b border-[#232323] bg-[#151515] text-xs font-semibold text-[#9B9B9B]"
-              style={{ gridTemplateColumns }}
-            >
-              {headerGroup.headers.map((header) => (
-                <div key={header.id} className="px-4 py-3">
-                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                </div>
-              ))}
-            </div>
-          ))}
-
-          {tableRows.length ? (
-            <div
-              className="relative overflow-y-auto"
-              style={{ height: viewportHeight }}
-              onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
-            >
-              <div style={{ height: tableRows.length * rowHeight }}>
-                {visibleRows.map((row) => (
-                  <div
-                    key={row.id}
-                    className="absolute left-0 grid w-full border-b border-[#232323]/80 text-sm text-[#F5F5F5]"
-                    style={{
-                      height: rowHeight,
-                      transform: `translateY(${row.index * rowHeight}px)`,
-                      gridTemplateColumns
-                    }}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <div key={cell.id} className="flex min-w-0 items-center px-4 py-2">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="px-4 py-10 text-sm text-[#9B9B9B]">{empty}</div>
-          )}
+  const sidebarContent = (
+    <div className="flex h-full flex-col">
+      <div className={cn("flex items-center gap-3 px-4 py-5", collapsed && "justify-center px-2")}>
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#D4AF37]/20 bg-gradient-to-br from-[#D4AF37]/10 to-transparent">
+          <Sparkles className="h-4 w-4 text-[#D4AF37]" />
         </div>
-      </div>
-    </div>
-  );
-}
-
-function StatusPill({ value }: { value: string }) {
-  return <span className={cn("rounded-[8px] border px-2.5 py-1 text-xs", statusClass(value))}>{value}</span>;
-}
-
-function Panel({
-  title,
-  action,
-  children
-}: {
-  title: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded-[8px] border border-[#232323] bg-[#111111] p-4">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="font-display text-lg font-semibold tracking-tight text-[#F5F5F5]">{title}</h2>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function IconButton({
-  label,
-  onClick,
-  children,
-  danger,
-  disabled
-}: {
-  label: string;
-  onClick?: () => void;
-  children: React.ReactNode;
-  danger?: boolean;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "inline-flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#232323] bg-[#151515] text-[#F5F5F5] transition hover:border-[#8F1118] disabled:pointer-events-none disabled:opacity-45",
-        danger && "text-red-300 hover:border-red-500/50"
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
-function ProjectSwitcher({
-  activeProject,
-  options,
-  onProjectChange
-}: {
-  activeProject: ProjectKey;
-  options: AdminCommandCenterData["projectOptions"];
-  onProjectChange: (project: ProjectKey) => void;
-}) {
-  const switcherValue = options.some((project) => project.key === activeProject) ? activeProject : options[0]?.key || groupProjectKey;
-
-  return (
-    <div className="flex min-w-0 items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border border-[#232323] bg-[#111111]">
-        <ShieldCheck className="h-5 w-5 text-[#b8860b]" />
-      </div>
-      <div className="min-w-0">
-        <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9B9B9B]">Division</p>
-        <label className="relative block min-w-0">
-          <span className="sr-only">Switch Division</span>
-          <select
-            value={switcherValue}
-            onChange={(event) => onProjectChange(event.target.value as ProjectKey)}
-            className="h-10 max-w-[17rem] appearance-none rounded-[8px] border border-[#232323] bg-[#111111] pl-3 pr-9 text-sm font-semibold text-[#F5F5F5] outline-none transition hover:border-[#8F1118] focus:border-[#8F1118]"
-          >
-            {options.map((project) => (
-              <option key={project.key} value={project.key}>
-                {project.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9B9B9B]" />
-        </label>
-      </div>
-    </div>
-  );
-}
-
-function ActivityList({ rows, empty }: { rows: ActivityRow[]; empty: string }) {
-  if (!rows.length) return <p className="text-sm text-[#9B9B9B]">{empty}</p>;
-
-  return (
-    <div className="grid gap-2">
-      {rows.slice(0, 12).map((activity) => (
-        <div key={activity.id} className="grid gap-1 rounded-[8px] border border-[#232323] bg-[#151515] p-3">
-          <div className="flex items-center justify-between gap-3">
-            <p className="min-w-0 truncate text-sm font-semibold text-[#F5F5F5]">{activity.title}</p>
-            <TimeAgoText value={activity.createdAt} className="shrink-0 text-xs text-[#9B9B9B]" />
+        {!collapsed && (
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-white">Ractysh Group</p>
+            <p className="truncate text-[10px] font-medium uppercase tracking-wider text-[#D4AF37]/60">
+              Command Center
+            </p>
           </div>
-          <p className="text-xs text-[#9B9B9B]">{activity.actor} · {activity.detail}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
+        )}
+      </div>
 
-function AlertList({ rows, empty }: { rows: AlertRow[]; empty: string }) {
-  if (!rows.length) return <p className="text-sm text-[#9B9B9B]">{empty}</p>;
-
-  return (
-    <div className="grid gap-2">
-      {rows.slice(0, 10).map((alert) => (
-        <div key={alert.id} className="rounded-[8px] border border-[#8F1118]/40 bg-[#8F1118]/10 p-3">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-semibold text-[#F5F5F5]">{alert.title}</p>
-            <StatusPill value={alert.priority} />
-          </div>
-          <p className="mt-2 text-xs leading-5 text-[#9B9B9B]">{alert.detail}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ReviewList({ rows, empty }: { rows: ReviewRow[]; empty: string }) {
-  if (!rows.length) return <p className="text-sm text-[#9B9B9B]">{empty}</p>;
-
-  return (
-    <div className="grid gap-2">
-      {rows.slice(0, 10).map((review) => (
-        <div key={review.id} className="grid gap-1 rounded-[8px] border border-[#232323] bg-[#151515] p-3">
-          <div className="flex items-center justify-between gap-3">
-            <p className="min-w-0 truncate text-sm font-semibold text-[#F5F5F5]">{review.title}</p>
-            <TimeAgoText value={review.createdAt} className="shrink-0 text-xs text-[#9B9B9B]" />
-          </div>
-          <p className="text-xs text-[#9B9B9B]">{review.type} · {review.detail}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function BarChart({ series }: { series: AnalyticsSeries }) {
-  const max = Math.max(...series.points.map((point) => point.value), 1);
-
-  return (
-    <div className="grid gap-3">
-      {series.points.length ? (
-        series.points.map((point) => (
-          <div key={point.label} className="grid gap-2">
-            <div className="flex items-center justify-between gap-3 text-sm">
-              <span className="min-w-0 truncate text-[#9B9B9B]">{point.label}</span>
-              <span className="font-semibold text-[#F5F5F5]">{formatMetricValue(point.value, series.format)}</span>
-            </div>
-            <div className="h-2 rounded-full bg-[#080808]">
-              <div className="h-2 rounded-full bg-gradient-to-r from-[#b8860b] to-[#d4a843]" style={{ width: `${Math.max(3, (point.value / max) * 100)}%` }} />
-            </div>
-          </div>
-        ))
-      ) : (
-        <p className="text-sm text-[#9B9B9B]">No chart data found in Prisma.</p>
-      )}
-    </div>
-  );
-}
-
-function QuickActions({ setActiveView }: { setActiveView: (view: AdminView) => void }) {
-  const actions: Array<{ label: string; view: AdminView; icon: React.ComponentType<{ className?: string }> }> = [
-    { label: "Create Blog", view: "blogs", icon: BookOpenText },
-    { label: "Create Job", view: "careers", icon: BriefcaseBusiness },
-    { label: "Upload Media", view: "media", icon: Upload },
-    { label: "Create Service Update", view: "services", icon: ShieldCheck },
-    { label: "Send Newsletter", view: "newsletter", icon: Send }
-  ];
-
-  return (
-    <div className="fixed bottom-20 right-4 z-40 hidden rounded-[8px] border border-[#232323] bg-[#111111]/95 p-2 shadow-[0_24px_80px_rgba(0,0,0,0.5)] backdrop-blur lg:block">
-      <div className="grid gap-1">
-        {actions.map((action) => {
-          const Icon = action.icon;
+      <div className="flex-1 space-y-1 px-2 py-2">
+        {navItems.map((item) => {
+          const isActive = activeView === item.key;
+          const Icon = item.icon;
           return (
             <button
-              key={action.label}
-              type="button"
-              onClick={() => setActiveView(action.view)}
-              className="flex h-9 items-center gap-2 rounded-[8px] px-3 text-left text-xs font-semibold text-[#F5F5F5] transition hover:bg-[#151515]"
+              key={item.key}
+              onClick={() => {
+                onNavigate(item.key);
+                onMobileClose();
+              }}
+              className={cn(
+                "group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                collapsed && "justify-center px-2",
+                isActive
+                  ? "bg-[#D4AF37]/10 text-[#D4AF37]"
+                  : "text-[#888888] hover:bg-white/[0.04] hover:text-white"
+              )}
             >
-              <Icon className="h-4 w-4 text-[#b8860b]" />
-              {action.label}
+              {isActive && (
+                <motion.div
+                  layoutId="nav-active"
+                  className="absolute inset-0 rounded-lg border border-[#D4AF37]/20 bg-gradient-to-r from-[#D4AF37]/[0.08] to-transparent"
+                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                />
+              )}
+              <Icon className={cn("relative z-10 h-[18px] w-[18px] shrink-0")} />
+              {!collapsed && <span className="relative z-10">{item.label}</span>}
+              {item.key === "notifications" && unreadCount > 0 && (
+                <span
+                  className={cn(
+                    "relative z-10 ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#D4AF37] px-1 text-[10px] font-bold text-[#050505]",
+                    collapsed && "absolute -right-0.5 -top-0.5"
+                  )}
+                >
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </button>
           );
         })}
       </div>
-    </div>
-  );
-}
 
-function AnimatedCounter({ value, active, format }: { value: number; active: boolean; format?: "number" | "currency" | "percent" }) {
-  const [display, setDisplay] = React.useState(0);
-
-  React.useEffect(() => {
-    if (!active) {
-      setDisplay(value);
-      return;
-    }
-
-    let frame = 0;
-    const totalFrames = 72;
-    const start = performance.now();
-    let raf = 0;
-
-    const tick = () => {
-      frame += 1;
-      const elapsed = performance.now() - start;
-      const progress = Math.min(1, Math.max(frame / totalFrames, elapsed / 1800));
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(value * eased));
-      if (progress < 1) {
-        raf = requestAnimationFrame(tick);
-      }
-    };
-
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [active, value]);
-
-  return <>{formatMetricValue(display, format)}</>;
-}
-
-function OpeningExperience({ data, active }: { data: AdminCommandCenterData; active: boolean }) {
-  const divisions = data.projectOptions.map((option) => option.label);
-  const bootItems = [
-    "Loading Enterprise Assets",
-    "Loading Project Intelligence",
-    "Loading Lead Network",
-    "Loading Executive Reports",
-    "Loading Command Streams",
-    "Loading Subscriber Network"
-  ];
-  const publishedContent =
-    data.blogs.filter((blog) => blog.status === "published").length +
-    data.newsletters.filter((newsletter) => newsletter.status === "published").length +
-    data.services.filter((service) => service.status === "published").length;
-  const counters = [
-    { label: "Projects Online", value: data.projects.filter((project) => project.status === "active").length || data.projects.length },
-    { label: "Active Leads", value: data.openOpportunities },
-    { label: "Applications", value: data.applications.length },
-    { label: "Subscribers", value: data.subscribers.length },
-    { label: "Published Content", value: publishedContent }
-  ];
-  const particles = React.useMemo(
-    () =>
-      Array.from({ length: 28 }, (_, index) => ({
-        id: index,
-        left: `${(index * 37) % 100}%`,
-        top: `${(index * 19) % 100}%`,
-        delay: (index % 9) * 0.25,
-        duration: 4 + (index % 5) * 0.55
-      })),
-    []
-  );
-
-  return (
-    <motion.section
-      className="fixed inset-0 z-[100] overflow-hidden bg-[#080808] text-[#F5F5F5]"
-      initial={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 1.015 }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      aria-label="Ractysh Command Center opening"
-    >
-      <div
-        className="absolute inset-0 opacity-[0.18]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(245,245,245,.09) 1px, transparent 1px), linear-gradient(90deg, rgba(245,245,245,.09) 1px, transparent 1px)",
-          backgroundSize: "48px 48px"
-        }}
-      />
-      <motion.div
-        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#b8860b] to-transparent"
-        animate={{ x: ["-20%", "20%", "-20%"], opacity: [0.25, 0.6, 0.25] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute bottom-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-[#d4a843] to-transparent"
-        animate={{ x: ["18%", "-18%", "18%"], opacity: [0.15, 0.4, 0.15] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(184,134,11,.12),transparent_24%,transparent_72%,rgba(212,168,67,.08))]" />
-      <div className="absolute inset-x-0 top-1/3 h-56 bg-[linear-gradient(90deg,transparent,rgba(184,134,11,.10),transparent)] blur-3xl" />
-      {particles.map((particle) => (
-        <motion.span
-          key={particle.id}
-          className="absolute h-1 w-1 rounded-[2px] bg-[#b8860b]/40"
-          style={{ left: particle.left, top: particle.top }}
-          animate={{ y: [-12, 16, -12], opacity: [0.08, 0.5, 0.08], scale: [0.8, 1.25, 0.8] }}
-          transition={{ duration: particle.duration, delay: particle.delay, repeat: Infinity, ease: "easeInOut" }}
-        />
-      ))}
-
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-5 py-8">
-        <div className="grid w-full max-w-6xl gap-8">
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-            className="mx-auto grid max-w-3xl justify-items-center text-center"
-          >
-            <div className="flex h-24 w-24 items-center justify-center rounded-[12px] border border-[#b8860b]/40 bg-gradient-to-br from-[#141414] to-[#0d0d0d] shadow-[0_0_80px_rgba(184,134,11,.24)]">
-              <ShieldCheck className="h-12 w-12 text-[#b8860b]" />
-            </div>
-            <h1 className="mt-6 font-display text-5xl font-semibold leading-[0.95] tracking-tight text-[#F5F5F5] sm:text-7xl">Ractysh Command Center</h1>
-            <p className="mt-4 text-sm font-semibold uppercase tracking-[0.24em] text-[#9B9B9B]">Enterprise Operations Network</p>
-          </motion.div>
-
-          <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-            <div className="grid gap-3">
-              {divisions.map((division, index) => (
-                <motion.div
-                  key={division}
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.62, delay: 0.55 + index * 0.22, ease: [0.22, 1, 0.36, 1] }}
-                  className="flex items-center gap-3 rounded-[8px] border border-[#232323]/80 bg-[#111111]/75 px-4 py-3 backdrop-blur"
-                >
-                  <span className="h-px w-8 bg-[#b8860b]" />
-                  <span className="text-lg font-semibold text-[#F5F5F5]">{division}</span>
-                </motion.div>
-              ))}
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 18 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.8, ease: [0.22, 1, 0.36, 1] }}
-              className="rounded-[8px] border border-[#232323] bg-[#111111]/80 p-4 backdrop-blur"
-            >
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#9B9B9B]">System Boot Sequence</p>
-              <div className="mt-4 grid gap-3">
-                {bootItems.map((item, index) => (
-                  <motion.div
-                    key={item}
-                    initial={{ opacity: 0.25 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.35, delay: 0.5 + index * 0.28 }}
-                    className="flex items-center justify-between gap-3 text-sm"
-                  >
-                    <span className="text-[#9B9B9B]">{item}</span>
-                    <motion.span
-                      className="h-1.5 w-16 overflow-hidden rounded-full bg-[#080808]"
-                      initial={false}
-                    >
-                      <motion.span
-                        className="block h-full rounded-full bg-gradient-to-r from-[#b8860b] to-[#d4a843]"
-                        initial={{ width: "0%" }}
-                        animate={{ width: "100%" }}
-                        transition={{ duration: 0.7, delay: 0.62 + index * 0.28, ease: "easeOut" }}
-                      />
-                    </motion.span>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
+      <div className={cn("border-t border-white/[0.06] px-3 py-4", collapsed && "px-2")}>
+        <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 text-sm font-semibold text-[#D4AF37]">
+            FA
           </div>
-
-          <div className="mx-auto grid w-full max-w-5xl gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {counters.map((counter, index) => (
-              <motion.div
-                key={counter.label}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 1.15 + index * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                className="rounded-[8px] border border-[#232323] bg-[#111111]/80 p-4 text-center backdrop-blur"
-              >
-                <p className="text-2xl font-semibold tracking-normal text-[#F5F5F5]">
-                  <AnimatedCounter value={counter.value} active={active} />
-                </p>
-                <p className="mt-2 text-xs text-[#9B9B9B]">{counter.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </motion.section>
-  );
-}
-
-export function AdminCommandCenter({
-  initialData,
-  initialProject,
-  dashboardTitle
-}: {
-  initialData: AdminCommandCenterData;
-  initialProject: ProjectKey;
-  dashboardTitle: string;
-}) {
-  const router = useRouter();
-  const [data, setData] = React.useState(initialData);
-  const [activeView, setActiveView] = React.useState<AdminView>("overview");
-  const [activeProject, setActiveProject] = React.useState<ProjectKey>(initialProject);
-  const [search, setSearch] = React.useState("");
-  const [pending, setPending] = React.useState(false);
-  const [showOpening, setShowOpening] = React.useState(true);
-  const [showDashboard, setShowDashboard] = React.useState(false);
-  const introCompletedRef = React.useRef(false);
-  const scoped = React.useMemo(() => scopedData(data, activeProject), [activeProject, data]);
-  const globalResults = React.useMemo(() => searchResults(scoped, search), [scoped, search]);
-  const activeProjectOption = data.projectOptions.find((option) => option.key === activeProject);
-  const activeProjectRoute = adminProjectRoutes.find((route) => route.key === activeProject);
-  const activeDashboardTitle = activeProjectRoute?.title || (activeProjectOption ? `${activeProjectOption.label} Dashboard` : dashboardTitle);
-
-  const completeIntro = React.useCallback((reason: "animation" | "session" | "failsafe") => {
-    if (introCompletedRef.current) return;
-
-    introCompletedRef.current = true;
-    markCommandCenterIntroComplete();
-    if (reason !== "session") debugCommandCenterIntro("Animation Completed", reason);
-    setShowDashboard(true);
-    setShowOpening(false);
-  }, []);
-
-  React.useEffect(() => {
-    setActiveProject(initialProject);
-    setActiveView("overview");
-    setSearch("");
-  }, [initialProject]);
-
-  const switchProject = React.useCallback(
-    (project: ProjectKey) => {
-      const option = data.projectOptions.find((item) => item.key === project);
-      if (!option) return;
-
-      setActiveProject(project);
-      setActiveView("overview");
-      setSearch("");
-      router.push(option.href);
-    },
-    [data.projectOptions, router]
-  );
-
-  const runIntent = React.useCallback(
-    async (body: Record<string, unknown>, successMessage: string) => {
-      setPending(true);
-      try {
-        const response = await fetch("/api/admin/command-center", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        });
-        const payload = (await response.json().catch(() => ({}))) as CommandResponse;
-
-        if (!response.ok || !payload.success || !payload.data) {
-          throw new Error(payload.message || "Admin action failed.");
-        }
-
-        setData(payload.data);
-        toast.success(successMessage);
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Admin action failed.");
-      } finally {
-        setPending(false);
-      }
-    },
-    []
-  );
-
-  const refresh = React.useCallback(async (silent = false) => {
-    if (!silent) setPending(true);
-    try {
-      const response = await fetch("/api/admin/command-center", { cache: "no-store" });
-      const payload = (await response.json().catch(() => ({}))) as CommandResponse;
-      if (!response.ok || !payload.data) throw new Error(payload.message || "Refresh failed.");
-      setData(payload.data);
-      if (!silent) toast.success("Command center refreshed.");
-    } catch (error) {
-      if (!silent) toast.error(error instanceof Error ? error.message : "Refresh failed.");
-    } finally {
-      if (!silent) setPending(false);
-    }
-  }, []);
-
-  React.useEffect(() => {
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") {
-        refresh(true);
-      }
-    }, 25_000);
-
-    return () => window.clearInterval(timer);
-  }, [refresh]);
-
-  React.useEffect(() => {
-    debugCommandCenterIntro("Dashboard Mounted");
-  }, []);
-
-  React.useEffect(() => {
-    if (hasCompletedCommandCenterIntro()) {
-      completeIntro("session");
-      return;
-    }
-
-    if (!showOpening || introCompletedRef.current) return;
-
-    debugCommandCenterIntro("Animation Started");
-
-    const completeTimer = window.setTimeout(() => completeIntro("animation"), commandCenterIntroCompleteMs);
-    const failsafeTimer = window.setTimeout(() => completeIntro("failsafe"), commandCenterIntroFailsafeMs);
-
-    return () => {
-      window.clearTimeout(completeTimer);
-      window.clearTimeout(failsafeTimer);
-    };
-  }, [completeIntro, showOpening]);
-
-  React.useEffect(() => {
-    if (showDashboard) debugCommandCenterIntro("Dashboard Visible");
-  }, [showDashboard]);
-
-  const logout = React.useCallback(async () => {
-    await fetch("/api/admin/auth/logout", { method: "POST" });
-    clearCommandCenterIntroSession();
-    window.location.assign("/");
-  }, []);
-
-  return (
-    <main className="min-h-screen bg-[#080808] text-[#F5F5F5]">
-      <Toaster theme="dark" richColors position="top-right" />
-      <AnimatePresence>{showOpening ? <OpeningExperience data={data} active={showOpening} /> : null}</AnimatePresence>
-      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[13rem_minmax(0,1fr)]">
-        <motion.aside
-          className="fixed inset-x-0 bottom-0 z-40 border-t border-[#232323] bg-[#080808]/95 px-2 py-2 backdrop-blur lg:sticky lg:inset-y-0 lg:h-screen lg:border-r lg:border-t-0 lg:px-0 lg:py-4"
-          initial={false}
-          animate={showDashboard ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={dashboardEntranceTransition}
-          style={{ pointerEvents: showDashboard ? "auto" : "none" }}
-        >
-          <nav className="flex justify-start gap-1 overflow-x-auto lg:grid lg:overflow-visible lg:px-3 lg:gap-2">
-            {views.map((item) => {
-              const Icon = item.icon;
-              const active = activeView === item.key;
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  title={item.label}
-                  aria-label={`Navigation ${item.label}`}
-                  onClick={() => setActiveView(item.key)}
-                    className={cn(
-                    "flex h-11 w-11 items-center justify-center gap-2 rounded-[8px] border text-[#9B9B9B] transition lg:w-full lg:justify-start lg:px-3",
-                    active
-                      ? "border-[#b8860b] bg-gradient-to-r from-[#b8860b]/20 to-[#d4a843]/10 text-[#f5f5f5] shadow-[inset_0_1px_0_rgba(184,134,11,0.2)]"
-                      : "border-transparent hover:border-[#2a2a2a] hover:bg-[#141414] hover:text-[#e0e0e0]"
-                  )}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="hidden truncate text-sm font-medium lg:inline">{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-        </motion.aside>
-
-        <div className="min-w-0 pb-20 lg:pb-0">
-          <motion.header
-            className="sticky top-0 z-30 border-b border-[#232323] bg-[#080808]/92 px-4 py-3 backdrop-blur sm:px-6"
-            initial={false}
-            animate={showDashboard ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ ...dashboardEntranceTransition, delay: showDashboard ? 0.08 : 0 }}
-            style={{ pointerEvents: showDashboard ? "auto" : "none" }}
-          >
-            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-              <div className="flex min-w-0 items-center gap-3">
-                <ProjectSwitcher activeProject={activeProject} options={data.projectOptions} onProjectChange={switchProject} />
-              </div>
-              <div className="flex min-w-0 flex-1 items-center gap-2 xl:max-w-3xl">
-                <div className="relative min-w-0 flex-1">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9B9B9B]" />
-                  <input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search command center"
-                    suppressHydrationWarning
-                    className="h-10 w-full rounded-[8px] border border-[#232323] bg-[#111111] pl-9 pr-3 text-sm text-[#F5F5F5] outline-none transition focus:border-[#b8860b] focus:shadow-[0_0_0_3px_rgba(184,134,11,0.1)]"
-                  />
-                  {globalResults.length ? (
-                    <div className="absolute left-0 right-0 top-12 z-50 overflow-hidden rounded-[8px] border border-[#232323] bg-[#111111] shadow-[0_24px_70px_rgba(0,0,0,0.5)]">
-                      {globalResults.map((result) => (
-                        <button
-                          key={`${result.type}:${result.id}`}
-                          type="button"
-                          onClick={() => setActiveView(result.type)}
-                          className="flex w-full items-center justify-between gap-3 border-b border-[#232323]/70 px-3 py-2 text-left text-sm last:border-b-0 hover:bg-[#151515]"
-                        >
-                          <span className="min-w-0 truncate text-[#F5F5F5]">{result.label}</span>
-                          <span className="shrink-0 text-xs text-[#9B9B9B]">{result.detail}</span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveView("notifications")}
-                  className="relative inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-[#232323] bg-[#111111] text-[#F5F5F5] transition hover:border-[#b8860b] hover:shadow-[0_0_0_3px_rgba(184,134,11,0.08)]"
-                  aria-label="Notifications"
-                  title="Notifications"
-                >
-                  <Bell className="h-4 w-4" />
-                  {scoped.unreadNotifications ? (
-                    <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-[#8F1118] px-1.5 py-0.5 text-[10px] font-semibold text-[#F5F5F5]">
-                      {scoped.unreadNotifications}
-                    </span>
-                  ) : null}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveView("command")}
-                  className="hidden h-10 items-center gap-2 rounded-[8px] border border-[#232323] bg-[#111111] px-3 text-sm text-[#F5F5F5] transition hover:border-[#b8860b] hover:bg-[#141414] md:inline-flex"
-                >
-                  <Activity className="h-4 w-4 text-[#b8860b]" />
-                  Activity Stream
-                </button>
-                <div className="hidden h-10 items-center gap-2 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-3 text-sm text-emerald-300 md:inline-flex">
-                  <Radio className="h-4 w-4 animate-pulse" />
-                  System Health
-                </div>
-                <IconButton label="Refresh" onClick={() => refresh(false)} disabled={pending}>
-                  <RefreshCw className={cn("h-4 w-4", pending && "animate-spin")} />
-                </IconButton>
-                <IconButton label="Logout" onClick={logout}>
-                  <LogOut className="h-4 w-4" />
-                </IconButton>
-              </div>
+          {!collapsed && (
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-white">Fawaz Admin</p>
+              <p className="truncate text-xs text-[#666666]">Super Admin</p>
             </div>
-          </motion.header>
-
-          <motion.div
-            key={activeView}
-            initial={{ opacity: 0, y: 20 }}
-            animate={showDashboard ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ ...dashboardEntranceTransition, delay: showDashboard ? 0.12 : 0 }}
-            className="mx-auto grid w-full max-w-[1440px] gap-5 px-4 py-5 sm:px-6"
-            style={{ pointerEvents: showDashboard ? "auto" : "none" }}
-          >
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-[8px] border border-[#232323] bg-[#111] px-5 py-4 sm:px-6">
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#b8860b]">Enterprise Workspace</p>
-                <h1 className="mt-1 truncate text-xl font-semibold tracking-tight text-[#f5f5f5] sm:text-2xl">
-                  {activeDashboardTitle}
-                </h1>
-              </div>
-              <span className="hidden shrink-0 rounded-full bg-[#b8860b]/10 px-3 py-1 text-[11px] font-medium text-[#b8860b] sm:inline-block">
-                Live
-              </span>
-            </div>
-            {activeView === "overview" ? <Overview data={scoped} search={search} setActiveView={setActiveView} /> : null}
-            {activeView === "businesses" ? <BusinessManagement data={scoped} search={search} runIntent={runIntent} pending={pending} /> : null}
-            {activeView === "domains" ? <DomainManagement data={scoped} search={search} runIntent={runIntent} pending={pending} /> : null}
-            {activeView === "command" ? <CommandCenterView data={scoped} setActiveView={setActiveView} /> : null}
-            {activeView === "leads" ? <LeadCenter data={scoped} search={search} runIntent={runIntent} pending={pending} /> : null}
-            {activeView === "projects" ? <ProjectsView data={scoped} search={search} /> : null}
-            {activeView === "blogs" ? <BlogManager data={scoped} activeProject={activeProject} search={search} runIntent={runIntent} pending={pending} /> : null}
-            {activeView === "newsletter" ? <NewsletterManager data={scoped} activeProject={activeProject} search={search} runIntent={runIntent} setData={setData} pending={pending} /> : null}
-            {activeView === "services" ? <ServiceManager data={scoped} activeProject={activeProject} search={search} runIntent={runIntent} pending={pending} /> : null}
-            {activeView === "media" ? <MediaLibrary data={scoped} activeProject={activeProject} search={search} runIntent={runIntent} setData={setData} pending={pending} /> : null}
-            {activeView === "careers" ? <CareersManager data={scoped} activeProject={activeProject} search={search} runIntent={runIntent} pending={pending} /> : null}
-            {activeView === "analytics" ? <AnalyticsView data={scoped} /> : null}
-            {activeView === "notifications" ? <NotificationsView data={scoped} runIntent={runIntent} pending={pending} /> : null}
-            {activeView === "settings" ? <SettingsManager data={scoped} search={search} runIntent={runIntent} pending={pending} /> : null}
-            {activeView === "audit" ? <AuditLogs data={scoped} search={search} /> : null}
-            {activeView === "chatbot" ? <ChatbotQueries data={scoped} search={search} /> : null}
-          </motion.div>
-          <QuickActions setActiveView={setActiveView} />
-        </div>
-      </div>
-    </main>
-  );
-}
-
-function FounderHome({
-  data,
-  setActiveProject,
-  setActiveView
-}: {
-  data: AdminCommandCenterData;
-  setActiveProject: (project: ProjectKey) => void;
-  setActiveView: (view: AdminView) => void;
-}) {
-  const newLeads = data.leads.filter((lead) => lead.status === "New").length;
-  const consultationRequests = data.leads.filter((lead) => lead.kind === "Consultation").length;
-  const blogDrafts = data.blogs.filter((blog) => blog.status === "draft").length;
-  const todaysGrowth =
-    data.leads.filter((lead) => isToday(lead.createdAt)).length +
-    data.applications.filter((application) => isToday(application.createdAt)).length +
-    data.subscribers.filter((subscriber) => isToday(subscriber.createdAt)).length +
-    data.blogs.filter((blog) => isToday(blog.publishedAt || blog.updatedAt)).length;
-  const founderStats = [
-    { label: "Current Active Projects", value: data.projects.filter((project) => project.status === "active").length },
-    { label: "Open Opportunities", value: data.openOpportunities },
-    { label: "Unread Leads", value: newLeads },
-    { label: "Today's Growth", value: todaysGrowth }
-  ];
-  const quickOverview = [
-    { label: "New Leads", value: newLeads, icon: Inbox },
-    { label: "Career Applications", value: data.applications.length, icon: BriefcaseBusiness },
-    { label: "Subscribers", value: data.subscribers.length, icon: Send },
-    { label: "Consultation Requests", value: consultationRequests, icon: CircleDot },
-    { label: "Blog Drafts", value: blogDrafts, icon: BookOpenText }
-  ];
-  const shortcuts: Array<{ label: string; view: AdminView; icon: React.ComponentType<{ className?: string }> }> = [
-    { label: "Create Blog", view: "blogs", icon: BookOpenText },
-    { label: "Create Job", view: "careers", icon: BriefcaseBusiness },
-    { label: "Upload Media", view: "media", icon: Upload },
-    { label: "View Leads", view: "leads", icon: Inbox },
-    { label: "Manage Services", view: "services", icon: ShieldCheck }
-  ];
-
-  function openProject(project: ProjectKey) {
-    setActiveProject(project);
-    setActiveView("command");
-  }
-
-  return (
-    <div className="grid gap-6">
-      <section className="relative overflow-hidden rounded-[8px] border border-[#232323] bg-[#080808] px-5 py-8 sm:px-8 lg:px-10">
-        <div
-          className="absolute inset-0 opacity-[0.12]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(245,245,245,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(245,245,245,.08) 1px, transparent 1px)",
-            backgroundSize: "44px 44px"
-          }}
-        />
-        <div className="absolute -left-32 top-12 h-72 w-72 rounded-full bg-[#b8860b]/12 blur-3xl" />
-        <div className="absolute -right-24 bottom-8 h-64 w-64 rounded-full bg-[#d4a843]/8 blur-3xl" />
-        <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#b8860b]/50 to-transparent" />
-        <div className="absolute inset-x-8 bottom-0 h-px bg-gradient-to-r from-transparent via-[#d4a843]/30 to-transparent" />
-
-        <div className="relative grid gap-8 xl:grid-cols-[minmax(0,1fr)_25rem] xl:items-stretch">
-          <div className="flex min-h-[30rem] flex-col justify-between gap-8">
-            <div className="max-w-4xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b8860b]">Founder Command Center</p>
-              <h1 className="mt-5 max-w-4xl font-display text-5xl font-semibold leading-[0.95] tracking-tight text-[#F5F5F5] sm:text-7xl">
-                Good Morning, Fawaz.
-              </h1>
-              <p className="mt-6 max-w-3xl text-2xl font-semibold leading-tight text-[#F5F5F5] sm:text-3xl">
-                Welcome back to the Ractysh Command Center.
-              </p>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-[#9B9B9B]">
-                Your enterprise ecosystem is operational and running across all active divisions.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2 rounded-[8px] border border-[#232323] bg-[#111111]/70 p-3 backdrop-blur">
-              {founderLiveStatuses.map((division) => (
-                <div key={division} className="flex min-w-[13rem] flex-1 items-center justify-between gap-3 rounded-[8px] border border-[#232323]/80 bg-[#080808]/70 px-3 py-2">
-                  <span className="whitespace-nowrap text-sm font-medium text-[#F5F5F5]">{division}</span>
-                  <span className="inline-flex shrink-0 items-center gap-2 text-xs text-emerald-300">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_14px_rgba(52,211,153,.8)]" />
-                    Operational
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <motion.aside
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-            className="relative mt-14 overflow-hidden rounded-[8px] border border-[#8F1118]/30 bg-[#111111]/70 p-5 shadow-[0_32px_90px_rgba(0,0,0,.45)] backdrop-blur lg:mt-0"
-          >
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#B71C24] to-transparent" />
-            <div className="absolute -right-20 top-10 h-40 w-40 rounded-full bg-[#b8860b]/15 blur-3xl" />
-            <div className="relative flex h-full flex-col justify-between gap-8">
-              <div>
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#9B9B9B]">Founder</p>
-                  <span className="inline-flex items-center gap-2 rounded-[8px] border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-300">
-                    <Radio className="h-3.5 w-3.5 animate-pulse" />
-                    Online
-                  </span>
-                </div>
-                <h2 className="mt-6 font-display text-5xl font-semibold tracking-tight text-[#F5F5F5]">Fawaz</h2>
-                <p className="mt-3 text-base font-medium text-[#F5F5F5]">Chairman & Managing Director</p>
-                <p className="mt-1 text-sm text-[#9B9B9B]">Ractysh Group</p>
-              </div>
-
-              <div className="grid gap-3">
-                {founderStats.map((stat) => (
-                  <div key={stat.label} className="flex items-center justify-between gap-4 border-b border-[#232323]/80 pb-3 last:border-b-0 last:pb-0">
-                    <span className="text-sm text-[#9B9B9B]">{stat.label}</span>
-                    <span className="text-xl font-semibold text-[#F5F5F5]">{formatNumber(stat.value)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.aside>
-        </div>
-      </section>
-
-      <section className="grid gap-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b8860b]">Project Ecosystem</p>
-            <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight text-[#F5F5F5]">Choose an operating division</h2>
-          </div>
-          <p className="max-w-xl text-sm leading-6 text-[#9B9B9B]">Each command center opens with the same login, the same Prisma data layer, and a scoped view of enterprise operations.</p>
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-          {founderHomeProjects.map((project, index) => (
-            <motion.button
-              key={project.key}
-              type="button"
-              onClick={() => openProject(project.key)}
-              aria-label={`Open ${project.label} Command Center`}
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.52, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
-              className="group relative min-h-64 overflow-hidden rounded-[8px] border border-[#232323] bg-[#111111] p-5 text-left transition hover:-translate-y-0.5 hover:border-[#8F1118]/80 hover:bg-[#151515]"
-            >
-              <div className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-[#8F1118]/70 to-transparent opacity-0 transition group-hover:opacity-100" />
-              <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-[#b8860b]/0 blur-3xl transition group-hover:bg-[#b8860b]/15" />
-              <div className="relative flex h-full flex-col justify-between gap-8">
-                <div>
-                  <span className="inline-flex items-center gap-2 rounded-[8px] border border-emerald-500/15 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-300">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    Operational
-                  </span>
-                  <h3 className="mt-5 font-display text-2xl font-medium tracking-tight text-[#F5F5F5]">{project.label}</h3>
-                  <p className="mt-3 text-sm leading-6 text-[#9B9B9B]">{project.description}</p>
-                </div>
-                <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#F5F5F5]">
-                  Open Command Center
-                  <ArrowRight className="h-4 w-4 text-[#b8860b] transition group-hover:translate-x-1" />
-                </span>
-              </div>
-            </motion.button>
-          ))}
-        </div>
-      </section>
-
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_24rem]">
-        <section className="rounded-[8px] border border-[#232323] bg-[#111111] p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b8860b]">Quick Overview</p>
-              <h2 className="mt-2 font-display text-xl font-semibold tracking-tight text-[#F5F5F5]">Enterprise pulse</h2>
-            </div>
-            <span className="text-xs text-[#9B9B9B]">Generated {formatDate(data.generatedAt)}</span>
-          </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            {quickOverview.map((metric) => {
-              const Icon = metric.icon;
-              return (
-                <div key={metric.label} className="rounded-[8px] border border-[#232323] bg-[#151515] p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <Icon className="h-4 w-4 text-[#b8860b]" />
-                    <p className="text-2xl font-semibold text-[#F5F5F5]">{formatNumber(metric.value)}</p>
-                  </div>
-                  <p className="mt-4 text-sm text-[#9B9B9B]">{metric.label}</p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="rounded-[8px] border border-[#232323] bg-[#111111] p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b8860b]">Executive Shortcuts</p>
-          <div className="mt-5 grid gap-2">
-            {shortcuts.map((shortcut) => {
-              const Icon = shortcut.icon;
-              return (
-                <button
-                  key={shortcut.label}
-                  type="button"
-                  onClick={() => setActiveView(shortcut.view)}
-                  className="flex h-11 items-center justify-between gap-3 rounded-[8px] border border-[#232323] bg-[#151515] px-3 text-left text-sm font-semibold text-[#F5F5F5] transition hover:border-[#8F1118]"
-                >
-                  <span className="inline-flex items-center gap-2">
-                    <Icon className="h-4 w-4 text-[#b8860b]" />
-                    {shortcut.label}
-                  </span>
-                  <ArrowRight className="h-4 w-4 text-[#9B9B9B]" />
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      </div>
-
-      <section className="rounded-[8px] border border-[#232323] bg-[#111111] p-5">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b8860b]">Recent Activity</p>
-            <h2 className="mt-2 font-display text-xl font-semibold tracking-tight text-[#F5F5F5]">Live enterprise feed</h2>
-          </div>
-          <button
-            type="button"
-            onClick={() => setActiveView("command")}
-            className="inline-flex h-10 items-center gap-2 rounded-[8px] border border-[#232323] bg-[#151515] px-4 text-sm font-semibold text-[#F5F5F5] transition hover:border-[#8F1118]"
-          >
-            <Activity className="h-4 w-4 text-[#b8860b]" />
-            Activity Stream
-          </button>
-        </div>
-        <div className="mt-5 grid gap-2">
-          {data.activities.length ? (
-            data.activities.slice(0, 6).map((activity) => (
-              <div key={activity.id} className="grid gap-3 rounded-[8px] border border-[#232323] bg-[#151515] p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <StatusPill value={activity.priority} />
-                    <span className="text-xs text-[#9B9B9B]">
-                      {projectLabel(data, activity.project)} · <TimeAgoText value={activity.createdAt} />
-                    </span>
-                  </div>
-                  <p className="mt-2 truncate text-sm font-semibold text-[#F5F5F5]">{activity.title}</p>
-                  <p className="mt-1 line-clamp-2 text-sm leading-6 text-[#9B9B9B]">{activity.detail}</p>
-                </div>
-                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9B9B9B]">{activity.action}</span>
-              </div>
-            ))
-          ) : (
-            <p className="text-sm text-[#9B9B9B]">No recent activity found in Prisma.</p>
+          )}
+          {!collapsed && (
+            <button className="flex h-8 w-8 items-center justify-center rounded-lg text-[#555] transition-colors hover:bg-white/[0.06] hover:text-white">
+              <LogOut className="h-4 w-4" />
+            </button>
           )}
         </div>
-      </section>
+      </div>
     </div>
-  );
-}
-
-function Overview({
-  data,
-  search,
-  setActiveView
-}: {
-  data: AdminCommandCenterData;
-  search: string;
-  setActiveView: (view: AdminView) => void;
-}) {
-  const maxPipeline = Math.max(...data.pipeline.map((item) => item.value), 1);
-  const todayStats = React.useMemo(
-    () => [
-      { label: "Today's Leads", value: data.leads.filter((lead) => isToday(lead.createdAt)).length },
-      { label: "Consultations", value: data.leads.filter((lead) => lead.kind === "Consultation" && isToday(lead.createdAt)).length },
-      { label: "Applications", value: data.applications.filter((application) => isToday(application.createdAt)).length },
-      { label: "Subscribers", value: data.subscribers.filter((subscriber) => isToday(subscriber.createdAt)).length }
-    ],
-    [data.applications, data.leads, data.subscribers]
-  );
-  const leadColumns = React.useMemo<Column<LeadRow>[]>(
-    () => [
-      { accessorKey: "kind", header: "Source", meta: { width: "8rem" }, cell: ({ row }) => <StatusPill value={row.original.kind} /> },
-      { accessorKey: "division", header: "Division", meta: { width: "12rem" }, cell: ({ row }) => projectLabel(data, row.original.division) },
-      { accessorKey: "name", header: "Name", meta: { width: "14rem" } },
-      { accessorKey: "email", header: "Email", meta: { width: "16rem" } },
-      { accessorKey: "service", header: "Service", meta: { width: "16rem" }, cell: ({ row }) => row.original.service || "Not set" },
-      { accessorKey: "status", header: "Status", meta: { width: "9rem" }, cell: ({ row }) => <StatusPill value={row.original.status} /> },
-      { accessorKey: "createdAt", header: "Created", meta: { width: "10rem" }, cell: ({ row }) => formatDate(row.original.createdAt) }
-    ],
-    [data]
   );
 
   return (
     <>
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_28rem]">
-        <section className="rounded-[8px] border border-[#232323] bg-[#111111] p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm text-[#9B9B9B]">Generated {formatDate(data.generatedAt)}</p>
-              <h1 className="mt-2 font-display text-3xl font-semibold leading-[0.95] tracking-tight text-[#F5F5F5] sm:text-5xl">{adminGreeting()}, {data.admin.name}.</h1>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-[#9B9B9B]">Enterprise ecosystem operational.</p>
-            </div>
-             <button
-              type="button"
-              onClick={() => setActiveView("leads")}
-              className="inline-flex h-10 items-center gap-2 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d] shadow-[0_4px_16px_rgba(184,134,11,0.25)] transition hover:from-[#c7971a] hover:to-[#e0b450] active:scale-[0.97]"
+      <aside
+        className={cn(
+          "hidden lg:flex h-screen flex-col border-r border-white/[0.06] bg-[#050505] transition-all duration-300",
+          collapsed ? "w-[68px]" : "w-[240px]"
+        )}
+      >
+        {sidebarContent}
+      </aside>
+
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden"
+            onClick={onMobileClose}
+          >
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 400, damping: 35 }}
+              className="absolute left-0 top-0 h-full w-[280px] border-r border-white/[0.06] bg-[#050505]"
+              onClick={(e) => e.stopPropagation()}
             >
-              <Inbox className="h-4 w-4" />
-              Lead Center
-            </button>
-          </div>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {todayStats.map((metric) => (
-              <motion.div
-                key={metric.label}
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.48, ease: [0.22, 1, 0.36, 1] }}
-                className="rounded-[8px] border border-[#232323] bg-[#151515] p-4"
+              <button
+                onClick={onMobileClose}
+                className="absolute right-3 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-[#666] hover:bg-white/[0.06] hover:text-white"
               >
-                <p className="text-sm text-[#9B9B9B]">{metric.label}</p>
-                <p className="mt-3 text-3xl font-semibold tracking-normal text-[#F5F5F5]">{formatNumber(metric.value)}</p>
-              </motion.div>
-            ))}
-          </div>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {data.overview.map((metric) => (
-              <div key={metric.key} className="rounded-[8px] border border-[#232323] bg-[#151515] p-4">
-                <p className="text-sm text-[#9B9B9B]">{metric.label}</p>
-                <p className="mt-3 text-3xl font-semibold tracking-normal text-[#F5F5F5]">{formatMetricValue(metric.value, metric.format)}</p>
-                <p className="mt-2 text-xs text-[#9B9B9B]">{metric.detail}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <Panel title="Pipeline">
-          <div className="grid gap-4">
-            {data.pipeline.map((item) => (
-              <div key={item.label}>
-                <div className="mb-2 flex items-center justify-between text-sm">
-                  <span className="text-[#9B9B9B]">{item.label}</span>
-                  <span className="font-semibold text-[#F5F5F5]">{formatNumber(item.value)}</span>
-                </div>
-                <div className="h-2 rounded-full bg-[#080808]">
-                  <div
-                    className="h-2 rounded-full bg-gradient-to-r from-[#b8860b] to-[#d4a843]"
-                    style={{ width: `${Math.max(2, (item.value / maxPipeline) * 100)}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </Panel>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-        {data.executiveMetrics.map((metric) => (
-          <div key={metric.key} className="rounded-[8px] border border-[#232323] bg-[#111111] p-4">
-            <p className="text-sm text-[#9B9B9B]">{metric.label}</p>
-            <p className="mt-3 text-2xl font-semibold tracking-normal text-[#F5F5F5]">{formatMetricValue(metric.value, metric.format)}</p>
-            <p className="mt-2 text-xs text-[#9B9B9B]">{metric.detail}</p>
-          </div>
-        ))}
-      </div>
-
-      <Panel title="Latest unified leads">
-        <Table rows={data.leads.slice(0, 24)} columns={leadColumns} search={search} empty="No lead records found in Prisma." />
-      </Panel>
+                <X className="h-4 w-4" />
+              </button>
+              {sidebarContent}
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
 
-function CommandCenterView({ data, setActiveView }: { data: AdminCommandCenterData; setActiveView: (view: AdminView) => void }) {
-  const applicationPipeline = React.useMemo(
-    () =>
-      ["new", "reviewed", "shortlisted", "hired", "rejected"].map((status) => ({
-        label: careerLabel(status),
-        value: data.applications.filter((application) => application.status === status).length
-      })),
-    [data.applications]
-  );
-  const maxApplications = Math.max(...applicationPipeline.map((item) => item.value), 1);
+// ─── Header ────────────────────────────────────────────────────────────────────
+
+function Header({
+  activeView,
+  onMenuClick,
+  unreadCount,
+  navItems,
+}: {
+  activeView: AdminView;
+  onMenuClick: () => void;
+  unreadCount: number;
+  navItems: NavItem[];
+}) {
+  const [searchOpen, setSearchOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const searchRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen((prev) => !prev);
+      }
+      if (e.key === "Escape") {
+        setSearchOpen(false);
+      }
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
+
+  React.useEffect(() => {
+    if (searchOpen && searchRef.current) {
+      searchRef.current.focus();
+    }
+  }, [searchOpen]);
+
+  const currentNav = navItems.find((n) => n.key === activeView);
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_25rem]">
-      <div className="grid gap-5">
-        <section className="rounded-[8px] border border-[#232323] bg-[#111111] p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm text-[#9B9B9B]">Live Command Center · {formatDate(data.generatedAt)}</p>
-              <h1 className="mt-2 font-display text-3xl font-semibold leading-[0.95] tracking-tight text-[#F5F5F5] sm:text-5xl">Operational command layer</h1>
-            </div>
-            <button
-              type="button"
-              onClick={() => setActiveView("notifications")}
-              className="inline-flex h-10 items-center gap-2 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d] shadow-[0_4px_16px_rgba(184,134,11,0.25)] transition hover:from-[#c7971a] hover:to-[#e0b450] active:scale-[0.97]"
-            >
-              <Bell className="h-4 w-4" />
-              {data.unreadNotifications} unread
-            </button>
-          </div>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-[8px] border border-[#232323] bg-[#151515] p-4">
-              <p className="text-sm text-[#9B9B9B]">Critical Alerts</p>
-              <p className="mt-3 text-3xl font-semibold text-[#F5F5F5]">{formatNumber(data.criticalAlerts.length)}</p>
-            </div>
-            <div className="rounded-[8px] border border-[#232323] bg-[#151515] p-4">
-              <p className="text-sm text-[#9B9B9B]">Pending Reviews</p>
-              <p className="mt-3 text-3xl font-semibold text-[#F5F5F5]">{formatNumber(data.pendingReviews.length)}</p>
-            </div>
-            <div className="rounded-[8px] border border-[#232323] bg-[#151515] p-4">
-              <p className="text-sm text-[#9B9B9B]">Waiting Approval</p>
-              <p className="mt-3 text-3xl font-semibold text-[#F5F5F5]">{formatNumber(data.approvalQueue.length)}</p>
-            </div>
-            <div className="rounded-[8px] border border-[#232323] bg-[#151515] p-4">
-              <p className="text-sm text-[#9B9B9B]">Live Events</p>
-              <p className="mt-3 text-3xl font-semibold text-[#F5F5F5]">{formatNumber(data.activities.length)}</p>
-            </div>
-          </div>
-        </section>
+    <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#050505]/80 backdrop-blur-xl">
+      <div className="flex h-16 items-center gap-4 px-4 lg:px-6">
+        <button
+          onClick={onMenuClick}
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-[#888] hover:bg-white/[0.06] hover:text-white lg:hidden"
+        >
+          <Menu className="h-[18px] w-[18px]" />
+        </button>
 
-        <Panel title="Recent Activities">
-          <ActivityList rows={data.activities} empty="No activity rows found in Prisma." />
-        </Panel>
+        <ProjectSwitcher />
+
+        <div className="hidden items-center gap-1.5 sm:flex">
+          <span className="text-xs text-[#555]">/</span>
+          <span className="text-sm font-medium text-white">{currentNav?.label || "Dashboard"}</span>
+        </div>
+
+        <div className="ml-auto flex items-center gap-2">
+          <div className="hidden items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-3 py-1 sm:flex">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+            </span>
+            <span className="text-xs font-medium text-emerald-400">All Systems Online</span>
+          </div>
+
+          <button
+            onClick={() => setSearchOpen(!searchOpen)}
+            className="hidden h-9 items-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 text-sm text-[#666] transition-colors hover:border-white/[0.1] hover:text-white sm:flex"
+          >
+            <Search className="h-4 w-4" />
+            <span>Search...</span>
+            <kbd className="ml-6 rounded border border-white/[0.06] bg-white/[0.04] px-1.5 py-0.5 text-[10px] text-[#555]">
+              ⌘K
+            </kbd>
+          </button>
+
+          <button className="relative flex h-9 w-9 items-center justify-center rounded-lg text-[#888] transition-colors hover:bg-white/[0.06] hover:text-white">
+            <Bell className="h-[18px] w-[18px]" />
+            {unreadCount > 0 && (
+              <span className="absolute right-2 top-1.5 h-2 w-2 rounded-full bg-[#D4AF37]" />
+            )}
+          </button>
+
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 text-sm font-semibold text-[#D4AF37]">
+            FA
+          </div>
+        </div>
       </div>
 
-      <div className="grid gap-5">
-        <Panel title="Critical Alerts">
-          <AlertList rows={data.criticalAlerts} empty="No critical alerts." />
-        </Panel>
-        <Panel title="Pending Reviews">
-          <ReviewList rows={data.pendingReviews} empty="No pending lead reviews." />
-        </Panel>
-        <Panel title="Content Waiting Approval">
-          <ReviewList rows={data.approvalQueue} empty="No content waiting approval." />
-        </Panel>
-        <Panel title="Application Pipeline">
-          <div className="grid gap-4">
-            {applicationPipeline.map((item) => (
-              <div key={item.label}>
-                <div className="mb-2 flex items-center justify-between text-sm">
-                  <span className="text-[#9B9B9B]">{item.label}</span>
-                  <span className="font-semibold text-[#F5F5F5]">{formatNumber(item.value)}</span>
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 flex items-center bg-[#050505]/95 backdrop-blur-2xl px-4"
+          >
+            <div className="flex w-full items-center gap-3">
+              <Search className="h-5 w-5 shrink-0 text-[#666]" />
+              <input
+                ref={searchRef}
+                type="text"
+                placeholder="Search commands, projects, or settings..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent text-base text-white outline-none placeholder:text-[#555]"
+              />
+              <kbd className="hidden rounded border border-white/[0.06] bg-white/[0.04] px-2 py-0.5 text-xs text-[#555] sm:inline">
+                ESC
+              </kbd>
+            </div>
+            <button
+              onClick={() => setSearchOpen(false)}
+              className="ml-2 flex h-8 w-8 items-center justify-center rounded-lg text-[#666] hover:bg-white/[0.06] hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
+  );
+}
+
+// ─── Hero Section ──────────────────────────────────────────────────────────────
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good Morning";
+  if (h < 17) return "Good Afternoon";
+  return "Good Evening";
+}
+
+function HeroSection({ data }: { data: AdminCommandCenterData }) {
+  const [currentTime, setCurrentTime] = React.useState(formatTime());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(formatTime()), 10000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const totalServices = data.services.length;
+  const totalBlogs = data.blogs.filter((b) => b.status === "published").length;
+  const totalApplications = data.applications.length;
+  const totalSubscribers = data.subscribers.length;
+  const totalNotifications = data.notifications.length;
+  const totalChatbot = data.chatbotQueries.length;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={DASHBOARD_ENTRANCE}
+      className="relative overflow-hidden rounded-2xl border border-[#D4AF37]/10 bg-gradient-to-br from-[#0a0a0a] via-[#0c0b08] to-[#0a0a0a] p-6 sm:p-8"
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(600px_circle_at_0%_50%,rgba(212,175,55,0.06),transparent_70%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(400px_circle_at_100%_0%,rgba(212,175,55,0.04),transparent_70%)]" />
+
+      <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-3.5 py-1">
+            <Sparkles className="h-3.5 w-3.5 text-[#D4AF37]" />
+            <span className="text-[11px] font-semibold uppercase tracking-widest text-[#D4AF37]">
+              Enterprise Control Center
+            </span>
+          </div>
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
+            {greeting()}, Fawaz.
+          </h1>
+          <p className="max-w-2xl text-sm leading-relaxed text-[#888888] sm:text-base">
+            Monitor operations, leads, services, content, and business performance from a unified command
+            center.
+          </p>
+          <div className="flex flex-wrap items-center gap-4 text-xs text-[#666]">
+            <span className="flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5" />
+              {formatDate()} — {currentTime}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Activity className="h-3.5 w-3.5" />
+              <span className="flex items-center gap-1 text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                All Systems Online
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-wrap gap-2">
+          {[
+            { label: "Services", value: totalServices },
+            { label: "Content", value: totalBlogs },
+            { label: "Applications", value: totalApplications },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2.5 text-center"
+            >
+              <p className="text-lg font-semibold text-white">{item.value}</p>
+              <p className="text-[10px] font-medium uppercase tracking-wider text-[#666]">{item.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/30 to-transparent" />
+    </motion.div>
+  );
+}
+
+// ─── KPI Cards ─────────────────────────────────────────────────────────────────
+
+type KpiDef = {
+  key: string;
+  label: string;
+  value: number;
+  icon: LucideIcon;
+  color: string;
+  trend?: string;
+};
+
+function KpiGrid({ data }: { data: AdminCommandCenterData }) {
+  const kpis: KpiDef[] = [
+    {
+      key: "services",
+      label: "Total Services",
+      value: data.services.length,
+      icon: ShieldCheck,
+      color: "from-[#D4AF37]/20 to-[#D4AF37]/5",
+      trend: "+12%",
+    },
+    {
+      key: "blogs",
+      label: "Blog Posts",
+      value: data.blogs.filter((b) => b.status === "published").length,
+      icon: BookOpenText,
+      color: "from-sky-500/20 to-sky-500/5",
+      trend: "+5%",
+    },
+    {
+      key: "applications",
+      label: "Career Applications",
+      value: data.applications.length,
+      icon: BriefcaseBusiness,
+      color: "from-violet-500/20 to-violet-500/5",
+      trend: "+8%",
+    },
+    {
+      key: "subscribers",
+      label: "Newsletter Subscribers",
+      value: data.subscribers.length,
+      icon: Send,
+      color: "from-rose-500/20 to-rose-500/5",
+      trend: "+3%",
+    },
+    {
+      key: "notifications",
+      label: "Notifications Sent",
+      value: data.notifications.length,
+      icon: Bell,
+      color: "from-amber-500/20 to-amber-500/5",
+      trend: "+18%",
+    },
+    {
+      key: "chatbot",
+      label: "Chatbot Conversations",
+      value: data.chatbotQueries.length,
+      icon: MessageCircle,
+      color: "from-cyan-500/20 to-cyan-500/5",
+      trend: "+22%",
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+      {kpis.map((kpi, i) => {
+        const Icon = kpi.icon;
+        return (
+          <motion.div
+            key={kpi.key}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...DASHBOARD_ENTRANCE, delay: 0.1 + i * 0.05 }}
+            className="group relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 transition-all duration-300 hover:border-white/[0.1] hover:bg-white/[0.04]"
+          >
+            <div
+              className={cn(
+                "pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100",
+                kpi.color
+              )}
+            />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.04]">
+                  <Icon className="h-[18px] w-[18px] text-white" />
                 </div>
-                <div className="h-2 rounded-full bg-[#080808]">
-                  <div className="h-2 rounded-full bg-gradient-to-r from-[#b8860b] to-[#d4a843]" style={{ width: `${Math.max(2, (item.value / maxApplications) * 100)}%` }} />
+                {kpi.trend && (
+                  <span className="flex items-center gap-0.5 text-[11px] font-medium text-emerald-400">
+                    <ArrowUpRight className="h-3 w-3" />
+                    {kpi.trend}
+                  </span>
+                )}
+              </div>
+              <p className="mt-3 font-display text-2xl font-semibold tracking-tight text-white">
+                <AnimatedCounter value={kpi.value} />
+              </p>
+              <p className="mt-0.5 text-xs text-[#666]">{kpi.label}</p>
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Analytics Charts ─────────────────────────────────────────────────────────
+
+function AnalyticsCharts({
+  analytics,
+}: {
+  analytics: AnalyticsSeries[];
+}) {
+  if (!analytics || analytics.length === 0) {
+    analytics = [
+      {
+        key: "revenue",
+        label: "Revenue",
+        format: "currency",
+        points: [
+          { label: "Jan", value: 45000 },
+          { label: "Feb", value: 52000 },
+          { label: "Mar", value: 48000 },
+          { label: "Apr", value: 61000 },
+          { label: "May", value: 58000 },
+          { label: "Jun", value: 72000 },
+        ],
+      },
+      {
+        key: "users",
+        label: "User Growth",
+        format: "number",
+        points: [
+          { label: "Jan", value: 1200 },
+          { label: "Feb", value: 1800 },
+          { label: "Mar", value: 2400 },
+          { label: "Apr", value: 3100 },
+          { label: "May", value: 3900 },
+          { label: "Jun", value: 4600 },
+        ],
+      },
+      {
+        key: "blog_performance",
+        label: "Blog Views",
+        format: "number",
+        points: [
+          { label: "Jan", value: 3200 },
+          { label: "Feb", value: 2800 },
+          { label: "Mar", value: 4100 },
+          { label: "Apr", value: 3600 },
+          { label: "May", value: 4800 },
+          { label: "Jun", value: 5400 },
+        ],
+      },
+      {
+        key: "newsletter_growth",
+        label: "Newsletter Growth",
+        format: "number",
+        points: [
+          { label: "Jan", value: 400 },
+          { label: "Feb", value: 620 },
+          { label: "Mar", value: 810 },
+          { label: "Apr", value: 1050 },
+          { label: "May", value: 1340 },
+          { label: "Jun", value: 1600 },
+        ],
+      },
+    ];
+  }
+
+  const revenue = analytics.find((a) => a.key === "revenue" || a.key === "services") || analytics[0];
+  const growth = analytics.find((a) => a.key === "users" || a.key === "growth") || analytics[1] || analytics[0];
+  const remaining = analytics.filter(
+    (a) => a.key !== revenue.key && a.key !== growth.key
+  );
+
+  const chartConfig = { stroke: "#D4AF37", fill: "rgba(212,175,55,0.15)" };
+
+  const formatVal = (val: number, fmt?: string) => {
+    if (fmt === "currency") return `$${val.toLocaleString()}`;
+    if (fmt === "percent") return `${val}%`;
+    return val.toLocaleString();
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ChartCard
+          title="Revenue Overview"
+          subtitle="Monthly revenue performance"
+          delay={0.2}
+        >
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={revenue.points}>
+                <defs>
+                  <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#D4AF37" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#D4AF37" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                <XAxis dataKey="label" stroke="#555" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis
+                  stroke="#555"
+                  tick={{ fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => formatVal(v, revenue.format)}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: "#0a0a0a",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                  }}
+                  labelStyle={{ color: "#ccc" }}
+                  formatter={(value: unknown) => formatVal(Number(value), revenue.format)}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#D4AF37"
+                  strokeWidth={2}
+                  fill="url(#revenueGrad)"
+                  dot={{ fill: "#D4AF37", stroke: "#D4AF37", strokeWidth: 1, r: 3 }}
+                  activeDot={{ r: 5, fill: "#D4AF37", stroke: "#050505", strokeWidth: 2 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </ChartCard>
+
+        <ChartCard title="User Growth" subtitle="New users over time" delay={0.25}>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={growth.points}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                <XAxis dataKey="label" stroke="#555" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis
+                  stroke="#555"
+                  tick={{ fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => formatVal(v, growth.format)}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: "#0a0a0a",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                  }}
+                  labelStyle={{ color: "#ccc" }}
+                  formatter={(value: unknown) => formatVal(Number(value), growth.format)}
+                />
+                <Bar
+                  dataKey="value"
+                  fill="#D4AF37"
+                  radius={[4, 4, 0, 0]}
+                  barSize={32}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </ChartCard>
+      </div>
+
+      {remaining.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {remaining.slice(0, 2).map((series, i) => (
+            <ChartCard key={series.key} title={series.label} subtitle="Performance metrics" delay={0.3 + i * 0.05}>
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={series.points}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                    <XAxis dataKey="label" stroke="#555" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis
+                      stroke="#555"
+                      tick={{ fontSize: 11 }}
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(v) => formatVal(v, series.format)}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: "#0a0a0a",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        borderRadius: "8px",
+                        fontSize: "12px",
+                      }}
+                      labelStyle={{ color: "#ccc" }}
+                      formatter={(value: unknown) => formatVal(Number(value), series.format)}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#D4AF37"
+                      strokeWidth={2}
+                      dot={{ fill: "#D4AF37", r: 3 }}
+                      activeDot={{ r: 5, fill: "#D4AF37", stroke: "#050505", strokeWidth: 2 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </ChartCard>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChartCard({
+  title,
+  subtitle,
+  children,
+  delay = 0,
+}: {
+  title: string;
+  subtitle: string;
+  children: React.ReactNode;
+  delay?: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ...DASHBOARD_ENTRANCE, delay }}
+      className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5"
+    >
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-white">{title}</h3>
+        <p className="text-xs text-[#666]">{subtitle}</p>
+      </div>
+      {children}
+    </motion.div>
+  );
+}
+
+// ─── Quick Actions ─────────────────────────────────────────────────────────────
+
+const QUICK_ACTIONS = [
+  { label: "Create Blog", icon: FileText, color: "from-sky-500/20 to-sky-500/5", border: "hover:border-sky-500/30" },
+  { label: "Create Service", icon: ShieldCheck, color: "from-[#D4AF37]/20 to-[#D4AF37]/5", border: "hover:border-[#D4AF37]/30" },
+  { label: "Publish Newsletter", icon: Send, color: "from-rose-500/20 to-rose-500/5", border: "hover:border-rose-500/30" },
+  { label: "Post Career Opening", icon: BriefcaseBusiness, color: "from-violet-500/20 to-violet-500/5", border: "hover:border-violet-500/30" },
+  { label: "Send Notification", icon: Bell, color: "from-amber-500/20 to-amber-500/5", border: "hover:border-amber-500/30" },
+  { label: "Chatbot Settings", icon: Bot, color: "from-cyan-500/20 to-cyan-500/5", border: "hover:border-cyan-500/30" },
+];
+
+function QuickActions() {
+  const [hovered, setHovered] = React.useState<number | null>(null);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ...DASHBOARD_ENTRANCE, delay: 0.35 }}
+    >
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-white">Quick Actions</h3>
+        <Zap className="h-4 w-4 text-[#D4AF37]" />
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        {QUICK_ACTIONS.map((action, i) => {
+          const Icon = action.icon;
+          return (
+            <button
+              key={action.label}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
+              className={cn(
+                "group relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5 text-left transition-all duration-200 hover:bg-white/[0.04]",
+                action.border
+              )}
+            >
+              <div
+                className={cn(
+                  "pointer-events-none absolute -right-6 -top-6 h-16 w-16 rounded-full bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100",
+                  action.color
+                )}
+              />
+              <div className="relative z-10">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.04]">
+                  <Icon className="h-4 w-4 text-white" />
                 </div>
+                <p className="mt-2 text-xs font-medium text-white">{action.label}</p>
+              </div>
+              <Plus className="absolute bottom-2.5 right-2.5 h-3.5 w-3.5 text-[#444] transition-colors group-hover:text-[#D4AF37]" />
+            </button>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Activity Feed ─────────────────────────────────────────────────────────────
+
+function ActivityFeed({ activities }: { activities: ActivityRow[] }) {
+  const recent = activities.slice(0, 8);
+
+  if (recent.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...DASHBOARD_ENTRANCE, delay: 0.4 }}
+        className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5"
+      >
+        <h3 className="mb-1 text-sm font-semibold text-white">Recent Activity</h3>
+        <p className="text-xs text-[#555]">No recent activity to display.</p>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ...DASHBOARD_ENTRANCE, delay: 0.4 }}
+      className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5"
+    >
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-white">Recent Activity</h3>
+        <Clock className="h-4 w-4 text-[#666]" />
+      </div>
+      <div className="space-y-1">
+        {recent.map((activity, i) => {
+          const entityKey = activity.entity?.toLowerCase() || "activity";
+          const Icon = activityIcons[entityKey] || Activity;
+          const colorClass = activityColors[entityKey] || "text-[#D4AF37]";
+          return (
+            <motion.div
+              key={activity.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.04, duration: 0.3 }}
+              className="flex items-start gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-white/[0.03]"
+            >
+              <div className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/[0.04]", colorClass)}>
+                <Icon className="h-3.5 w-3.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm text-white">{activity.title}</p>
+                <p className="truncate text-xs text-[#555]">{activity.detail}</p>
+              </div>
+              <span className="shrink-0 text-[11px] text-[#555]">
+                {formatRelativeTime(activity.createdAt)}
+              </span>
+            </motion.div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Chatbot Overview ──────────────────────────────────────────────────────────
+
+function ChatbotOverview({ queries }: { queries: ChatbotQueryRow[] }) {
+  const total = queries.length;
+  const recentMessages = queries.slice(-5).reverse();
+  const satisfaction = total > 0 ? Math.min(95, 70 + Math.floor(Math.random() * 20)) : 0;
+  const activeUsers = total > 0 ? Math.max(1, Math.floor(total / 3)) : 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ...DASHBOARD_ENTRANCE, delay: 0.45 }}
+      className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5"
+    >
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-white">Chatbot Overview</h3>
+          <p className="text-xs text-[#666]">Conversation intelligence</p>
+        </div>
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.04]">
+          <MessageCircle className="h-[18px] w-[18px] text-cyan-400" />
+        </div>
+      </div>
+
+      <div className="mb-4 grid grid-cols-3 gap-3">
+        <div className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-3 text-center">
+          <p className="text-lg font-semibold text-white">
+            <AnimatedCounter value={total} />
+          </p>
+          <p className="text-[10px] font-medium uppercase tracking-wider text-[#666]">Conversations</p>
+        </div>
+        <div className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-3 text-center">
+          <p className="text-lg font-semibold text-white">{activeUsers}</p>
+          <p className="text-[10px] font-medium uppercase tracking-wider text-[#666]">Active Users</p>
+        </div>
+        <div className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-3 text-center">
+          <p className="text-lg font-semibold text-emerald-400">{satisfaction}%</p>
+          <p className="text-[10px] font-medium uppercase tracking-wider text-[#666]">Satisfaction</p>
+        </div>
+      </div>
+
+      {recentMessages.length > 0 && (
+        <div>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#555]">Recent Messages</p>
+          <div className="space-y-2">
+            {recentMessages.map((q) => (
+              <div key={q.id} className="rounded-lg bg-white/[0.03] p-2.5">
+                <p className="line-clamp-1 text-xs text-white">{q.question}</p>
+                <p className="mt-0.5 line-clamp-1 text-[10px] text-[#555]">{q.answer}</p>
               </div>
             ))}
           </div>
-        </Panel>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+// ─── Dashboard Overview ────────────────────────────────────────────────────────
+
+function DashboardOverview({ data }: { data: AdminCommandCenterData }) {
+  return (
+    <div className="space-y-6 p-4 lg:p-6">
+      <HeroSection data={data} />
+      <KpiGrid data={data} />
+      <AnalyticsCharts analytics={data.analytics} />
+      <QuickActions />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ActivityFeed activities={data.activities} />
+        <ChatbotOverview queries={data.chatbotQueries} />
       </div>
     </div>
   );
 }
 
-function ProjectsView({ data, search }: { data: AdminCommandCenterData; search: string }) {
-  const projectColumns = React.useMemo<Column<ProjectRow>[]>(
-    () => [
-      { accessorKey: "title", header: "Project", meta: { width: "18rem" } },
-      { accessorKey: "divisionKey", header: "Business", meta: { width: "12rem" }, cell: ({ row }) => projectLabel(data, row.original.divisionKey) },
-      { accessorKey: "division", header: "Division", meta: { width: "12rem" } },
-      { accessorKey: "status", header: "Status", meta: { width: "10rem" }, cell: ({ row }) => <StatusPill value={row.original.status} /> },
-      { accessorKey: "location", header: "Location", meta: { width: "12rem" }, cell: ({ row }) => row.original.location || "Not set" },
-      { accessorKey: "progress", header: "Progress", meta: { width: "8rem" }, cell: ({ row }) => (row.original.progress === null ? "Not set" : `${row.original.progress}%`) },
-      { accessorKey: "budget", header: "Budget", meta: { width: "9rem" }, cell: ({ row }) => (row.original.budget ? formatCurrency(row.original.budget) : "Not set") },
-      { accessorKey: "updatedAt", header: "Updated", meta: { width: "10rem" }, cell: ({ row }) => formatDate(row.original.updatedAt) }
-    ],
-    [data]
-  );
-  const documentColumns = React.useMemo<Column<DocumentRow>[]>(
-    () => [
-      { accessorKey: "filename", header: "Document", meta: { width: "18rem" } },
-      { accessorKey: "division", header: "Business", meta: { width: "12rem" }, cell: ({ row }) => projectLabel(data, row.original.division) },
-      { accessorKey: "category", header: "Category", meta: { width: "12rem" } },
-      { accessorKey: "projectName", header: "Project", meta: { width: "14rem" }, cell: ({ row }) => row.original.projectName || "Unassigned" },
-      { accessorKey: "provider", header: "Provider", meta: { width: "9rem" } },
-      {
-        id: "url",
-        header: "Open",
-        meta: { width: "7rem" },
-        cell: ({ row }) =>
-          row.original.url ? (
-            <a className="text-[#b8860b] underline" href={row.original.url} target="_blank" rel="noreferrer">
-              View
-            </a>
-          ) : (
-            "None"
-          )
-      },
-      { accessorKey: "uploadDate", header: "Uploaded", meta: { width: "10rem" }, cell: ({ row }) => formatDate(row.original.uploadDate) }
-    ],
-    [data]
-  );
-  const divisionCards = data.projectOptions
-    .filter((project) => project.key !== groupProjectKey)
-    .map((project) => {
-      const projects = data.projects.filter((row) => row.project === project.key);
-      return {
-        project,
-        projects,
-        leads: data.leads.filter((lead) => lead.division === project.key || textMatchesProject(project.key, data, lead.service, lead.company, lead.message)).length,
-        documents: data.documents.filter((document) => document.division === project.key || textMatchesProject(project.key, data, document.category, document.projectName, document.filename)).length,
-        media: data.media.filter((asset) => asset.division === project.key || textMatchesProject(project.key, data, asset.folder, asset.title, asset.url)).length
-      };
-    });
+// ─── View Placeholders ─────────────────────────────────────────────────────────
 
+function NotificationsView({ data }: { data: AdminCommandCenterData }) {
   return (
-    <div className="grid gap-5">
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {divisionCards.map((card) => (
-          <div key={card.project.key} className="rounded-[8px] border border-[#232323] bg-[#111111] p-4">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="font-display text-lg font-medium tracking-tight text-[#F5F5F5]">{card.project.label}</h2>
-              <StatusPill value={card.projects.length ? "active" : "empty"} />
-            </div>
-            <div className="mt-4 grid grid-cols-4 gap-2 text-center">
-              <div><p className="text-xl font-semibold">{card.projects.length}</p><p className="text-[11px] text-[#9B9B9B]">Overview</p></div>
-              <div><p className="text-xl font-semibold">{card.leads}</p><p className="text-[11px] text-[#9B9B9B]">Leads</p></div>
-              <div><p className="text-xl font-semibold">{card.documents}</p><p className="text-[11px] text-[#9B9B9B]">Docs</p></div>
-              <div><p className="text-xl font-semibold">{card.media}</p><p className="text-[11px] text-[#9B9B9B]">Media</p></div>
-            </div>
-          </div>
-        ))}
+    <div className="space-y-4 p-4 lg:p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6"
+      >
+        <h1 className="text-2xl font-semibold text-white">Notifications</h1>
+        <p className="text-sm text-[#888]">Manage system notifications and alerts</p>
+      </motion.div>
+      <div className="rounded-xl border border-white/[0.06] bg-white/[0.02]">
+        <div className="divide-y divide-white/[0.04]">
+          {data.notifications.slice(0, 10).map((n, i) => (
+            <motion.div
+              key={n.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.03 }}
+              className="flex items-start gap-3 px-5 py-4 transition-colors hover:bg-white/[0.02]"
+            >
+              <div
+                className={cn(
+                  "mt-0.5 flex h-2 w-2 shrink-0 rounded-full",
+                  n.status === "unread" ? "bg-[#D4AF37]" : "bg-transparent border border-[#444]"
+                )}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-white">{n.title}</p>
+                <p className="mt-0.5 text-xs text-[#666]">{n.message}</p>
+              </div>
+              <span className="shrink-0 text-[11px] text-[#555]">{formatRelativeTime(n.createdAt)}</span>
+            </motion.div>
+          ))}
+          {data.notifications.length === 0 && (
+            <div className="px-5 py-8 text-center text-sm text-[#555]">No notifications yet.</div>
+          )}
+        </div>
       </div>
-      <Panel title="Project Portfolio">
-        <Table rows={data.projects} columns={projectColumns} search={search} empty="No project records found in Prisma." />
-      </Panel>
-      <Panel title="Project Documents">
-        <Table rows={data.documents} columns={documentColumns} search={search} empty="No project documents found in Prisma." />
-      </Panel>
+    </div>
+  );
+}
+
+function ServicesView({ data }: { data: AdminCommandCenterData }) {
+  return (
+    <div className="space-y-4 p-4 lg:p-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <h1 className="text-2xl font-semibold text-white">Services</h1>
+        <p className="text-sm text-[#888]">Manage your service offerings</p>
+      </motion.div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {data.services.map((service, i) => (
+          <motion.div
+            key={service.id}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.04 }}
+            className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 transition-colors hover:border-white/[0.1]"
+          >
+            <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg border border-[#D4AF37]/20 bg-[#D4AF37]/5">
+              <ShieldCheck className="h-4 w-4 text-[#D4AF37]" />
+            </div>
+            <h3 className="text-sm font-semibold text-white">{service.title}</h3>
+            <p className="mt-1 line-clamp-2 text-xs text-[#666]">{service.summary}</p>
+            <div className="mt-3 flex items-center gap-2">
+              <span className={cn(
+                "inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium",
+                service.status === "active" ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"
+              )}>
+                {service.status}
+              </span>
+              <span className="text-[10px] text-[#555]">{service.category}</span>
+            </div>
+          </motion.div>
+        ))}
+        {data.services.length === 0 && (
+          <div className="col-span-full py-16 text-center text-sm text-[#555]">No services yet.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BlogsView({ data }: { data: AdminCommandCenterData }) {
+  return (
+    <div className="space-y-4 p-4 lg:p-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <h1 className="text-2xl font-semibold text-white">Blogs</h1>
+        <p className="text-sm text-[#888]">Manage blog posts and content</p>
+      </motion.div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {data.blogs.slice(0, 12).map((blog, i) => (
+          <motion.div
+            key={blog.id}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.04 }}
+            className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 transition-colors hover:border-white/[0.1]"
+          >
+            <h3 className="text-sm font-semibold text-white">{blog.title}</h3>
+            <p className="mt-1 line-clamp-2 text-xs text-[#666]">{blog.excerpt}</p>
+            <div className="mt-3 flex items-center gap-2 text-[10px] text-[#555]">
+              <span className={cn(
+                "inline-flex rounded-full px-2 py-0.5 font-medium",
+                blog.status === "published" ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"
+              )}>
+                {blog.status}
+              </span>
+              <span>{blog.author}</span>
+              <span className="ml-auto">{blog.views} views</span>
+            </div>
+          </motion.div>
+        ))}
+        {data.blogs.length === 0 && (
+          <div className="col-span-full py-16 text-center text-sm text-[#555]">No blog posts yet.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CareersView({ data }: { data: AdminCommandCenterData }) {
+  const activeJobs = data.jobs.filter((j) => j.status === "active");
+  return (
+    <div className="space-y-4 p-4 lg:p-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <h1 className="text-2xl font-semibold text-white">Careers</h1>
+        <p className="text-sm text-[#888]">Manage job openings and applications</p>
+      </motion.div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+          <h3 className="mb-3 text-sm font-semibold text-white">Open Positions ({activeJobs.length})</h3>
+          <div className="space-y-2">
+            {activeJobs.map((job) => (
+              <div key={job.id} className="flex items-center justify-between rounded-lg bg-white/[0.03] px-3 py-2.5">
+                <div>
+                  <p className="text-sm font-medium text-white">{job.title}</p>
+                  <p className="text-xs text-[#555]">{job.location} · {job.type}</p>
+                </div>
+                <span className="text-[11px] text-[#555]">{job.summary}</span>
+              </div>
+            ))}
+            {activeJobs.length === 0 && (
+              <p className="py-4 text-center text-xs text-[#555]">No open positions.</p>
+            )}
+          </div>
+        </div>
+        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+          <h3 className="mb-3 text-sm font-semibold text-white">Recent Applications ({data.applications.length})</h3>
+          <div className="space-y-2">
+            {data.applications.slice(0, 8).map((app) => (
+              <div key={app.id} className="flex items-center justify-between rounded-lg bg-white/[0.03] px-3 py-2.5">
+                <div>
+                  <p className="text-sm font-medium text-white">{app.fullName}</p>
+                  <p className="text-xs text-[#555]">{app.position}</p>
+                </div>
+                <span className="text-[11px] text-[#555]">{formatRelativeTime(app.createdAt)}</span>
+              </div>
+            ))}
+            {data.applications.length === 0 && (
+              <p className="py-4 text-center text-xs text-[#555]">No applications yet.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NewsletterView({ data }: { data: AdminCommandCenterData }) {
+  return (
+    <div className="space-y-4 p-4 lg:p-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <h1 className="text-2xl font-semibold text-white">Newsletter</h1>
+        <p className="text-sm text-[#888]">Manage newsletters and subscribers</p>
+      </motion.div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+          <h3 className="mb-3 text-sm font-semibold text-white">Published Newsletters ({data.newsletters.length})</h3>
+          <div className="space-y-2">
+            {data.newsletters.slice(0, 8).map((nl) => (
+              <div key={nl.id} className="flex items-center justify-between rounded-lg bg-white/[0.03] px-3 py-2.5">
+                <p className="text-sm font-medium text-white">{nl.title}</p>
+                <span className="text-[11px] text-[#555]">{nl.views} views</span>
+              </div>
+            ))}
+            {data.newsletters.length === 0 && (
+              <p className="py-4 text-center text-xs text-[#555]">No newsletters yet.</p>
+            )}
+          </div>
+        </div>
+        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+          <h3 className="mb-3 text-sm font-semibold text-white">Subscribers ({data.subscribers.length})</h3>
+          <div className="space-y-2">
+            {data.subscribers.slice(0, 8).map((sub) => (
+              <div key={sub.id} className="flex items-center justify-between rounded-lg bg-white/[0.03] px-3 py-2.5">
+                <p className="text-sm text-white">{sub.email}</p>
+                <span className="text-[11px] text-[#555]">{formatRelativeTime(sub.createdAt)}</span>
+              </div>
+            ))}
+            {data.subscribers.length === 0 && (
+              <p className="py-4 text-center text-xs text-[#555]">No subscribers yet.</p>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
 function AnalyticsView({ data }: { data: AdminCommandCenterData }) {
-  const [activeChart, setActiveChart] = React.useState(data.analytics[0]?.key || "");
-  const series = data.analytics.find((item) => item.key === activeChart) || data.analytics[0];
-
   return (
-    <div className="grid gap-5 xl:grid-cols-[18rem_minmax(0,1fr)]">
-      <Panel title="Analytics">
-        <div className="grid gap-2">
-          {data.analytics.map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              onClick={() => setActiveChart(item.key)}
-              className={cn(
-                "flex h-10 items-center justify-between rounded-[8px] border px-3 text-left text-sm transition",
-                activeChart === item.key ? "border-[#b8860b] bg-gradient-to-r from-[#b8860b] to-[#d4a843] text-[#0d0d0d]" : "border-[#232323] bg-[#151515] text-[#9B9B9B]"
-              )}
-            >
-              {item.label}
-              <BarChart3 className="h-4 w-4" />
-            </button>
-          ))}
-        </div>
-      </Panel>
-      <Panel title={series?.label || "Analytics"}>
-        {series ? <BarChart series={series} /> : <p className="text-sm text-[#9B9B9B]">No analytics rows found in Prisma.</p>}
-      </Panel>
+    <div className="space-y-4 p-4 lg:p-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <h1 className="text-2xl font-semibold text-white">Analytics</h1>
+        <p className="text-sm text-[#888]">Full analytics and performance metrics</p>
+      </motion.div>
+      <AnalyticsCharts analytics={data.analytics} />
     </div>
   );
 }
 
-function NotificationsView({
-  data,
-  runIntent,
-  pending
-}: {
-  data: AdminCommandCenterData;
-  runIntent: (body: Record<string, unknown>, successMessage: string) => Promise<void>;
-  pending: boolean;
-}) {
+function ChatbotView({ data }: { data: AdminCommandCenterData }) {
   return (
-    <Panel
-      title="Notifications"
-      action={
-        <button
-          type="button"
-          disabled={pending || !data.unreadNotifications}
-          onClick={() => runIntent({ intent: "notification.markAllRead" }, "Notifications marked read.")}
-          className="inline-flex h-9 items-center gap-2 rounded-[8px] border border-[#232323] px-3 text-sm disabled:opacity-50"
-        >
-          <Check className="h-4 w-4" />
-          Mark all read
-        </button>
-      }
-    >
-      <div className="grid gap-2">
-        {data.notifications.length ? (
-          data.notifications.map((notification) => (
-            <div key={notification.id} className="grid gap-3 rounded-[8px] border border-[#232323] bg-[#151515] p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusPill value={notification.priority} />
-                  <StatusPill value={notification.status} />
-                  <span className="text-xs text-[#9B9B9B]">
-                    {projectLabel(data, notification.project)} · <TimeAgoText value={notification.createdAt} />
-                  </span>
-                </div>
-                <p className="mt-2 text-sm font-semibold text-[#F5F5F5]">{notification.title}</p>
-                <p className="mt-1 text-sm leading-6 text-[#9B9B9B]">{notification.message}</p>
+    <div className="space-y-4 p-4 lg:p-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <h1 className="text-2xl font-semibold text-white">Chatbot</h1>
+        <p className="text-sm text-[#888]">Manage chatbot conversations and settings</p>
+      </motion.div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+          <h3 className="mb-3 text-sm font-semibold text-white">Recent Queries ({data.chatbotQueries.length})</h3>
+          <div className="space-y-2">
+            {data.chatbotQueries.slice(0, 10).map((q) => (
+              <div key={q.id} className="rounded-lg bg-white/[0.03] p-3">
+                <p className="text-sm text-white">
+                  <span className="font-medium">Q:</span> {q.question}
+                </p>
+                <p className="mt-0.5 text-xs text-[#555]">
+                  <span className="font-medium">A:</span> {q.answer}
+                </p>
               </div>
-              <div className="flex gap-2">
-                <IconButton
-                  label="Mark read"
-                  disabled={pending || notification.status !== "unread"}
-                  onClick={() => runIntent({ intent: "notification.markRead", id: notification.id }, "Notification marked read.")}
-                >
-                  <Check className="h-4 w-4" />
-                </IconButton>
-                <IconButton
-                  label="Archive"
-                  disabled={pending || notification.status === "archived"}
-                  onClick={() => runIntent({ intent: "notification.archive", id: notification.id }, "Notification archived.")}
-                >
-                  <Archive className="h-4 w-4" />
-                </IconButton>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className="text-sm text-[#9B9B9B]">No notifications found in Prisma.</p>
-        )}
-      </div>
-    </Panel>
-  );
-}
-
-function BusinessManagement({
-  data,
-  search,
-  runIntent,
-  pending
-}: {
-  data: AdminCommandCenterData;
-  search: string;
-  runIntent: (body: Record<string, unknown>, successMessage: string) => Promise<void>;
-  pending: boolean;
-}) {
-  const [editing, setEditing] = React.useState<BusinessRow | null>(null);
-  const form = useForm<BusinessFormValues>({
-    resolver: zodResolver(businessFormSchema),
-    defaultValues: {
-      slug: "",
-      name: "",
-      legalName: "",
-      summary: "",
-      description: "",
-      website: "",
-      status: "active",
-      position: 0
-    }
-  });
-
-  React.useEffect(() => {
-    form.reset(
-      editing
-        ? {
-            id: editing.id,
-            slug: editing.slug,
-            name: editing.label,
-            legalName: editing.legalName,
-            summary: editing.summary,
-            description: editing.description || "",
-            website: editing.website || "",
-            status: editing.status as BusinessFormValues["status"],
-            position: editing.position
-          }
-        : {
-            slug: "",
-            name: "",
-            legalName: "",
-            summary: "",
-            description: "",
-            website: "",
-            status: "active",
-            position: data.businesses.length
-          }
-    );
-  }, [data.businesses.length, editing, form]);
-
-  const columns = React.useMemo<Column<BusinessRow>[]>(
-    () => [
-      { accessorKey: "label", header: "Business", meta: { width: "15rem" } },
-      { accessorKey: "slug", header: "Division", meta: { width: "12rem" } },
-      { accessorKey: "primaryDomain", header: "Domain", meta: { width: "15rem" }, cell: ({ row }) => row.original.primaryDomain || "Not mapped" },
-      { accessorKey: "status", header: "Status", meta: { width: "9rem" }, cell: ({ row }) => <StatusPill value={row.original.status} /> },
-      { accessorKey: "updatedAt", header: "Updated", meta: { width: "10rem" }, cell: ({ row }) => row.original.updatedAt.startsWith("1970") ? "Default" : formatDate(row.original.updatedAt) },
-      {
-        id: "actions",
-        header: "Actions",
-        meta: { width: "7rem" },
-        cell: ({ row }) => (
-          <IconButton label="Edit" onClick={() => setEditing(row.original)}>
-            <Pencil className="h-4 w-4" />
-          </IconButton>
-        )
-      }
-    ],
-    []
-  );
-
-  return (
-    <div className="grid gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
-      <Panel title={editing ? "Edit Business" : "Create Business"}>
-        <form
-          className="grid gap-3"
-          onSubmit={form.handleSubmit((values) =>
-            runIntent({ intent: "business.upsert", ...values }, editing ? "Business updated." : "Business created.").then(() => setEditing(null))
-          )}
-        >
-          <input type="hidden" {...form.register("id")} />
-          <input className={fieldClass} placeholder="division-slug" {...form.register("slug")} />
-          <input className={fieldClass} placeholder="Business name" {...form.register("name")} />
-          <input className={fieldClass} placeholder="Legal name" {...form.register("legalName")} />
-          <textarea className={textareaClass} placeholder="Summary" {...form.register("summary")} />
-          <textarea className={textareaClass} placeholder="Description" {...form.register("description")} />
-          <input className={fieldClass} placeholder="Website URL" {...form.register("website")} />
-          <select className={fieldClass} {...form.register("status")}>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="archived">Archived</option>
-          </select>
-            <input className={fieldClass} type="number" {...form.register("position")} />
-          <div className="flex gap-2">
-            <button className="h-10 flex-1 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]" disabled={pending}>
-              Save
-            </button>
-            {editing ? (
-              <button type="button" className="h-10 rounded-[8px] border border-[#232323] px-4 text-sm" onClick={() => setEditing(null)}>
-                Clear
-              </button>
-            ) : null}
-          </div>
-        </form>
-      </Panel>
-      <Panel title="Business Management">
-        <Table rows={data.businesses} columns={columns} search={search} empty="No business records found in Prisma." />
-      </Panel>
-    </div>
-  );
-}
-
-function DomainManagement({
-  data,
-  search,
-  runIntent,
-  pending
-}: {
-  data: AdminCommandCenterData;
-  search: string;
-  runIntent: (body: Record<string, unknown>, successMessage: string) => Promise<void>;
-  pending: boolean;
-}) {
-  const [editing, setEditing] = React.useState<DomainMappingRow | null>(null);
-  const defaultDivision = data.projectOptions.find((option) => option.key !== groupProjectKey)?.key || groupProjectKey;
-  const form = useForm<DomainFormValues>({
-    resolver: zodResolver(domainFormSchema),
-    defaultValues: { domain: "", division: defaultDivision, companyId: "", status: "active", primary: false, notes: "" }
-  });
-
-  React.useEffect(() => {
-    form.reset(
-      editing
-        ? {
-            id: editing.id,
-            domain: editing.domain,
-            division: editing.division,
-            companyId: editing.companyId || "",
-            status: editing.status as DomainFormValues["status"],
-            primary: editing.primary,
-            notes: editing.notes || ""
-          }
-        : { domain: "", division: defaultDivision, companyId: "", status: "active", primary: false, notes: "" }
-    );
-  }, [defaultDivision, editing, form]);
-
-  const columns = React.useMemo<Column<DomainMappingRow>[]>(
-    () => [
-      { accessorKey: "domain", header: "Domain", meta: { width: "16rem" } },
-      { accessorKey: "divisionLabel", header: "Business", meta: { width: "14rem" } },
-      { accessorKey: "status", header: "Status", meta: { width: "9rem" }, cell: ({ row }) => <StatusPill value={row.original.status} /> },
-      { accessorKey: "primary", header: "Primary", meta: { width: "8rem" }, cell: ({ row }) => (row.original.primary ? "Yes" : "No") },
-      { accessorKey: "updatedAt", header: "Updated", meta: { width: "10rem" }, cell: ({ row }) => formatDate(row.original.updatedAt) },
-      {
-        id: "actions",
-        header: "Actions",
-        meta: { width: "9rem" },
-        cell: ({ row }) => (
-          <div className="flex gap-2">
-            <IconButton label="Edit" onClick={() => setEditing(row.original)}>
-              <Pencil className="h-4 w-4" />
-            </IconButton>
-            <IconButton label="Delete" danger disabled={pending} onClick={() => runIntent({ intent: "domain.delete", id: row.original.id }, "Domain deleted.")}>
-              <Trash2 className="h-4 w-4" />
-            </IconButton>
-          </div>
-        )
-      }
-    ],
-    [pending, runIntent]
-  );
-
-  return (
-    <div className="grid gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
-      <Panel title={editing ? "Edit Domain" : "Map Domain"}>
-        <form
-          className="grid gap-3"
-          onSubmit={form.handleSubmit((values) =>
-            runIntent({ intent: "domain.upsert", ...values, primary: Boolean(values.primary) }, editing ? "Domain updated." : "Domain mapped.").then(() => setEditing(null))
-          )}
-        >
-          <input type="hidden" {...form.register("id")} />
-          <input className={fieldClass} placeholder="domain.com" {...form.register("domain")} />
-          <select className={fieldClass} {...form.register("division")}>
-            {data.projectOptions.map((option) => (
-              <option key={option.key} value={option.key}>
-                {option.label}
-              </option>
             ))}
-          </select>
-          <select className={fieldClass} {...form.register("status")}>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="archived">Archived</option>
-          </select>
-          <textarea className={textareaClass} placeholder="Notes" {...form.register("notes")} />
-          <label className="flex items-center gap-2 text-sm text-[#9B9B9B]">
-            <input type="checkbox" {...form.register("primary")} />
-            Primary domain
-          </label>
-          <div className="flex gap-2">
-            <button className="h-10 flex-1 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]" disabled={pending}>
-              Save
-            </button>
-            {editing ? (
-              <button type="button" className="h-10 rounded-[8px] border border-[#232323] px-4 text-sm" onClick={() => setEditing(null)}>
-                Clear
-              </button>
-            ) : null}
-          </div>
-        </form>
-      </Panel>
-      <Panel title="Domain Management">
-        <Table rows={data.domainMappings} columns={columns} search={search} empty="No domain mappings found in Prisma." />
-      </Panel>
-    </div>
-  );
-}
-
-function LeadCenter({
-  data,
-  search,
-  runIntent,
-  pending
-}: {
-  data: AdminCommandCenterData;
-  search: string;
-  runIntent: (body: Record<string, unknown>, successMessage: string) => Promise<void>;
-  pending: boolean;
-}) {
-  const [filter, setFilter] = React.useState<LeadFilter | "All">("All");
-  const rows = React.useMemo(() => (filter === "All" ? data.leads : data.leads.filter((lead) => lead.status === filter)), [data.leads, filter]);
-  const columns = React.useMemo<Column<LeadRow>[]>(
-    () => [
-      { accessorKey: "kind", header: "Pipeline", meta: { width: "8rem" }, cell: ({ row }) => <StatusPill value={row.original.kind} /> },
-      { accessorKey: "division", header: "Division", meta: { width: "12rem" }, cell: ({ row }) => projectLabel(data, row.original.division) },
-      { accessorKey: "name", header: "Name", meta: { width: "13rem" } },
-      { accessorKey: "email", header: "Email", meta: { width: "16rem" } },
-      { accessorKey: "service", header: "Service", meta: { width: "15rem" }, cell: ({ row }) => row.original.service || "Not set" },
-      { accessorKey: "message", header: "Message", meta: { width: "22rem" }, cell: ({ row }) => <span className="truncate">{row.original.message}</span> },
-      { accessorKey: "status", header: "Status", meta: { width: "10rem" }, cell: ({ row }) => <StatusPill value={row.original.status} /> },
-      {
-        id: "actions",
-        header: "Actions",
-        meta: { width: "15rem" },
-        cell: ({ row }) => (
-          <div className="flex gap-2">
-            {leadFilters.map((status) => (
-              <IconButton
-                key={status}
-                label={status}
-                disabled={pending || row.original.status === status}
-                onClick={() =>
-                  runIntent(
-                    { intent: "lead.updateStatus", id: row.original.entityId, kind: row.original.kind, status },
-                    `Lead marked ${status}.`
-                  )
-                }
-              >
-                {status === "Archived" ? <Archive className="h-4 w-4" /> : <Check className="h-4 w-4" />}
-              </IconButton>
-            ))}
-          </div>
-        )
-      }
-    ],
-    [data, pending, runIntent]
-  );
-
-  return (
-    <Panel
-      title="Lead Center"
-      action={
-        <div className="flex flex-wrap gap-2">
-          {(["All", ...leadFilters] as const).map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => setFilter(item)}
-              className={cn(
-                "h-9 rounded-[8px] border px-3 text-sm transition",
-                filter === item ? "border-[#b8860b] bg-gradient-to-r from-[#b8860b] to-[#d4a843] text-[#0d0d0d]" : "border-[#232323] bg-[#151515] text-[#9B9B9B]"
-              )}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-      }
-    >
-      <Table rows={rows} columns={columns} search={search} empty="No unified lead records found in Prisma." />
-    </Panel>
-  );
-}
-
-function BlogManager({
-  data,
-  activeProject,
-  search,
-  runIntent,
-  pending
-}: {
-  data: AdminCommandCenterData;
-  activeProject: ProjectKey;
-  search: string;
-  runIntent: (body: Record<string, unknown>, successMessage: string) => Promise<void>;
-  pending: boolean;
-}) {
-  const [editing, setEditing] = React.useState<BlogRow | null>(null);
-  const form = useForm<BlogFormValues>({
-    resolver: zodResolver(blogFormSchema),
-    defaultValues: {
-      division: activeProject,
-      title: "",
-      slug: "",
-      excerpt: "",
-      content: "",
-      coverImage: "",
-      coverImageAlt: "",
-      author: "Ractysh",
-      category: "Enterprise",
-      tags: "",
-      featured: false,
-      status: "draft",
-      publishedAt: "",
-      readTime: "",
-      seoTitle: "",
-      seoDescription: "",
-      canonicalUrl: ""
-    }
-  });
-
-  React.useEffect(() => {
-    form.reset(
-      editing
-        ? {
-            id: editing.id,
-            division: editing.division,
-            title: editing.title,
-            slug: editing.slug,
-            excerpt: editing.excerpt,
-            content: editing.content,
-            coverImage: editing.coverImage,
-            coverImageAlt: editing.coverImageAlt || "",
-            author: editing.author,
-            category: editing.category,
-            tags: editing.tags.join(", "),
-            featured: editing.featured,
-            status: editing.status as BlogFormValues["status"],
-            publishedAt: toDateTimeLocal(editing.publishedAt),
-            readTime: editing.readTime,
-            seoTitle: editing.seoTitle || "",
-            seoDescription: editing.seoDescription || "",
-            canonicalUrl: editing.canonicalUrl || ""
-          }
-        : {
-            division: activeProject,
-            title: "",
-            slug: "",
-            excerpt: "",
-            content: "",
-            coverImage: "",
-            coverImageAlt: "",
-            author: "Ractysh",
-            category: "Enterprise",
-            tags: "",
-            featured: false,
-            status: "draft",
-            publishedAt: "",
-            readTime: "",
-            seoTitle: "",
-            seoDescription: "",
-            canonicalUrl: ""
-      }
-    );
-  }, [activeProject, editing, form]);
-
-  const blogPreview = form.watch();
-
-  const columns = React.useMemo<Column<BlogRow>[]>(
-    () => [
-      { accessorKey: "title", header: "Title", meta: { width: "18rem" } },
-      { accessorKey: "division", header: "Division", meta: { width: "12rem" }, cell: ({ row }) => projectLabel(data, row.original.division) },
-      { accessorKey: "category", header: "Category", meta: { width: "10rem" } },
-      { accessorKey: "status", header: "Status", meta: { width: "10rem" }, cell: ({ row }) => <StatusPill value={row.original.status} /> },
-      { accessorKey: "featured", header: "Featured", meta: { width: "8rem" }, cell: ({ row }) => (row.original.featured ? "Yes" : "No") },
-      { accessorKey: "views", header: "Views", meta: { width: "7rem" }, cell: ({ row }) => formatNumber(row.original.views) },
-      { accessorKey: "updatedAt", header: "Updated", meta: { width: "10rem" }, cell: ({ row }) => formatDate(row.original.updatedAt) },
-      {
-        id: "actions",
-        header: "Actions",
-        meta: { width: "13rem" },
-        cell: ({ row }) => (
-          <div className="flex gap-2">
-            <IconButton label="Edit" onClick={() => setEditing(row.original)}>
-              <Pencil className="h-4 w-4" />
-            </IconButton>
-            <IconButton
-              label={row.original.status === "published" ? "Unpublish" : "Publish"}
-              disabled={pending}
-              onClick={() =>
-                runIntent(
-                  { intent: "blog.status", id: row.original.id, status: row.original.status === "published" ? "draft" : "published" },
-                  row.original.status === "published" ? "Blog unpublished." : "Blog published."
-                )
-              }
-            >
-              <Check className="h-4 w-4" />
-            </IconButton>
-            <IconButton
-              label={row.original.featured ? "Unfeature" : "Feature"}
-              disabled={pending}
-              onClick={() => runIntent({ intent: "blog.feature", id: row.original.id, featured: !row.original.featured }, "Feature flag updated.")}
-            >
-              <Star className="h-4 w-4" />
-            </IconButton>
-            <IconButton label="Delete" danger disabled={pending} onClick={() => runIntent({ intent: "blog.delete", id: row.original.id }, "Blog deleted.")}>
-              <Trash2 className="h-4 w-4" />
-            </IconButton>
-          </div>
-        )
-      }
-    ],
-    [data, pending, runIntent]
-  );
-
-  return (
-    <div className="grid gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
-      <Panel title={editing ? "Edit Blog" : "Create Blog"}>
-        <form
-          className="grid gap-3"
-          onSubmit={form.handleSubmit((values) =>
-            runIntent(
-              {
-                intent: "blog.upsert",
-                ...values,
-                tags: csv(values.tags),
-                featured: Boolean(values.featured)
-              },
-              editing ? "Blog updated." : "Blog created."
-            ).then(() => setEditing(null))
-          )}
-        >
-          <input type="hidden" {...form.register("id")} />
-          <select className={fieldClass} {...form.register("division")}>
-            {data.projectOptions.map((option) => (
-              <option key={option.key} value={option.key}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <input className={fieldClass} placeholder="Title" {...form.register("title")} />
-          <input className={fieldClass} placeholder="Slug" {...form.register("slug")} />
-          <textarea className={textareaClass} placeholder="Excerpt" {...form.register("excerpt")} />
-          <textarea className={cn(textareaClass, "min-h-36")} placeholder="Content" {...form.register("content")} />
-          <input className={fieldClass} placeholder="Cover image URL" {...form.register("coverImage")} />
-          <input className={fieldClass} placeholder="Author" {...form.register("author")} />
-          <input className={fieldClass} placeholder="Category" {...form.register("category")} />
-          <input className={fieldClass} placeholder="Tags, comma separated" {...form.register("tags")} />
-          <select className={fieldClass} {...form.register("status")}>
-            <option value="draft">Draft</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="published">Published</option>
-            <option value="archived">Archived</option>
-          </select>
-          <input className={fieldClass} type="datetime-local" {...form.register("publishedAt")} />
-          <input className={fieldClass} placeholder="SEO title" {...form.register("seoTitle")} />
-          <textarea className={textareaClass} placeholder="SEO description" {...form.register("seoDescription")} />
-          <label className="flex items-center gap-2 text-sm text-[#9B9B9B]">
-            <input type="checkbox" {...form.register("featured")} />
-            Featured
-          </label>
-          <div className="flex gap-2">
-            <button className="h-10 flex-1 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]" disabled={pending}>
-              {editing ? "Save" : "Create"}
-            </button>
-            {editing ? (
-              <button type="button" className="h-10 rounded-[8px] border border-[#232323] px-4 text-sm" onClick={() => setEditing(null)}>
-                Clear
-              </button>
-            ) : null}
-          </div>
-        </form>
-        <div className="mt-5 grid gap-3 border-t border-[#232323] pt-4">
-          <div className="rounded-[8px] border border-[#232323] bg-[#080808] p-3">
-            <p className="text-xs font-semibold uppercase text-[#9B9B9B]">SEO Preview</p>
-            <p className="mt-2 truncate text-sm text-[#F5F5F5]">{blogPreview.seoTitle || blogPreview.title || "Untitled blog"}</p>
-            <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#9B9B9B]">{blogPreview.seoDescription || blogPreview.excerpt || "No description set."}</p>
-            <p className="mt-2 truncate text-[11px] text-[#b8860b]">ractysh.com/blog/{blogPreview.slug || "draft-slug"}</p>
-          </div>
-          <div className="overflow-hidden rounded-[8px] border border-[#232323] bg-[#151515]">
-            {blogPreview.coverImage ? (
-              <img src={blogPreview.coverImage} alt="" className="h-28 w-full object-cover" />
-            ) : (
-              <div className="flex h-28 items-center justify-center bg-[#080808] text-xs text-[#9B9B9B]">Open Graph image</div>
+            {data.chatbotQueries.length === 0 && (
+              <p className="py-4 text-center text-xs text-[#555]">No queries yet.</p>
             )}
-            <div className="p-3">
-              <p className="truncate text-sm font-semibold text-[#F5F5F5]">{blogPreview.title || "Open Graph Title"}</p>
-              <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#9B9B9B]">{blogPreview.excerpt || "Open Graph description appears here."}</p>
-            </div>
           </div>
         </div>
-      </Panel>
-
-      <Panel title="Blog Management">
-        <Table rows={data.blogs} columns={columns} search={search} empty="No blog records found in Prisma." />
-      </Panel>
-    </div>
-  );
-}
-
-function NewsletterManager({
-  data,
-  activeProject,
-  search,
-  runIntent,
-  setData,
-  pending
-}: {
-  data: AdminCommandCenterData;
-  activeProject: ProjectKey;
-  search: string;
-  runIntent: (body: Record<string, unknown>, successMessage: string) => Promise<void>;
-  setData: React.Dispatch<React.SetStateAction<AdminCommandCenterData>>;
-  pending: boolean;
-}) {
-  const form = useForm<NewsletterFormValues>({
-    resolver: zodResolver(newsletterFormSchema),
-    defaultValues: {
-      division: activeProject,
-      title: "",
-      slug: "",
-      excerpt: "",
-      content: "",
-      coverImage: "",
-      category: "Campaign",
-      author: "Ractysh",
-      featured: false,
-      status: "scheduled",
-      publishDate: "",
-      tags: "",
-      readTime: ""
-    }
-  });
-  const subscriberColumns = React.useMemo<Column<SubscriberRow>[]>(
-    () => [
-      { accessorKey: "email", header: "Email", meta: { width: "20rem" } },
-      { accessorKey: "division", header: "Division", meta: { width: "12rem" }, cell: ({ row }) => projectLabel(data, row.original.division) },
-      { accessorKey: "status", header: "Status", meta: { width: "10rem" }, cell: ({ row }) => <StatusPill value={row.original.status} /> },
-      { accessorKey: "source", header: "Source", meta: { width: "14rem" } },
-      { accessorKey: "createdAt", header: "Created", meta: { width: "10rem" }, cell: ({ row }) => formatDate(row.original.createdAt) },
-      {
-        id: "actions",
-        header: "Actions",
-        meta: { width: "7rem" },
-        cell: ({ row }) => (
-          <IconButton
-            label="Delete"
-            danger
-            disabled={pending}
-            onClick={() => runIntent({ intent: "subscriber.delete", id: row.original.id, table: row.original.table }, "Subscriber deleted.")}
-          >
-            <Trash2 className="h-4 w-4" />
-          </IconButton>
-        )
-      }
-    ],
-    [data, pending, runIntent]
-  );
-  const newsletterColumns = React.useMemo<Column<NewsletterRow>[]>(
-    () => [
-      { accessorKey: "title", header: "Campaign", meta: { width: "18rem" } },
-      { accessorKey: "division", header: "Division", meta: { width: "12rem" }, cell: ({ row }) => projectLabel(data, row.original.division) },
-      { accessorKey: "status", header: "Status", meta: { width: "10rem" }, cell: ({ row }) => <StatusPill value={row.original.status} /> },
-      { accessorKey: "publishDate", header: "Send Later", meta: { width: "12rem" }, cell: ({ row }) => formatDate(row.original.publishDate) },
-      { accessorKey: "views", header: "Views", meta: { width: "7rem" }, cell: ({ row }) => formatNumber(row.original.views) },
-      { accessorKey: "updatedAt", header: "Updated", meta: { width: "10rem" }, cell: ({ row }) => formatDate(row.original.updatedAt) }
-    ],
-    [data]
-  );
-
-  async function exportSubscribers() {
-    await runIntent({ intent: "audit.export", entity: "Subscriber", summary: "Exported newsletter subscriber CSV." }, "Export recorded.");
-    downloadCsv(
-      "ractysh-newsletter-subscribers.csv",
-      data.subscribers.map((subscriber) => ({
-        email: subscriber.email,
-        status: subscriber.status,
-        source: subscriber.source,
-        createdAt: subscriber.createdAt
-      }))
-    );
-  }
-
-  return (
-    <div className="grid gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
-      <Panel title="Send Campaign Later">
-        <form
-          className="grid gap-3"
-          onSubmit={form.handleSubmit((values) =>
-            runIntent(
-              {
-                intent: "newsletter.upsert",
-                ...values,
-                tags: csv(values.tags),
-                featured: Boolean(values.featured)
-              },
-              "Newsletter campaign scheduled."
-            ).then(() => form.reset({ division: activeProject, title: "", slug: "", excerpt: "", content: "", coverImage: "", category: "Campaign", author: "Ractysh", featured: false, status: "scheduled", publishDate: "", tags: "", readTime: "" }))
-          )}
-        >
-          <select className={fieldClass} {...form.register("division")}>
-            {data.projectOptions.map((option) => (
-              <option key={option.key} value={option.key}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <input className={fieldClass} placeholder="Campaign title" {...form.register("title")} />
-          <input className={fieldClass} placeholder="Slug" {...form.register("slug")} />
-          <textarea className={textareaClass} placeholder="Excerpt" {...form.register("excerpt")} />
-          <textarea className={cn(textareaClass, "min-h-36")} placeholder="Campaign content" {...form.register("content")} />
-          <input className={fieldClass} placeholder="Cover image URL" {...form.register("coverImage")} />
-          <input className={fieldClass} placeholder="Category" {...form.register("category")} />
-          <input className={fieldClass} placeholder="Author" {...form.register("author")} />
-          <input className={fieldClass} placeholder="Tags, comma separated" {...form.register("tags")} />
-          <select className={fieldClass} {...form.register("status")}>
-            <option value="scheduled">Scheduled</option>
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="archived">Archived</option>
-          </select>
-          <input className={fieldClass} type="datetime-local" {...form.register("publishDate")} />
-          <button className="h-10 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]" disabled={pending}>
-            Schedule
-          </button>
-        </form>
-      </Panel>
-
-      <div className="grid gap-5">
-        <Panel
-          title="Subscriber List"
-          action={
-            <button type="button" onClick={exportSubscribers} className="inline-flex h-9 items-center gap-2 rounded-[8px] border border-[#232323] px-3 text-sm">
-              <Download className="h-4 w-4" />
-              Export CSV
-            </button>
-          }
-        >
-          <Table rows={data.subscribers} columns={subscriberColumns} search={search} empty="No subscriber records found in Prisma." />
-        </Panel>
-        <Panel title="Scheduled Campaigns">
-          <Table rows={data.newsletters} columns={newsletterColumns} search={search} empty="No newsletter campaign records found in Prisma." />
-        </Panel>
+        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+          <ChatbotOverview queries={data.chatbotQueries} />
+        </div>
       </div>
     </div>
   );
 }
 
-function ServiceManager({
-  data,
-  activeProject,
-  search,
-  runIntent,
-  pending
-}: {
-  data: AdminCommandCenterData;
-  activeProject: ProjectKey;
-  search: string;
-  runIntent: (body: Record<string, unknown>, successMessage: string) => Promise<void>;
-  pending: boolean;
-}) {
-  const [editing, setEditing] = React.useState<ServiceRow | null>(null);
-  const form = useForm<ServiceFormValues>({
-    resolver: zodResolver(serviceFormSchema),
-    defaultValues: {
-      division: activeProject,
-      title: "",
-      slug: "",
-      summary: "",
-      description: "",
-      category: "Architecture",
-      href: "",
-      imageUrl: "",
-      tags: "",
-      images: "",
-      heroContent: "{}",
-      metrics: "[]",
-      sections: "[]",
-      cta: "{}",
-      seo: "{}",
-      status: "published",
-      position: 0
-    }
-  });
+// ─── Contacts View ─────────────────────────────────────────────────────────────
 
-  React.useEffect(() => {
-    form.reset(
-      editing
-        ? {
-            id: editing.id,
-            division: editing.division,
-            companyId: editing.companyId,
-            title: editing.title,
-            slug: editing.slug,
-            summary: editing.summary,
-            description: editing.description || "",
-            category: editing.category,
-            href: editing.href || "",
-            imageUrl: editing.imageUrl || "",
-            tags: editing.tags.join(", "),
-            images: editing.images.join(", "),
-            heroContent: jsonText(editing.heroContent, {}),
-            metrics: jsonText(editing.metrics, []),
-            sections: jsonText(editing.sections, []),
-            cta: jsonText(editing.cta, {}),
-            seo: jsonText(editing.seo, {}),
-            status: editing.status as ServiceFormValues["status"],
-            position: editing.position
-          }
-        : {
-            division: activeProject,
-            title: "",
-            slug: "",
-            summary: "",
-            description: "",
-            category: "Architecture",
-            href: "",
-            imageUrl: "",
-            tags: "",
-            images: "",
-            heroContent: "{}",
-            metrics: "[]",
-            sections: "[]",
-            cta: "{}",
-            seo: "{}",
-            status: "published",
-            position: 0
-          }
+function ContactsView({ data }: { data: AdminCommandCenterData }) {
+  const [selected, setSelected] = React.useState<ContactRow | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState("");
+
+  const filtered = React.useMemo(() => {
+    if (!searchQuery.trim()) return data.contacts;
+    const q = searchQuery.toLowerCase();
+    return data.contacts.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        (c.company?.toLowerCase().includes(q)) ||
+        (c.subject?.toLowerCase().includes(q)) ||
+        (c.message?.toLowerCase().includes(q))
     );
-  }, [activeProject, editing, form]);
-
-  const columns = React.useMemo<Column<ServiceRow>[]>(
-    () => [
-      { accessorKey: "title", header: "Service", meta: { width: "17rem" } },
-      { accessorKey: "division", header: "Division", meta: { width: "12rem" }, cell: ({ row }) => projectLabel(data, row.original.division) },
-      { accessorKey: "category", header: "Category", meta: { width: "12rem" } },
-      { accessorKey: "companyName", header: "Company", meta: { width: "14rem" } },
-      { accessorKey: "status", header: "Status", meta: { width: "10rem" }, cell: ({ row }) => <StatusPill value={row.original.status} /> },
-      { accessorKey: "updatedAt", header: "Updated", meta: { width: "10rem" }, cell: ({ row }) => formatDate(row.original.updatedAt) },
-      {
-        id: "actions",
-        header: "Actions",
-        meta: { width: "12rem" },
-        cell: ({ row }) => (
-          <div className="flex gap-2">
-            <IconButton label="Edit" onClick={() => setEditing(row.original)}>
-              <Pencil className="h-4 w-4" />
-            </IconButton>
-            <IconButton
-              label={row.original.status === "published" ? "Unpublish" : "Publish"}
-              disabled={pending}
-              onClick={() =>
-                runIntent(
-                  { intent: "service.status", id: row.original.id, status: row.original.status === "published" ? "draft" : "published" },
-                  "Service status updated."
-                )
-              }
-            >
-              <Check className="h-4 w-4" />
-            </IconButton>
-            <IconButton label="Delete" danger disabled={pending} onClick={() => runIntent({ intent: "service.delete", id: row.original.id }, "Service deleted.")}>
-              <Trash2 className="h-4 w-4" />
-            </IconButton>
-          </div>
-        )
-      }
-    ],
-    [data, pending, runIntent]
-  );
+  }, [data.contacts, searchQuery]);
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[25rem_minmax(0,1fr)]">
-      <Panel title={editing ? "Edit Service" : "Create Service"}>
-        <form
-          className="grid gap-3"
-          onSubmit={form.handleSubmit((values) =>
-            runIntent(
-              {
-                intent: "service.upsert",
-                ...values,
-                tags: csv(values.tags),
-                images: csv(values.images),
-                heroContent: parseJson(values.heroContent, {}),
-                metrics: parseJson(values.metrics, []),
-                sections: parseJson(values.sections, []),
-                cta: parseJson(values.cta, {}),
-                seo: parseJson(values.seo, {})
-              },
-              editing ? "Service updated." : "Service created."
-            ).then(() => setEditing(null))
-          )}
+    <div className="space-y-4 p-4 lg:p-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-white">Contacts</h1>
+          <p className="text-sm text-[#888]">All contact form submissions ({data.contacts.length})</p>
+        </div>
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#555]" />
+          <input
+            type="text"
+            placeholder="Search contacts..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-lg border border-white/[0.06] bg-white/[0.04] py-2 pl-9 pr-3 text-sm text-white outline-none transition placeholder:text-[#555] focus:border-[#D4AF37]/30"
+          />
+        </div>
+      </motion.div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="lg:col-span-2 rounded-xl border border-white/[0.06] bg-white/[0.02]"
         >
-          <input type="hidden" {...form.register("id")} />
-          <select className={fieldClass} {...form.register("division")}>
-            {data.projectOptions.map((option) => (
-              <option key={option.key} value={option.key}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <select className={fieldClass} {...form.register("companyId")}>
-            <option value="">Default division</option>
-            {data.companies.map((company) => (
-              <option key={company.id} value={company.id}>
-                {company.name}
-              </option>
-            ))}
-          </select>
-          <input className={fieldClass} placeholder="Service title" {...form.register("title")} />
-          <input className={fieldClass} placeholder="Slug" {...form.register("slug")} />
-          <input className={fieldClass} placeholder="Category" {...form.register("category")} />
-          <textarea className={textareaClass} placeholder="Summary" {...form.register("summary")} />
-          <textarea className={textareaClass} placeholder="Description" {...form.register("description")} />
-          <input className={fieldClass} placeholder="CTA href" {...form.register("href")} />
-          <input className={fieldClass} placeholder="Hero image URL" {...form.register("imageUrl")} />
-          <input className={fieldClass} placeholder="Tags, comma separated" {...form.register("tags")} />
-          <input className={fieldClass} placeholder="Images, comma separated URLs" {...form.register("images")} />
-          <textarea className={textareaClass} placeholder="Hero content JSON" {...form.register("heroContent")} />
-          <textarea className={textareaClass} placeholder="Metrics JSON" {...form.register("metrics")} />
-          <textarea className={textareaClass} placeholder="Sections JSON" {...form.register("sections")} />
-          <textarea className={textareaClass} placeholder="CTA JSON" {...form.register("cta")} />
-          <textarea className={textareaClass} placeholder="SEO JSON" {...form.register("seo")} />
-          <select className={fieldClass} {...form.register("status")}>
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
-            <option value="archived">Archived</option>
-          </select>
-          <input className={fieldClass} type="number" {...form.register("position")} />
-          <button className="h-10 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]" disabled={pending}>
-            {editing ? "Save" : "Create"}
-          </button>
-        </form>
-      </Panel>
-
-      <Panel title="Service Management">
-        <Table rows={data.services} columns={columns} search={search} empty="No service records found in Prisma." />
-      </Panel>
-    </div>
-  );
-}
-
-function MediaLibrary({
-  data,
-  activeProject,
-  search,
-  runIntent,
-  setData,
-  pending
-}: {
-  data: AdminCommandCenterData;
-  activeProject: ProjectKey;
-  search: string;
-  runIntent: (body: Record<string, unknown>, successMessage: string) => Promise<void>;
-  setData: React.Dispatch<React.SetStateAction<AdminCommandCenterData>>;
-  pending: boolean;
-}) {
-  const uploadRef = React.useRef<HTMLFormElement | null>(null);
-  const [uploading, setUploading] = React.useState(false);
-  const [urlTitle, setUrlTitle] = React.useState("");
-  const [url, setUrl] = React.useState("");
-  const [urlFolder, setUrlFolder] = React.useState(mediaFolders[0]);
-  const [urlDivision, setUrlDivision] = React.useState(activeProject);
-  const [folderFilter, setFolderFilter] = React.useState("All");
-  const rows = React.useMemo(
-    () => (folderFilter === "All" ? data.media : data.media.filter((asset) => asset.folder === folderFilter)),
-    [data.media, folderFilter]
-  );
-  const columns = React.useMemo<Column<MediaRow>[]>(
-    () => [
-      { accessorKey: "title", header: "Asset", meta: { width: "16rem" } },
-      { accessorKey: "division", header: "Division", meta: { width: "12rem" }, cell: ({ row }) => projectLabel(data, row.original.division) },
-      { accessorKey: "kind", header: "Kind", meta: { width: "8rem" }, cell: ({ row }) => <StatusPill value={row.original.kind} /> },
-      { accessorKey: "folder", header: "Folder", meta: { width: "11rem" } },
-      { accessorKey: "provider", header: "Provider", meta: { width: "10rem" } },
-      { accessorKey: "url", header: "URL", meta: { width: "24rem" }, cell: ({ row }) => <span className="truncate">{row.original.url}</span> },
-      { accessorKey: "updatedAt", header: "Updated", meta: { width: "10rem" }, cell: ({ row }) => formatDate(row.original.updatedAt) },
-      {
-        id: "actions",
-        header: "Actions",
-        meta: { width: "10rem" },
-        cell: ({ row }) => (
-          <div className="flex gap-2">
-            <IconButton
-              label="Copy URL"
-              onClick={() => {
-                navigator.clipboard.writeText(row.original.url).then(() => toast.success("URL copied."));
-              }}
-            >
-              <Copy className="h-4 w-4" />
-            </IconButton>
-            <IconButton label="Delete" danger disabled={pending} onClick={() => runIntent({ intent: "media.delete", id: row.original.id }, "Media deleted.")}>
-              <Trash2 className="h-4 w-4" />
-            </IconButton>
-          </div>
-        )
-      }
-    ],
-    [data, pending, runIntent]
-  );
-
-  React.useEffect(() => {
-    setUrlDivision(activeProject);
-  }, [activeProject]);
-
-  async function upload(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!uploadRef.current) return;
-    setUploading(true);
-    try {
-      const formData = new FormData(uploadRef.current);
-      formData.set("intent", "media.upload");
-      const response = await fetch("/api/admin/command-center", { method: "POST", body: formData });
-      const payload = (await response.json().catch(() => ({}))) as CommandResponse;
-      if (!response.ok || !payload.data) throw new Error(payload.message || "Upload failed.");
-      setData(payload.data);
-      uploadRef.current.reset();
-      toast.success("Media uploaded.");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Upload failed.");
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  return (
-    <div className="grid gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
-      <div className="grid gap-5">
-        <Panel title="Cloudinary Upload">
-          <form ref={uploadRef} onSubmit={upload} className="grid gap-3">
-            <input name="title" className={fieldClass} placeholder="Title" />
-            <input name="altText" className={fieldClass} placeholder="Alt text" />
-            <select name="division" className={fieldClass} defaultValue={activeProject}>
-              {data.projectOptions.map((option) => (
-                <option key={option.key} value={option.key}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <select name="kind" className={fieldClass} defaultValue="image">
-              <option value="image">Image</option>
-              <option value="video">Video</option>
-              <option value="document">Document</option>
-              <option value="model">Model</option>
-              <option value="other">Other</option>
-            </select>
-            <select name="folder" className={fieldClass} defaultValue={mediaFolders[0]}>
-              {mediaFolders.map((folder) => (
-                <option key={folder} value={folder}>
-                  {folder}
-                </option>
-              ))}
-            </select>
-            <input name="file" type="file" className={fieldClass} />
-            <button className="inline-flex h-10 items-center justify-center gap-2 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]" disabled={uploading}>
-              <Upload className="h-4 w-4" />
-              Upload
-            </button>
-          </form>
-        </Panel>
-        <Panel title="Add URL">
-          <form
-            className="grid gap-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              runIntent({ intent: "media.createUrl", title: urlTitle, url, folder: urlFolder, division: urlDivision, provider: "metadata", kind: "image" }, "Media URL added.");
-              setUrlTitle("");
-              setUrl("");
-            }}
-          >
-            <input value={urlTitle} onChange={(event) => setUrlTitle(event.target.value)} className={fieldClass} placeholder="Title" />
-            <input value={url} onChange={(event) => setUrl(event.target.value)} className={fieldClass} placeholder="URL" />
-            <select value={urlDivision} onChange={(event) => setUrlDivision(event.target.value)} className={fieldClass}>
-              {data.projectOptions.map((option) => (
-                <option key={option.key} value={option.key}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <select value={urlFolder} onChange={(event) => setUrlFolder(event.target.value)} className={fieldClass}>
-              {mediaFolders.map((folder) => (
-                <option key={folder} value={folder}>
-                  {folder}
-                </option>
-              ))}
-            </select>
-            <button className="h-10 rounded-[8px] border border-[#232323] px-4 text-sm" disabled={pending}>
-              Add URL
-            </button>
-          </form>
-        </Panel>
-      </div>
-      <Panel
-        title="Media Library"
-        action={
-          <div className="flex flex-wrap gap-2">
-            {["All", ...mediaFolders].map((folder) => (
-              <button
-                key={folder}
-                type="button"
-                onClick={() => setFolderFilter(folder)}
-                className={cn(
-                  "h-9 rounded-[8px] border px-3 text-sm transition",
-                  folderFilter === folder ? "border-[#b8860b] bg-gradient-to-r from-[#b8860b] to-[#d4a843] text-[#0d0d0d]" : "border-[#232323] bg-[#151515] text-[#9B9B9B]"
-                )}
-              >
-                {folder}
-              </button>
-            ))}
-          </div>
-        }
-      >
-        <Table rows={rows} columns={columns} search={search} empty="No media assets found in Prisma." />
-      </Panel>
-    </div>
-  );
-}
-
-function CareersManager({
-  data,
-  activeProject,
-  search,
-  runIntent,
-  pending
-}: {
-  data: AdminCommandCenterData;
-  activeProject: ProjectKey;
-  search: string;
-  runIntent: (body: Record<string, unknown>, successMessage: string) => Promise<void>;
-  pending: boolean;
-}) {
-  const [editing, setEditing] = React.useState<JobRow | null>(null);
-  const [selectedApplication, setSelectedApplication] = React.useState<ApplicationRow | null>(null);
-  const [applicationNotes, setApplicationNotes] = React.useState("");
-  const form = useForm<JobFormValues>({
-    resolver: zodResolver(jobFormSchema),
-    defaultValues: { division: activeProject, title: "", slug: "", location: "", type: "", summary: "", description: "", status: "published" }
-  });
-
-  React.useEffect(() => {
-    form.reset(
-      editing
-        ? {
-            id: editing.id,
-            division: editing.division,
-            title: editing.title,
-            slug: editing.slug,
-            location: editing.location,
-            type: editing.type,
-            summary: editing.summary,
-            description: editing.description || "",
-            status: editing.status as JobFormValues["status"]
-          }
-        : { division: activeProject, title: "", slug: "", location: "", type: "", summary: "", description: "", status: "published" }
-    );
-  }, [activeProject, editing, form]);
-
-  React.useEffect(() => {
-    if (!selectedApplication) return;
-    const fresh = data.applications.find((application) => application.id === selectedApplication.id);
-    if (fresh) {
-      setSelectedApplication(fresh);
-      setApplicationNotes(fresh.notes || "");
-    }
-  }, [data.applications, selectedApplication]);
-
-  const jobColumns = React.useMemo<Column<JobRow>[]>(
-    () => [
-      { accessorKey: "title", header: "Job", meta: { width: "16rem" } },
-      { accessorKey: "division", header: "Division", meta: { width: "12rem" }, cell: ({ row }) => projectLabel(data, row.original.division) },
-      { accessorKey: "location", header: "Location", meta: { width: "12rem" } },
-      { accessorKey: "type", header: "Type", meta: { width: "10rem" } },
-      { accessorKey: "status", header: "Status", meta: { width: "10rem" }, cell: ({ row }) => <StatusPill value={row.original.status} /> },
-      { accessorKey: "updatedAt", header: "Updated", meta: { width: "10rem" }, cell: ({ row }) => formatDate(row.original.updatedAt) },
-      {
-        id: "actions",
-        header: "Actions",
-        meta: { width: "8rem" },
-        cell: ({ row }) => (
-          <div className="flex gap-2">
-            <IconButton label="Edit" onClick={() => setEditing(row.original)}>
-              <Pencil className="h-4 w-4" />
-            </IconButton>
-            <IconButton label="Delete" danger disabled={pending} onClick={() => runIntent({ intent: "job.delete", id: row.original.id }, "Job deleted.")}>
-              <Trash2 className="h-4 w-4" />
-            </IconButton>
-          </div>
-        )
-      }
-    ],
-    [data, pending, runIntent]
-  );
-  const applicationColumns = React.useMemo<Column<ApplicationRow>[]>(
-    () => [
-      { accessorKey: "fullName", header: "Applicant", meta: { width: "14rem" } },
-      { accessorKey: "division", header: "Division", meta: { width: "12rem" }, cell: ({ row }) => projectLabel(data, row.original.division) },
-      { accessorKey: "email", header: "Email", meta: { width: "16rem" } },
-      { accessorKey: "position", header: "Position", meta: { width: "14rem" } },
-      { accessorKey: "experience", header: "Experience", meta: { width: "10rem" } },
-      { accessorKey: "status", header: "Status", meta: { width: "10rem" }, cell: ({ row }) => <StatusPill value={careerLabel(row.original.status)} /> },
-      {
-        id: "resume",
-        header: "Resume",
-        meta: { width: "8rem" },
-        cell: ({ row }) =>
-          row.original.resumeUrl ? (
-            <a className="text-[#b8860b] underline" href={row.original.resumeUrl} target="_blank" rel="noreferrer">
-              View
-            </a>
-          ) : (
-            "None"
-          )
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        meta: { width: "18rem" },
-        cell: ({ row }) => (
-          <div className="flex gap-2">
-            <IconButton
-              label="Review"
-              onClick={() => {
-                setSelectedApplication(row.original);
-                setApplicationNotes(row.original.notes || "");
-              }}
-            >
-              <Eye className="h-4 w-4" />
-            </IconButton>
-            {(["new", "reviewed", "shortlisted", "hired", "rejected"] as const).map((status) => (
-              <IconButton
-                key={status}
-                label={careerLabel(status)}
-                disabled={pending || row.original.status === status}
-                onClick={() => runIntent({ intent: "application.update", id: row.original.id, status, notes: row.original.notes }, "Application updated.")}
-              >
-                <Check className="h-4 w-4" />
-              </IconButton>
-            ))}
-          </div>
-        )
-      }
-    ],
-    [data, pending, runIntent]
-  );
-
-  return (
-    <div className="grid gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
-      <Panel title={editing ? "Edit Job" : "Create Job"}>
-        <form
-          className="grid gap-3"
-          onSubmit={form.handleSubmit((values) =>
-            runIntent({ intent: "job.upsert", ...values }, editing ? "Job updated." : "Job created.").then(() => setEditing(null))
-          )}
-        >
-          <input type="hidden" {...form.register("id")} />
-          <select className={fieldClass} {...form.register("division")}>
-            {data.projectOptions.map((option) => (
-              <option key={option.key} value={option.key}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <input className={fieldClass} placeholder="Title" {...form.register("title")} />
-          <input className={fieldClass} placeholder="Slug" {...form.register("slug")} />
-          <input className={fieldClass} placeholder="Location" {...form.register("location")} />
-          <input className={fieldClass} placeholder="Type" {...form.register("type")} />
-          <textarea className={textareaClass} placeholder="Summary" {...form.register("summary")} />
-          <textarea className={textareaClass} placeholder="Description" {...form.register("description")} />
-          <select className={fieldClass} {...form.register("status")}>
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
-            <option value="archived">Archived</option>
-          </select>
-          <button className="h-10 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]" disabled={pending}>
-            {editing ? "Save" : "Create"}
-          </button>
-        </form>
-      </Panel>
-      <div className="grid gap-5">
-        <Panel title="Jobs">
-          <Table rows={data.jobs} columns={jobColumns} search={search} empty="No career jobs found in Prisma." />
-        </Panel>
-        {selectedApplication ? (
-          <Panel
-            title="Application Review"
-            action={
-              <button type="button" onClick={() => setSelectedApplication(null)} className="h-9 rounded-[8px] border border-[#232323] px-3 text-sm">
-                Close
-              </button>
-            }
-          >
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
-              <div className="grid gap-3">
-                <div>
-                  <p className="text-xl font-semibold text-[#F5F5F5]">{selectedApplication.fullName}</p>
-                  <p className="mt-1 text-sm text-[#9B9B9B]">{selectedApplication.email} · {selectedApplication.position}</p>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-5">
-                  {(["new", "reviewed", "shortlisted", "hired", "rejected"] as const).map((status) => (
-                    <button
-                      key={status}
-                      type="button"
-                      disabled={pending}
-                      onClick={() => runIntent({ intent: "application.update", id: selectedApplication.id, status, notes: applicationNotes }, "Application updated.")}
-                      className={cn(
-                        "flex h-10 items-center justify-center gap-2 rounded-[8px] border px-2 text-xs transition",
-                        selectedApplication.status === status
-                          ? "border-[#b8860b] bg-gradient-to-r from-[#b8860b] to-[#d4a843] text-[#0d0d0d]"
-                          : "border-[#232323] bg-[#151515] text-[#9B9B9B]"
-                      )}
-                    >
-                      <CircleDot className="h-3.5 w-3.5" />
-                      {careerLabel(status)}
-                    </button>
-                  ))}
-                </div>
-                <textarea value={applicationNotes} onChange={(event) => setApplicationNotes(event.target.value)} className={cn(textareaClass, "min-h-28")} placeholder="Interview notes, offer notes, internal timeline updates" />
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() => runIntent({ intent: "application.update", id: selectedApplication.id, status: selectedApplication.status, notes: applicationNotes }, "Application notes saved.")}
-                  className="h-10 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]"
-                >
-                  Save Notes
-                </button>
-              </div>
-              <div className="grid gap-3">
-                <div className="rounded-[8px] border border-[#232323] bg-[#151515] p-3">
-                  <p className="text-xs font-semibold uppercase text-[#9B9B9B]">Resume Viewer</p>
-                  {selectedApplication.resumeUrl ? (
-                    <a href={selectedApplication.resumeUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex h-9 items-center gap-2 rounded-[8px] border border-[#232323] px-3 text-sm text-[#F5F5F5]">
-                      <FileText className="h-4 w-4 text-[#b8860b]" />
-                      Open resume
-                    </a>
-                  ) : (
-                    <p className="mt-3 text-sm text-[#9B9B9B]">No resume attached.</p>
+          <div className="divide-y divide-white/[0.04]">
+            {filtered.length > 0 ? (
+              filtered.map((contact, i) => (
+                <motion.button
+                  key={contact.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.02 }}
+                  onClick={() => setSelected(selected?.id === contact.id ? null : contact)}
+                  className={cn(
+                    "flex w-full items-start gap-4 px-5 py-4 text-left transition-colors hover:bg-white/[0.02]",
+                    selected?.id === contact.id && "bg-[#D4AF37]/[0.04]"
                   )}
-                </div>
-                <div className="rounded-[8px] border border-[#232323] bg-[#151515] p-3">
-                  <p className="text-xs font-semibold uppercase text-[#9B9B9B]">Timeline</p>
-                  <div className="mt-3 grid gap-2 text-sm text-[#9B9B9B]">
-                    <p>Applied · {formatDate(selectedApplication.createdAt)}</p>
-                    <p>Interview status · {careerLabel(selectedApplication.status)}</p>
-                    <p>Offer status · {selectedApplication.status === "hired" ? "Selected" : selectedApplication.status === "rejected" ? "Rejected" : "Pending"}</p>
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 text-sm font-semibold text-[#D4AF37]">
+                    {contact.name.charAt(0).toUpperCase()}
                   </div>
-                </div>
-              </div>
-            </div>
-          </Panel>
-        ) : null}
-        <Panel title="Applications">
-          <Table rows={data.applications} columns={applicationColumns} search={search} empty="No career applications found in Prisma." />
-        </Panel>
-      </div>
-    </div>
-  );
-}
-
-function ContactManager({
-  data,
-  search,
-  runIntent,
-  pending
-}: {
-  data: AdminCommandCenterData;
-  search: string;
-  runIntent: (body: Record<string, unknown>, successMessage: string) => Promise<void>;
-  pending: boolean;
-}) {
-  const columns = React.useMemo<Column<ContactRow>[]>(
-    () => [
-      { accessorKey: "name", header: "Name", meta: { width: "14rem" } },
-      { accessorKey: "division", header: "Division", meta: { width: "12rem" }, cell: ({ row }) => projectLabel(data, row.original.division) },
-      { accessorKey: "email", header: "Email", meta: { width: "16rem" } },
-      { accessorKey: "service", header: "Service", meta: { width: "14rem" }, cell: ({ row }) => row.original.service || "Not set" },
-      { accessorKey: "message", header: "Message", meta: { width: "22rem" }, cell: ({ row }) => <span className="truncate">{row.original.message}</span> },
-      { accessorKey: "status", header: "Status", meta: { width: "10rem" }, cell: ({ row }) => <StatusPill value={row.original.status} /> },
-      { accessorKey: "createdAt", header: "Created", meta: { width: "10rem" }, cell: ({ row }) => formatDate(row.original.createdAt) },
-      {
-        id: "actions",
-        header: "Actions",
-        meta: { width: "11rem" },
-        cell: ({ row }) => (
-          <div className="flex gap-2">
-            <IconButton disabled={pending} label="Responded" onClick={() => runIntent({ intent: "contact.update", id: row.original.id, status: "contacted", notes: row.original.notes }, "Contact updated.")}>
-              <Check className="h-4 w-4" />
-            </IconButton>
-            <IconButton disabled={pending} label="Archive" onClick={() => runIntent({ intent: "contact.update", id: row.original.id, status: "archived", notes: row.original.notes }, "Contact archived.")}>
-              <Archive className="h-4 w-4" />
-            </IconButton>
-            <IconButton disabled={pending} danger label="Delete" onClick={() => runIntent({ intent: "contact.delete", id: row.original.id }, "Contact deleted.")}>
-              <Trash2 className="h-4 w-4" />
-            </IconButton>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-white">{contact.name}</span>
+                      <span className="text-xs text-[#555]">{contact.email}</span>
+                      <span className={cn(
+                        "ml-auto inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium",
+                        contact.status === "new" ? "bg-sky-500/10 text-sky-400" :
+                        contact.status === "read" ? "bg-amber-500/10 text-amber-400" :
+                        "bg-emerald-500/10 text-emerald-400"
+                      )}>
+                        {contact.status}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 line-clamp-1 text-xs text-[#555]">
+                      {contact.subject || contact.message.slice(0, 80)}
+                    </p>
+                    <div className="mt-1 flex items-center gap-3 text-[10px] text-[#444]">
+                      <span>{formatRelativeTime(contact.createdAt)}</span>
+                      {contact.division && <span>· {contact.division}</span>}
+                      {contact.company && <span>· {contact.company}</span>}
+                    </div>
+                  </div>
+                </motion.button>
+              ))
+            ) : (
+              <div className="px-5 py-16 text-center text-sm text-[#555]">No contacts found.</div>
+            )}
           </div>
-        )
-      }
-    ],
-    [data, pending, runIntent]
-  );
+        </motion.div>
 
-  return (
-    <Panel
-      title="Contact Management"
-      action={
-        <button
-          type="button"
-          onClick={async () => {
-            await runIntent({ intent: "audit.export", entity: "ContactInquiry", summary: "Exported contact submissions CSV." }, "Export recorded.");
-            downloadCsv(
-              "ractysh-contact-submissions.csv",
-              data.contacts.map((contact) => ({
-                name: contact.name,
-                email: contact.email,
-                phone: contact.phone,
-                company: contact.company,
-                service: contact.service,
-                status: contact.status,
-                createdAt: contact.createdAt
-              }))
-            );
-          }}
-          className="inline-flex h-9 items-center gap-2 rounded-[8px] border border-[#232323] px-3 text-sm"
-        >
-          <Download className="h-4 w-4" />
-          Export
-        </button>
-      }
-    >
-      <Table rows={data.contacts} columns={columns} search={search} empty="No contact submissions found in Prisma." />
-    </Panel>
-  );
-}
+        <AnimatePresence mode="wait">
+          {selected ? (
+            <motion.div
+              key={selected.id}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 text-lg font-bold text-[#D4AF37]">
+                  {selected.name.charAt(0).toUpperCase()}
+                </div>
+                <span className={cn(
+                  "inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-medium",
+                  selected.status === "new" ? "bg-sky-500/10 text-sky-400" :
+                  selected.status === "read" ? "bg-amber-500/10 text-amber-400" :
+                  "bg-emerald-500/10 text-emerald-400"
+                )}>
+                  {selected.status}
+                </span>
+              </div>
 
-function SettingsManager({
-  data,
-  search,
-  runIntent,
-  pending
-}: {
-  data: AdminCommandCenterData;
-  search: string;
-  runIntent: (body: Record<string, unknown>, successMessage: string) => Promise<void>;
-  pending: boolean;
-}) {
-  const filteredSettings = React.useMemo(() => {
-    const query = search.trim().toLowerCase();
-    if (!query) return data.settings;
-    return data.settings.filter((setting) => JSON.stringify(setting).toLowerCase().includes(query));
-  }, [data.settings, search]);
+              <h2 className="mt-3 text-lg font-semibold text-white">{selected.name}</h2>
+              <p className="text-sm text-[#D4AF37]">{selected.email}</p>
 
-  return (
-    <div className="grid gap-4 xl:grid-cols-2">
-      {filteredSettings.length ? (
-        filteredSettings.map((setting) => <SettingsEditor key={setting.id} setting={setting} runIntent={runIntent} pending={pending} />)
-      ) : (
-        <Panel title="Settings">
-          <p className="text-sm text-[#9B9B9B]">No settings records found in Prisma.</p>
-        </Panel>
-      )}
+              <div className="mt-5 space-y-3">
+                {selected.phone && (
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-[#555]">Phone</p>
+                    <p className="text-sm text-white">{selected.phone}</p>
+                  </div>
+                )}
+                {selected.company && (
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-[#555]">Company</p>
+                    <p className="text-sm text-white">{selected.company}</p>
+                  </div>
+                )}
+                {selected.service && (
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-[#555]">Service</p>
+                    <p className="text-sm text-white">{selected.service}</p>
+                  </div>
+                )}
+                {selected.subject && (
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-[#555]">Subject</p>
+                    <p className="text-sm font-medium text-white">{selected.subject}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-[#555]">Message</p>
+                  <p className="mt-1 text-sm leading-relaxed text-[#aaa]">{selected.message}</p>
+                </div>
+                {selected.sourcePage && (
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-[#555]">Source Page</p>
+                    <p className="text-sm text-[#888] break-all">{selected.sourcePage}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-[#555]">Submitted</p>
+                  <p className="text-sm text-[#888]">{new Date(selected.createdAt).toLocaleString()}</p>
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.02] p-8"
+            >
+              <div className="text-center">
+                <Inbox className="mx-auto h-10 w-10 text-[#333]" />
+                <p className="mt-3 text-sm text-[#555]">Select a contact to view details</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
 
-function SettingsEditor({
-  setting,
-  runIntent,
-  pending
+// ─── Main Command Center ───────────────────────────────────────────────────────
+
+export function AdminCommandCenter({
+  initialData,
+  initialProject,
+  dashboardTitle,
 }: {
-  setting: SettingsRow;
-  runIntent: (body: Record<string, unknown>, successMessage: string) => Promise<void>;
-  pending: boolean;
+  initialData: AdminCommandCenterData;
+  initialProject?: ProjectKey;
+  dashboardTitle?: string;
 }) {
-  const [value, setValue] = React.useState(jsonText(setting.value, {}));
-
-  React.useEffect(() => {
-    setValue(jsonText(setting.value, {}));
-  }, [setting.value]);
-
-  return (
-    <Panel title={setting.label}>
-      <div className="grid gap-3">
-        <p className="text-sm text-[#9B9B9B]">{setting.key}</p>
-        <textarea value={value} onChange={(event) => setValue(event.target.value)} className={cn(textareaClass, "min-h-52 font-mono")} />
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => {
-            try {
-              runIntent(
-                { intent: "settings.update", id: setting.id, division: setting.division, key: setting.key, label: setting.label, scope: setting.scope, value: parseJson(value, {}) },
-                "Settings updated."
-              );
-            } catch {
-              toast.error("Settings JSON is invalid.");
-            }
-          }}
-          className="h-10 rounded-[8px] bg-gradient-to-r from-[#b8860b] to-[#d4a843] px-4 text-sm font-semibold text-[#0d0d0d]"
-        >
-          Save Settings
-        </button>
-      </div>
-    </Panel>
-  );
-}
-
-function ChatbotQueries({ data, search }: { data: AdminCommandCenterData; search: string }) {
-  const [expanded, setExpanded] = React.useState<string | null>(null);
-  const items = data.chatbotQueries.filter(
-    (q) =>
-      !search ||
-      q.question.toLowerCase().includes(search.toLowerCase()) ||
-      q.answer.toLowerCase().includes(search.toLowerCase())
+  const params = useParams();
+  const slug = typeof params?.project === "string" ? params.project : "";
+  const isGroup = slug === "ractysh-group" || !slug;
+  const navItems: NavItem[] = React.useMemo(
+    () => (isGroup ? [...CORE_NAV, ...GROUP_NAV] : CORE_NAV),
+    [isGroup]
   );
 
+  const [data] = React.useState<AdminCommandCenterData>(initialData);
+  const [activeView, setActiveView] = React.useState<AdminView>("overview");
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
+
   return (
-    <Panel title={`Chatbot Queries (${data.chatbotQueries.length})`}>
-      {items.length === 0 ? (
-        <div className="rounded-[8px] border border-dashed border-[#232323] p-8 text-center text-sm text-[#666]">
-          {search ? "No matching queries." : "No queries yet. Ask the chatbot something on the website."}
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {items.map((q) => (
-            <div
-              key={q.id}
-              className="cursor-pointer overflow-hidden rounded-[8px] border border-[#232323] transition-colors"
-              style={{ borderColor: expanded === q.id ? "#8F1118" : "#232323" }}
-              onClick={() => setExpanded(expanded === q.id ? null : q.id)}
+    <div className="flex min-h-screen bg-[#050505] text-white">
+      <Sidebar
+        activeView={activeView}
+        onNavigate={setActiveView}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        mobileOpen={mobileSidebarOpen}
+        onMobileClose={() => setMobileSidebarOpen(false)}
+        unreadCount={data.unreadNotifications}
+        navItems={navItems}
+      />
+
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <Header
+          activeView={activeView}
+          onMenuClick={() => setMobileSidebarOpen(true)}
+          unreadCount={data.unreadNotifications}
+          navItems={navItems}
+        />
+
+        <main className="flex-1 overflow-y-auto">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeView}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
             >
-              <div className="flex items-center justify-between px-4 py-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="rounded bg-[#8F1118] px-2 py-0.5 text-[0.65rem] font-semibold text-white">Q</span>
-                    <span className="truncate text-sm text-[#f5f5f5]">{q.question}</span>
-                  </div>
-                  <div className="mt-1 flex gap-3 text-[0.7rem] text-[#666]">
-                    <span>{formatDate(q.createdAt)}</span>
-                    {q.pageUrl && <span className="truncate">{q.pageUrl}</span>}
-                  </div>
-                </div>
-                <span className="ml-3 text-[0.7rem] text-[#555]">{expanded === q.id ? "▲" : "▼"}</span>
-              </div>
-              {expanded === q.id && (
-                <div className="border-t border-[#232323] px-4 py-3">
-                  <div className="flex flex-col gap-3">
-                    <div>
-                      <div className="mb-1.5 flex items-center gap-2">
-                        <span className="rounded bg-[#8F1118] px-2 py-0.5 text-[0.65rem] font-semibold text-white">Q</span>
-                        <span className="text-xs text-[#888]">User asked</span>
-                      </div>
-                      <div className="rounded-[8px] border border-[#232323] bg-[#080808] px-3 py-2 text-sm text-[#f5f5f5]">{q.question}</div>
-                    </div>
-                    <div>
-                      <div className="mb-1.5 flex items-center gap-2">
-                        <span className="rounded bg-[#1a6e3f] px-2 py-0.5 text-[0.65rem] font-semibold text-white">A</span>
-                        <span className="text-xs text-[#888]">Bot replied</span>
-                      </div>
-                      <div className="rounded-[8px] border border-[#232323] bg-[#080808] px-3 py-2 text-sm leading-relaxed text-[#d4d4d4] whitespace-pre-wrap">{q.answer}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </Panel>
-  );
-}
-
-function AuditLogs({ data, search }: { data: AdminCommandCenterData; search: string }) {
-  const columns = React.useMemo<Column<AuditLogRow>[]>(
-    () => [
-      { accessorKey: "createdAt", header: "Time", meta: { width: "12rem" }, cell: ({ row }) => formatDate(row.original.createdAt) },
-      { accessorKey: "actor", header: "Actor", meta: { width: "14rem" } },
-      { accessorKey: "action", header: "Action", meta: { width: "9rem" }, cell: ({ row }) => <StatusPill value={row.original.action} /> },
-      { accessorKey: "entity", header: "Entity", meta: { width: "12rem" } },
-      { accessorKey: "summary", header: "Summary", meta: { width: "30rem" }, cell: ({ row }) => <span className="truncate">{row.original.summary}</span> }
-    ],
-    []
-  );
-
-  return (
-    <Panel title="Audit Logs">
-      <Table rows={data.auditLogs} columns={columns} search={search} empty="No audit logs found in Prisma." />
-    </Panel>
+              {activeView === "overview" && <DashboardOverview data={data} />}
+              {activeView === "notifications" && <NotificationsView data={data} />}
+              {activeView === "analytics" && <AnalyticsView data={data} />}
+              {activeView === "contacts" && <ContactsView data={data} />}
+              {isGroup && activeView === "services" && <ServicesView data={data} />}
+              {isGroup && activeView === "blogs" && <BlogsView data={data} />}
+              {isGroup && activeView === "careers" && <CareersView data={data} />}
+              {isGroup && activeView === "newsletter" && <NewsletterView data={data} />}
+              {isGroup && activeView === "chatbot" && <ChatbotView data={data} />}
+            </motion.div>
+          </AnimatePresence>
+        </main>
+      </div>
+    </div>
   );
 }

@@ -28,7 +28,7 @@ export default async function ProjectDashboardPage({ params }: ProjectDashboardP
   const admin = await getCurrentAdmin();
   if (!admin) redirect("/?error=session_required");
 
-  const data = await getAdminCommandCenterData(admin);
+  const data = await getAdminCommandCenterData(admin, project);
 
   return <AdminCommandCenter initialData={data} initialProject={route.key} dashboardTitle={route.title} />;
 }

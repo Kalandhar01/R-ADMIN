@@ -213,10 +213,10 @@ async function audit(
   });
 }
 
-async function responseWithData(admin: { id: string; email: string; name: string; roles: string[] }) {
+async function responseWithData(admin: { id: string; email: string; name: string; roles: string[] }, division?: string) {
   return NextResponse.json({
     success: true,
-    data: await getAdminCommandCenterData(admin)
+    data: await getAdminCommandCenterData(admin, division)
   });
 }
 
@@ -371,7 +371,10 @@ export async function GET(request: NextRequest) {
   const admin = await getCurrentAdminFromRequest(request);
   if (!admin) return NextResponse.json({ success: false, message: "Unauthorized." }, { status: 401 });
 
-  return responseWithData(admin);
+  const { searchParams } = new URL(request.url);
+  const division = searchParams.get("division") || undefined;
+
+  return responseWithData(admin, division);
 }
 
 export async function POST(request: NextRequest) {
@@ -386,6 +389,19 @@ export async function POST(request: NextRequest) {
 
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
     const intent = String(body.intent || "");
+
+    const writeIntents = new Set([
+      "lead.updateStatus", "contact.update", "contact.delete",
+      "blog.upsert", "blog.delete", "blog.status", "blog.feature",
+      "newsletter.upsert", "subscriber.delete",
+      "service.upsert", "service.delete", "service.status",
+      "media.createUrl", "media.delete", "media.upload",
+      "job.upsert", "job.delete", "application.update", "application.delete",
+      "settings.update", "business.upsert", "domain.upsert", "domain.delete"
+    ]);
+    if (writeIntents.has(intent) && !admin.roles?.length) {
+      return NextResponse.json({ success: false, message: "Forbidden: no role assigned." }, { status: 403 });
+    }
 
     if (intent === "lead.updateStatus") {
       const parsed = z.object({ id: z.string(), kind: z.enum(["Contact", "Consultation", "Career"]), status: statusFilterSchema }).parse(body);

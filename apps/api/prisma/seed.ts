@@ -5,8 +5,8 @@ import { blogSeedData } from "./blogSeedData.js";
 
 const prisma = new PrismaClient();
 
-const DEVELOPMENT_ADMIN_EMAIL = "admin@ractysh.com";
-const DEVELOPMENT_ADMIN_PASSWORD = "admin@123";
+const DEVELOPMENT_ADMIN_EMAIL = "fawas";
+const DEVELOPMENT_ADMIN_PASSWORD = "admin123";
 
 function hashPassword(password: string): string {
   const salt = randomBytes(16).toString("hex");
