@@ -24,8 +24,8 @@ function clean(value: unknown, limit = 4000) {
   return typeof value === "string" ? value.replace(/[\u0000-\u001F\u007F]/g, "").trim().slice(0, limit) : "";
 }
 
-function jsonValue(value: unknown): Prisma.InputJsonValue {
-  return JSON.parse(JSON.stringify(value ?? {})) as Prisma.InputJsonValue;
+function jsonValue(value: unknown) {
+  return JSON.parse(JSON.stringify(value ?? {}));
 }
 
 function excerpt(value: string, limit = 190) {

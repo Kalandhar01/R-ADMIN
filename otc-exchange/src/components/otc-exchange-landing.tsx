@@ -288,11 +288,6 @@ const otcDeskAdvantages: Array<{
   },
 ];
 
-const sectionReveal = {
-  hidden: { opacity: 0, y: 46, filter: "blur(10px)" },
-  visible: { opacity: 1, y: 0, filter: "blur(0px)" },
-};
-
 const initialPhoneStatusTime = "9:41";
 const initialPhoneLockDate = "Thursday, June 11";
 
@@ -1007,24 +1002,8 @@ function LazyRenderSection({
   );
 }
 
-function ScrollRevealSection({
-  children,
-  amount = 0.16,
-}: {
-  children: ReactNode;
-  amount?: number;
-}) {
-  return (
-    <motion.div
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount }}
-      variants={sectionReveal}
-      transition={{ duration: 0.72, ease: [0.22, 1, 0.36, 1] }}
-    >
-      {children}
-    </motion.div>
-  );
+function ScrollRevealSection({ children }: { children: ReactNode; amount?: number }) {
+  return <>{children}</>;
 }
 
 function ProjectsFaqSection() {
