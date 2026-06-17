@@ -116,7 +116,7 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ success: true, message: "Request received." }, { status: 202 });
+    return NextResponse.json({ success: true, message: "Subscribed" }, { status: 202 });
   } catch (error) {
     console.error("[newsletter-subscribe] Subscription flow failed.", error);
 

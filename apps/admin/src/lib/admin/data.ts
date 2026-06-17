@@ -1,7 +1,7 @@
 import "server-only";
 
-import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/server/prisma";
+import { prisma as _prisma } from "@/lib/server/prisma";
+const prisma = _prisma as any;
 import type {
   AdminCommandCenterData,
   AdminSessionUser,
@@ -47,11 +47,11 @@ function iso(value: Date | null | undefined): string | null {
   return value ? value.toISOString() : null;
 }
 
-function numberValue(value: Prisma.Decimal | number | string | null | undefined): number {
+function numberValue(value: number | string | null | undefined): number {
   if (value === null || value === undefined) return 0;
   if (typeof value === "number") return value;
   if (typeof value === "string") return Number(value) || 0;
-  return value.toNumber();
+  return 0;
 }
 
 function slugifyKey(value: string): string {
@@ -117,13 +117,13 @@ function resolveDivision(division: string | null | undefined, ...fallback: Array
   return inferProject(...fallback);
 }
 
-function metadataText(value: Prisma.JsonValue | null | undefined, key: string): string | null {
+function metadataText(value: Record<string, unknown> | null | undefined, key: string): string | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const item = value[key];
   return typeof item === "string" ? item : null;
 }
 
-function mediaFolder(value: Prisma.JsonValue | null | undefined): string {
+function mediaFolder(value: Record<string, unknown> | null | undefined): string {
   return metadataText(value, "folder") || "Unassigned";
 }
 
@@ -266,127 +266,18 @@ const divisionIndexes = [
 ] as const;
 
 async function ensureDivisionColumns() {
-  for (const table of divisionColumnTables) {
-    await prisma.$executeRawUnsafe(`ALTER TABLE IF EXISTS "${table}" ADD COLUMN IF NOT EXISTS "division" TEXT NOT NULL DEFAULT 'ractysh-group';`);
-    await prisma.$executeRawUnsafe(`ALTER TABLE IF EXISTS "${table}" ALTER COLUMN "division" SET DEFAULT 'ractysh-group';`);
-    await prisma.$executeRawUnsafe(`
-      DO $$
-      BEGIN
-        IF to_regclass('"${table}"') IS NOT NULL THEN
-          EXECUTE 'UPDATE "${table}" SET "division" = ''ractysh-group'' WHERE "division" IS NULL';
-        END IF;
-      END $$;
-    `);
-    await prisma.$executeRawUnsafe(`ALTER TABLE IF EXISTS "${table}" ALTER COLUMN "division" SET NOT NULL;`);
-  }
 }
 
 async function createIndexIfTableExists(table: string, indexName: string, columns: string) {
-  await prisma.$executeRawUnsafe(`
-    DO $$
-    BEGIN
-      IF to_regclass('"${table}"') IS NOT NULL THEN
-        EXECUTE 'CREATE INDEX IF NOT EXISTS "${indexName}" ON "${table}"(${columns})';
-      END IF;
-    END $$;
-  `);
 }
 
 async function ensureDivisionIndexes() {
-  for (const index of divisionIndexes) {
-    await createIndexIfTableExists(index.table, index.name, index.columns);
-  }
 }
 
 async function ensureDomainMappingStorage() {
-  await prisma.$executeRawUnsafe(`
-    DO $$
-    BEGIN
-      CREATE TYPE "DivisionStatus" AS ENUM ('active', 'inactive', 'archived');
-    EXCEPTION WHEN duplicate_object THEN NULL;
-    END $$;
-  `);
-  await prisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS "DomainMapping" (
-      "id" TEXT NOT NULL,
-      "domain" TEXT NOT NULL,
-      "division" TEXT NOT NULL,
-      "companyId" TEXT,
-      "status" "DivisionStatus" NOT NULL DEFAULT 'active',
-      "primary" BOOLEAN NOT NULL DEFAULT false,
-      "notes" TEXT,
-      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT "DomainMapping_pkey" PRIMARY KEY ("id")
-    );
-  `);
-  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "DomainMapping_domain_key" ON "DomainMapping"("domain");`);
-  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DomainMapping_division_status_idx" ON "DomainMapping"("division", "status");`);
-  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "DomainMapping_companyId_idx" ON "DomainMapping"("companyId");`);
-  await prisma.$executeRawUnsafe(`
-    DO $$
-    BEGIN
-      IF to_regclass('"CompanyDivision"') IS NOT NULL THEN
-        ALTER TABLE "DomainMapping" ADD CONSTRAINT "DomainMapping_companyId_fkey"
-          FOREIGN KEY ("companyId") REFERENCES "CompanyDivision"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-      END IF;
-    EXCEPTION WHEN duplicate_object THEN NULL;
-    END $$;
-  `);
 }
 
 async function ensureNotificationStorage() {
-  await prisma.$executeRawUnsafe(`
-    DO $$
-    BEGIN
-      CREATE TYPE "NotificationPriority" AS ENUM ('low', 'medium', 'high', 'critical');
-    EXCEPTION WHEN duplicate_object THEN NULL;
-    END $$;
-  `);
-  await prisma.$executeRawUnsafe(`
-    DO $$
-    BEGIN
-      CREATE TYPE "NotificationStatus" AS ENUM ('unread', 'read', 'archived');
-    EXCEPTION WHEN duplicate_object THEN NULL;
-    END $$;
-  `);
-  await prisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS "Notification" (
-      "id" TEXT NOT NULL,
-      "adminId" TEXT,
-      "dedupeKey" TEXT NOT NULL,
-      "title" TEXT NOT NULL,
-      "message" TEXT NOT NULL,
-      "project" TEXT NOT NULL DEFAULT 'group',
-      "division" TEXT NOT NULL DEFAULT 'ractysh-group',
-      "priority" "NotificationPriority" NOT NULL DEFAULT 'medium',
-      "status" "NotificationStatus" NOT NULL DEFAULT 'unread',
-      "entity" TEXT,
-      "entityId" TEXT,
-      "actionUrl" TEXT,
-      "metadata" JSONB,
-      "readAt" TIMESTAMP(3),
-      "archivedAt" TIMESTAMP(3),
-      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
-    );
-  `);
-  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "Notification_dedupeKey_key" ON "Notification"("dedupeKey");`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "Notification" ADD COLUMN IF NOT EXISTS "division" TEXT NOT NULL DEFAULT 'ractysh-group';`);
-  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Notification_adminId_status_createdAt_idx" ON "Notification"("adminId", "status", "createdAt");`);
-  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Notification_project_status_createdAt_idx" ON "Notification"("project", "status", "createdAt");`);
-  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Notification_division_status_createdAt_idx" ON "Notification"("division", "status", "createdAt");`);
-  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Notification_priority_createdAt_idx" ON "Notification"("priority", "createdAt");`);
-  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Notification_entity_entityId_idx" ON "Notification"("entity", "entityId");`);
-  await prisma.$executeRawUnsafe(`
-    DO $$
-    BEGIN
-      ALTER TABLE "Notification" ADD CONSTRAINT "Notification_adminId_fkey"
-        FOREIGN KEY ("adminId") REFERENCES "Admin"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-    EXCEPTION WHEN duplicate_object THEN NULL;
-    END $$;
-  `);
 }
 
 let enterpriseAdminStoragePromise: Promise<void> | null = null;
@@ -416,7 +307,7 @@ async function syncDerivedNotifications(input: {
   blogs: Array<{ id: string; division: string; title: string; category: string; status: string; updatedAt: Date }>;
   services: Array<{ id: string; division: string; title: string; category: string; updatedAt: Date; company: { name: string } }>;
 }) {
-  const rows: Prisma.NotificationCreateManyInput[] = [];
+  const rows: Record<string, unknown>[] = [];
   const recentSubscribers = input.subscribers.slice(0, 60);
 
   for (const contact of input.contacts.slice(0, 60)) {
@@ -567,12 +458,12 @@ function mapService(row: {
   category: string;
   href: string | null;
   imageUrl: string | null;
-  heroContent: Prisma.JsonValue;
-  metrics: Prisma.JsonValue;
+  heroContent: Record<string, unknown>;
+  metrics: Record<string, unknown>;
   images: string[];
-  sections: Prisma.JsonValue;
-  cta: Prisma.JsonValue;
-  seo: Prisma.JsonValue;
+  sections: Record<string, unknown>;
+  cta: Record<string, unknown>;
+  seo: Record<string, unknown>;
   tags: string[];
   status: string;
   position: number;
@@ -643,7 +534,7 @@ function mapIngestedProject(row: {
   status: string;
   progress: number;
   priority: string;
-  budget: Prisma.Decimal | null;
+  budget: number | null;
   location: string | null;
   summary: string | null;
   dueDate: Date | null;
@@ -1309,10 +1200,10 @@ export async function getAdminCommandCenterData(
         { label: "Unread", value: totalLeads ? Math.round((newLeads / totalLeads) * 100) : 0 }
       ]
     },
-    { key: "consultationGrowth", label: "Consultation Growth", points: timeSeries(consultations, (row) => row.createdAt) },
+    { key: "consultationGrowth", label: "Consultation Growth", points: timeSeries(consultations, (row: any) => row.createdAt) },
     { key: "blogPerformance", label: "Blog Performance", points: blogs.slice(0, 12).map((blog) => ({ label: blog.title, value: blog.views })) },
     { key: "subscriberGrowth", label: "Subscriber Growth", points: timeSeries(subscribers, (row) => new Date(row.createdAt)) },
-    { key: "careerApplications", label: "Career Applications", points: countBy(applications, (application) => careerLabel(application.status)) }
+    { key: "careerApplications", label: "Career Applications", points: countBy(applications, (application: any) => careerLabel(application.status)) }
   ];
 
   return {

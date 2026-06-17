@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { Prisma, type NewsletterSubscriber } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -19,7 +18,7 @@ type SubscribePayload = {
 };
 
 type SubscribeRecord = {
-  subscriber: NewsletterSubscriber;
+  subscriber: Record<string, unknown>;
   created: boolean;
 };
 
@@ -97,8 +96,9 @@ async function createSubscriber(email: string): Promise<SubscribeRecord> {
     });
 
     return { subscriber, created: true };
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+  } catch (error: unknown) {
+    const mongoErr = error as { code?: number; name?: string };
+    if (mongoErr.code === 11000) {
       const subscriber = await prisma.newsletterSubscriber.findUnique({
         where: { email },
       });
@@ -110,7 +110,7 @@ async function createSubscriber(email: string): Promise<SubscribeRecord> {
   }
 }
 
-async function notifyAdmins(subscriber: NewsletterSubscriber, source: string) {
+async function notifyAdmins(subscriber: Record<string, unknown>, source: string) {
   const admins = await prisma.admin.findMany({
     where: { active: true },
     select: { id: true },
@@ -118,7 +118,7 @@ async function notifyAdmins(subscriber: NewsletterSubscriber, source: string) {
 
   if (!admins.length) return;
 
-  const rows: Prisma.NotificationCreateManyInput[] = admins.map((admin) => ({
+  const rows: Record<string, unknown>[] = admins.map((admin) => ({
     adminId: admin.id,
     dedupeKey: `${admin.id}:subscriber:NewsletterSubscriber:${subscriber.id}:real-estate`,
     title: "New Real Estate Newsletter Subscriber",
@@ -186,9 +186,9 @@ export async function POST(request: NextRequest) {
         ? "Subscribed. You are now connected to Ractysh Real Estate insights."
         : "This email is already subscribed.",
       subscriber: {
-        id: subscriber.id,
-        email: subscriber.email,
-        createdAt: subscriber.createdAt.toISOString(),
+        id: subscriber.id as string,
+        email: subscriber.email as string,
+        createdAt: (subscriber.createdAt as unknown as Date).toISOString(),
       },
       division: requestedDivision,
     });

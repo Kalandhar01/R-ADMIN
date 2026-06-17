@@ -1,7 +1,7 @@
-import { Prisma, type Newsletter, type NewsletterStatus } from "@prisma/client";
-import { prisma } from "../lib/prisma.js";
+import { NewsletterModel, SubscriberModel, type INewsletter, type ISubscriber } from "../models/Newsletter.js";
 import type { NewsletterCreateInput, NewsletterSubscribeInput, NewsletterUpdateInput } from "../validation/newsletter.js";
 import { safelyIngestLead, safelyIngestNewsletter } from "./ingestionService.js";
+import { isMongoConnected } from "../lib/db.js";
 
 export class NewsletterDatabaseUnavailableError extends Error {
   constructor(message = "Newsletter database is unavailable.") {
@@ -17,8 +17,6 @@ export class NewsletterNotFoundError extends Error {
   }
 }
 
-type NewsletterRecord = Newsletter;
-
 export interface NewsletterDto {
   id: string;
   title: string;
@@ -29,7 +27,7 @@ export interface NewsletterDto {
   category: string;
   author: string;
   featured: boolean;
-  status: NewsletterStatus;
+  status: string;
   publishDate: string | null;
   tags: string[];
   readTime: string;
@@ -45,22 +43,15 @@ export interface NewsletterTickerItem {
   slug: string;
 }
 
-let newsletterPrismaEnabled = false;
-let schemaWarningLogged = false;
-let databaseUnavailableMessage = "Newsletter database is unavailable.";
-let publicSchemaReady: boolean | undefined;
+let newsletterMongoEnabled = false;
 
 export function setNewsletterPrismaEnabled(value: boolean): void {
-  newsletterPrismaEnabled = value;
-  if (value) {
-    databaseUnavailableMessage = "Newsletter database is unavailable.";
-    publicSchemaReady = undefined;
-  }
+  newsletterMongoEnabled = value;
 }
 
 function assertDatabase(): void {
-  if (!newsletterPrismaEnabled) {
-    throw new NewsletterDatabaseUnavailableError(databaseUnavailableMessage);
+  if (!newsletterMongoEnabled) {
+    throw new NewsletterDatabaseUnavailableError("Newsletter database is unavailable.");
   }
 }
 
@@ -79,78 +70,14 @@ function emptyExecutiveIntelligence() {
   };
 }
 
-function isNewsletterSchemaMismatch(error: unknown): boolean {
-  if (!(error instanceof Prisma.PrismaClientKnownRequestError)) return false;
-  if (error.code !== "P2021" && error.code !== "P2022") return false;
-
-  const modelName = typeof error.meta?.modelName === "string" ? error.meta.modelName : "";
-  return modelName === "Newsletter" || /Newsletter/i.test(error.message);
-}
-
-function useSchemaFallback(): void {
-  newsletterPrismaEnabled = false;
-  publicSchemaReady = false;
-  databaseUnavailableMessage = "Newsletter database schema is out of date. Run the latest Prisma migration.";
-
-  if (!schemaWarningLogged) {
-    schemaWarningLogged = true;
-    console.warn(
-      "[newsletter] Database schema is missing Newsletter fields. Public newsletter endpoints are using empty fallbacks until migrations are applied."
-    );
-  }
-}
-
-function shouldUsePublicFallback(error: unknown): boolean {
-  if (error instanceof NewsletterDatabaseUnavailableError) return true;
-  if (!isNewsletterSchemaMismatch(error)) return false;
-
-  useSchemaFallback();
-  return true;
-}
-
-async function hasNewsletterDivisionColumn(): Promise<boolean> {
-  const rows = await prisma.$queryRaw<Array<{ exists: boolean }>>`
-    SELECT EXISTS (
-      SELECT 1
-      FROM information_schema.columns
-      WHERE table_schema = current_schema()
-        AND table_name = 'Newsletter'
-        AND column_name = 'division'
-    ) AS "exists"
-  `;
-
-  return Boolean(rows[0]?.exists);
-}
-
-async function hasPublicNewsletterDatabase(): Promise<boolean> {
-  try {
-    assertDatabase();
-  } catch (error) {
-    if (shouldUsePublicFallback(error)) return false;
-    throw error;
-  }
-
-  if (publicSchemaReady !== undefined) return publicSchemaReady;
-
-  if (!(await hasNewsletterDivisionColumn())) {
-    useSchemaFallback();
-    return false;
-  }
-
-  publicSchemaReady = true;
-  return true;
-}
-
-function iso(value: Date | null): string | null {
+function iso(value: Date | null | undefined): string | null {
   return value ? value.toISOString() : null;
 }
 
 function publicWhere(now = new Date()) {
   return {
-    status: "published" as const,
-    publishDate: {
-      lte: now
-    }
+    status: "published",
+    publishDate: { $lte: now }
   };
 }
 
@@ -183,9 +110,9 @@ function parsePublishDate(value: string | undefined): Date | null | undefined {
   return date;
 }
 
-function mapNewsletter(record: NewsletterRecord, includeContent = false): NewsletterDto {
+function mapNewsletter(record: INewsletter, includeContent = false): NewsletterDto {
   return {
-    id: record.id,
+    id: String(record._id),
     title: record.title,
     slug: record.slug,
     excerpt: record.excerpt,
@@ -196,7 +123,7 @@ function mapNewsletter(record: NewsletterRecord, includeContent = false): Newsle
     featured: record.featured,
     status: record.status,
     publishDate: iso(record.publishDate),
-    tags: record.tags,
+    tags: record.tags || [],
     readTime: record.readTime,
     views: record.views,
     createdAt: record.createdAt.toISOString(),
@@ -204,9 +131,9 @@ function mapNewsletter(record: NewsletterRecord, includeContent = false): Newsle
   };
 }
 
-function newsletterIngestionPayload(record: NewsletterRecord, action: "created" | "updated") {
+function newsletterIngestionPayload(record: INewsletter, action: "created" | "updated") {
   return {
-    id: record.id,
+    id: String(record._id),
     title: record.title,
     slug: record.slug,
     excerpt: record.excerpt,
@@ -215,7 +142,7 @@ function newsletterIngestionPayload(record: NewsletterRecord, action: "created" 
     featured: record.featured,
     status: record.status,
     publishDate: iso(record.publishDate),
-    tags: record.tags,
+    tags: record.tags || [],
     action
   };
 }
@@ -225,19 +152,15 @@ async function ensureUniqueSlug(base: string, existingId?: string): Promise<stri
   let suffix = 2;
 
   while (true) {
-    const existing = await prisma.newsletter.findUnique({
-      where: { slug: candidate },
-      select: { id: true }
-    });
-
-    if (!existing || existing.id === existingId) return candidate;
+    const existing = await NewsletterModel.findOne({ slug: candidate }).select("_id").lean();
+    if (!existing || (existingId && String(existing._id) === existingId)) return candidate;
 
     candidate = `${slugify(base)}-${suffix}`;
     suffix += 1;
   }
 }
 
-function publishDateForStatus(status: NewsletterStatus, publishDate: Date | null | undefined): Date | null | undefined {
+function publishDateForStatus(status: string, publishDate: Date | null | undefined): Date | null | undefined {
   if (status === "published") {
     return publishDate === undefined || publishDate === null ? new Date() : publishDate;
   }
@@ -253,7 +176,7 @@ function publishDateForStatus(status: NewsletterStatus, publishDate: Date | null
 }
 
 async function normalizeCreateInput(input: NewsletterCreateInput) {
-  const status = input.status as NewsletterStatus;
+  const status = input.status;
   const publishDate = publishDateForStatus(status, parsePublishDate(input.publishDate));
 
   return {
@@ -264,7 +187,7 @@ async function normalizeCreateInput(input: NewsletterCreateInput) {
     coverImage: input.coverImage,
     category: input.category,
     author: input.author,
-    featured: input.featured,
+    featured: input.featured || false,
     status,
     publishDate,
     tags: input.tags || [],
@@ -288,7 +211,7 @@ async function normalizeUpdateInput(id: string, input: NewsletterUpdateInput) {
     next.slug = await ensureUniqueSlug(input.slug || input.title || "executive-intelligence", id);
   }
 
-  const status = input.status as NewsletterStatus | undefined;
+  const status = input.status;
   const parsedPublishDate = parsePublishDate(input.publishDate);
 
   if (status !== undefined) {
@@ -311,155 +234,138 @@ async function normalizeUpdateInput(id: string, input: NewsletterUpdateInput) {
 async function normalizeFeatured(id: string, featured: boolean): Promise<void> {
   if (!featured) return;
 
-  await prisma.newsletter.updateMany({
-    where: {
-      id: {
-        not: id
-      },
-      featured: true
-    },
-    data: {
-      featured: false
-    }
-  });
+  await NewsletterModel.updateMany(
+    { _id: { $ne: id }, featured: true },
+    { $set: { featured: false } }
+  );
 }
 
 export async function listAdminNewsletters(): Promise<NewsletterDto[]> {
   assertDatabase();
 
-  const newsletters = await prisma.newsletter.findMany({
-    orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }]
-  });
+  const newsletters = await NewsletterModel.find()
+    .sort({ updatedAt: -1, createdAt: -1 })
+    .lean();
 
-  return newsletters.map((record) => mapNewsletter(record, true));
+  return newsletters.map((record) => mapNewsletter(record as INewsletter, true));
 }
 
 export async function createNewsletter(input: NewsletterCreateInput): Promise<NewsletterDto> {
   assertDatabase();
 
   const data = await normalizeCreateInput(input);
-  const newsletter = await prisma.newsletter.create({ data });
-  await normalizeFeatured(newsletter.id, newsletter.featured);
+  const newsletter = await NewsletterModel.create(data);
+  await normalizeFeatured(String(newsletter._id), newsletter.featured);
 
   const fresh = newsletter.featured
-    ? await prisma.newsletter.findUniqueOrThrow({ where: { id: newsletter.id } })
-    : newsletter;
+    ? await NewsletterModel.findById(newsletter._id).lean()
+    : newsletter.toObject();
 
-  await safelyIngestNewsletter(newsletterIngestionPayload(fresh, "created"));
-  return mapNewsletter(fresh, true);
+  const record = (fresh || newsletter.toObject()) as INewsletter;
+  await safelyIngestNewsletter(newsletterIngestionPayload(record, "created"));
+  return mapNewsletter(record, true);
 }
 
 export async function updateNewsletter(id: string, input: NewsletterUpdateInput): Promise<NewsletterDto> {
   assertDatabase();
 
   const data = await normalizeUpdateInput(id, input);
-  const newsletter = await prisma.newsletter.update({ where: { id }, data });
-  await normalizeFeatured(newsletter.id, newsletter.featured);
+  const newsletter = await NewsletterModel.findByIdAndUpdate(id, { $set: data }, { new: true }).lean();
+  if (!newsletter) throw new NewsletterNotFoundError();
+
+  await normalizeFeatured(id, (data.featured as boolean) || newsletter.featured);
 
   const fresh = newsletter.featured
-    ? await prisma.newsletter.findUniqueOrThrow({ where: { id: newsletter.id } })
+    ? await NewsletterModel.findById(id).lean()
     : newsletter;
 
-  await safelyIngestNewsletter(newsletterIngestionPayload(fresh, "updated"));
-  return mapNewsletter(fresh, true);
+  const record = (fresh || newsletter) as INewsletter;
+  await safelyIngestNewsletter(newsletterIngestionPayload(record, "updated"));
+  return mapNewsletter(record, true);
 }
 
 export async function deleteNewsletter(id: string): Promise<void> {
   assertDatabase();
-  await prisma.newsletter.delete({ where: { id } });
+  await NewsletterModel.findByIdAndDelete(id);
 }
 
 export async function getPublicNewsletterBySlug(slug: string): Promise<NewsletterDto | null> {
   try {
-    if (!(await hasPublicNewsletterDatabase())) return null;
+    if (!newsletterMongoEnabled) return null;
 
-    const record = await prisma.newsletter.findFirst({
-      where: {
-        slug,
-        ...publicWhere()
-      }
-    });
+    const record = await NewsletterModel.findOne({
+      slug,
+      ...publicWhere()
+    }).lean();
 
     if (!record) return null;
 
-    const updated = await prisma.newsletter.update({
-      where: { id: record.id },
-      data: { views: { increment: 1 } }
-    });
-
-    return mapNewsletter(updated, true);
+    await NewsletterModel.findByIdAndUpdate(record._id, { $inc: { views: 1 } });
+    const updated = await NewsletterModel.findById(record._id).lean();
+    return mapNewsletter((updated || record) as INewsletter, true);
   } catch (error) {
-    if (shouldUsePublicFallback(error)) return null;
+    if (!newsletterMongoEnabled) return null;
     throw error;
   }
 }
 
 export async function getFeaturedNewsletter(): Promise<NewsletterDto | null> {
   try {
-    if (!(await hasPublicNewsletterDatabase())) return null;
+    if (!newsletterMongoEnabled) return null;
 
-    const record = await prisma.newsletter.findFirst({
-      where: {
-        featured: true,
-        ...publicWhere()
-      },
-      orderBy: [{ publishDate: "desc" }, { updatedAt: "desc" }]
-    });
+    const record = await NewsletterModel.findOne({
+      featured: true,
+      ...publicWhere()
+    }).sort({ publishDate: -1, updatedAt: -1 }).lean();
 
-    if (record) return mapNewsletter(record);
+    if (record) return mapNewsletter(record as INewsletter);
 
-    const latest = await prisma.newsletter.findFirst({
-      where: publicWhere(),
-      orderBy: [{ publishDate: "desc" }, { updatedAt: "desc" }]
-    });
+    const latest = await NewsletterModel.findOne(publicWhere())
+      .sort({ publishDate: -1, updatedAt: -1 })
+      .lean();
 
-    return latest ? mapNewsletter(latest) : null;
+    return latest ? mapNewsletter(latest as INewsletter) : null;
   } catch (error) {
-    if (shouldUsePublicFallback(error)) return null;
+    if (!newsletterMongoEnabled) return null;
     throw error;
   }
 }
 
 export async function getLatestNewsletter(): Promise<NewsletterDto | null> {
   try {
-    if (!(await hasPublicNewsletterDatabase())) return null;
+    if (!newsletterMongoEnabled) return null;
 
-    const record = await prisma.newsletter.findFirst({
-      where: publicWhere(),
-      orderBy: [{ publishDate: "desc" }, { updatedAt: "desc" }]
-    });
+    const record = await NewsletterModel.findOne(publicWhere())
+      .sort({ publishDate: -1, updatedAt: -1 })
+      .lean();
 
-    return record ? mapNewsletter(record) : null;
+    return record ? mapNewsletter(record as INewsletter) : null;
   } catch (error) {
-    if (shouldUsePublicFallback(error)) return null;
+    if (!newsletterMongoEnabled) return null;
     throw error;
   }
 }
 
 export async function getExecutiveIntelligence(limit = 6) {
   try {
-    if (!(await hasPublicNewsletterDatabase())) return emptyExecutiveIntelligence();
+    if (!newsletterMongoEnabled) return emptyExecutiveIntelligence();
 
     const take = Math.min(Math.max(limit, 3), 12);
     const where = publicWhere();
     const [newsletters, featured, latest, trending, subscriberCount, issueCount] = await Promise.all([
-      prisma.newsletter.findMany({
-        where,
-        take,
-        orderBy: [{ publishDate: "desc" }, { updatedAt: "desc" }]
-      }),
+      NewsletterModel.find(where)
+        .sort({ publishDate: -1, updatedAt: -1 })
+        .limit(take)
+        .lean(),
       getFeaturedNewsletter(),
       getLatestNewsletter(),
-      prisma.newsletter.findFirst({
-        where,
-        orderBy: [{ views: "desc" }, { publishDate: "desc" }]
-      }),
-      prisma.subscriber.count({ where: { status: "active" } }),
-      prisma.newsletter.count({ where })
+      NewsletterModel.findOne(where).sort({ views: -1, publishDate: -1 }).lean(),
+      SubscriberModel.countDocuments({ status: "active" }),
+      NewsletterModel.countDocuments(where)
     ]);
 
-    const mapped = newsletters.map((record) => mapNewsletter(record));
-    const trendingDto = trending ? mapNewsletter(trending) : null;
+    const mapped = newsletters.map((record) => mapNewsletter(record as INewsletter));
+    const trendingDto = trending ? mapNewsletter(trending as INewsletter) : null;
     const ticker: NewsletterTickerItem[] = [
       latest ? { label: "Latest Publication", title: latest.title, category: latest.category, slug: latest.slug } : null,
       featured ? { label: "Featured Insight", title: featured.title, category: featured.category, slug: featured.slug } : null,
@@ -485,7 +391,7 @@ export async function getExecutiveIntelligence(limit = 6) {
       }
     };
   } catch (error) {
-    if (shouldUsePublicFallback(error)) return emptyExecutiveIntelligence();
+    if (!newsletterMongoEnabled) return emptyExecutiveIntelligence();
     throw error;
   }
 }
@@ -494,25 +400,25 @@ export async function subscribeToNewsletter(input: NewsletterSubscribeInput) {
   assertDatabase();
 
   const now = new Date();
-  const subscriber = await prisma.subscriber.upsert({
-    where: { email: input.email.toLowerCase() },
-    create: {
-      email: input.email.toLowerCase(),
-      division: input.division,
-      source: input.source || "executive-intelligence-center",
-      status: "active"
+  const email = input.email.toLowerCase();
+
+  const subscriber = await SubscriberModel.findOneAndUpdate(
+    { email },
+    {
+      $set: {
+        email,
+        division: input.division,
+        source: input.source || "executive-intelligence-center",
+        status: "active",
+        updatedAt: now
+      }
     },
-    update: {
-      division: input.division,
-      source: input.source || "executive-intelligence-center",
-      status: "active",
-      updatedAt: now
-    }
-  });
+    { upsert: true, new: true }
+  ).lean();
 
   await safelyIngestLead({
-    fullName: input.email.split("@")[0] || "Newsletter Subscriber",
-    email: input.email,
+    fullName: email.split("@")[0] || "Newsletter Subscriber",
+    email,
     division: input.division,
     source: input.source || "executive-intelligence-center",
     sourceType: "newsletter_form",
@@ -520,15 +426,15 @@ export async function subscribeToNewsletter(input: NewsletterSubscribeInput) {
     status: "new",
     message: "Newsletter subscription captured for future client intelligence and communications.",
     metadata: {
-      subscriberId: subscriber.id,
+      subscriberId: String(subscriber._id),
       subscriptionStatus: subscriber.status
     },
-    externalEntityId: subscriber.id,
+    externalEntityId: String(subscriber._id),
     externalEntityModel: "Subscriber"
   });
 
   return {
-    id: subscriber.id,
+    id: String(subscriber._id),
     email: subscriber.email,
     status: subscriber.status,
     source: subscriber.source,

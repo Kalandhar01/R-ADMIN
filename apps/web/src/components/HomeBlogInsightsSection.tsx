@@ -28,7 +28,7 @@ export function HomeBlogInsightsSection({ data }: { data: BlogListPayload | null
   return (
     <motion.section
       ref={sectionRef}
-      className="relative isolate overflow-hidden bg-[#fffdf8] px-5 py-20 text-[#201714] md:px-8 lg:py-24 xl:px-12"
+      className="relative isolate overflow-hidden bg-[#fffdf8] px-5 py-20 text-[#201714] md:px-8 lg:py-28 xl:px-12"
       initial={reduceMotion ? false : { opacity: 0, y: revealDistance }}
       animate={hasEntered || reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: revealDistance }}
       transition={{ duration: reduceMotion ? 0 : 0.8, ease: smoothEase }}
@@ -43,14 +43,14 @@ export function HomeBlogInsightsSection({ data }: { data: BlogListPayload | null
       </div>
 
       <motion.div
-        className="pointer-events-none absolute inset-[-72px] opacity-[0.04] will-change-transform [background-image:linear-gradient(rgba(95,73,42,0.14)_1px,transparent_1px),linear-gradient(90deg,rgba(95,73,42,0.1)_1px,transparent_1px)] [background-size:84px_84px]"
+        className="pointer-events-none absolute inset-[-72px] opacity-[0.03] will-change-transform [background-image:linear-gradient(rgba(95,73,42,0.14)_1px,transparent_1px),linear-gradient(90deg,rgba(95,73,42,0.1)_1px,transparent_1px)] [background-size:84px_84px]"
         aria-hidden="true"
         animate={ambientActive ? { x: [0, 18 * motionScale, 0], y: [0, 12 * motionScale, 0] } : { x: 0, y: 0 }}
         transition={{ duration: 28, repeat: ambientActive ? Infinity : 0, ease: "easeInOut" }}
       />
 
       <div className="relative mx-auto max-w-[92rem]">
-        <header className="mb-12 grid gap-7 border-y border-[#dcc891]/55 py-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        <header className="mb-12 grid gap-7 border-y border-[#dcc891]/55 py-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div className="max-w-[58rem]">
             <motion.div
               className="flex items-center gap-4"
@@ -58,11 +58,11 @@ export function HomeBlogInsightsSection({ data }: { data: BlogListPayload | null
               animate={hasEntered || reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 * motionScale }}
               transition={{ duration: reduceMotion ? 0 : 0.55, ease: smoothEase, delay: reduceMotion ? 0 : 0.08 }}
             >
-              <span className="h-px w-12 bg-[#b68a35]" />
-              <p className="text-[11px] font-semibold uppercase tracking-[0] text-[#8b1118]">CMS Insights</p>
+              <span className="h-px w-14 bg-[#b68a35]" />
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8b1118]">CMS Insights</p>
             </motion.div>
             <motion.h2
-              className="mt-5 font-display text-[2.6rem] font-semibold leading-[0.92] tracking-[0] text-[#1a120f] sm:text-[3.7rem] lg:text-[5rem]"
+              className="mt-5 font-display text-[2.6rem] font-semibold leading-[0.92] tracking-[-0.02em] text-[#1a120f] sm:text-[3.7rem] lg:text-[5rem]"
               initial={reduceMotion ? false : { opacity: 0, y: 16 * motionScale }}
               animate={hasEntered || reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 * motionScale }}
               transition={{ duration: reduceMotion ? 0 : 0.68, ease: smoothEase, delay: reduceMotion ? 0 : 0.16 }}
@@ -75,7 +75,7 @@ export function HomeBlogInsightsSection({ data }: { data: BlogListPayload | null
             <LiveCmsBadge active={ambientActive} reduceMotion={reduceMotion} />
             <Link
               href="/blog"
-              className="group inline-flex min-h-11 items-center justify-center gap-2 rounded-[4px] border border-[#b68a35]/55 bg-[#1f1713] px-4 text-[0.78rem] font-bold uppercase tracking-[0] text-[#fff9ed] shadow-[0_14px_34px_rgba(68,45,20,0.14)] transition duration-300 hover:border-[#c69b42] hover:bg-[#2a1d16] hover:shadow-[0_18px_46px_rgba(68,45,20,0.2)]"
+              className="group inline-flex min-h-11 items-center justify-center gap-2 rounded-[8px] border border-[#b68a35]/55 bg-[#1f1713] px-5 text-[0.78rem] font-bold uppercase tracking-[0.04em] text-[#fff9ed] shadow-[0_14px_34px_rgba(68,45,20,0.14)] transition-all duration-300 hover:border-[#c69b42] hover:bg-[#2a1d16] hover:shadow-[0_18px_46px_rgba(68,45,20,0.2)] active:scale-[0.98]"
             >
               View Blog
               <ArrowUpRight className="h-4 w-4 text-[#d9b967] transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -131,7 +131,7 @@ function FeaturedHomeBlog({
     >
       <Link
         href={`/blog/${article.slug}`}
-        className="group grid overflow-hidden rounded-[8px] border border-[#dac58c]/70 bg-white shadow-[0_22px_60px_rgba(67,45,17,0.07)] transition-[border-color,box-shadow,background-color] duration-500 hover:border-[#b68a35] hover:bg-[#fffdf8] hover:shadow-[0_34px_90px_rgba(67,45,17,0.13)] lg:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)]"
+        className="group grid overflow-hidden rounded-[12px] border border-[#dac58c]/60 bg-white shadow-[0_22px_60px_rgba(67,45,17,0.07)] transition-all duration-500 hover:border-[#b68a35] hover:bg-[#fffdf8] hover:shadow-[0_34px_90px_rgba(67,45,17,0.13)] lg:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)]"
       >
         <div className="relative aspect-[1.25] overflow-hidden bg-[#211711] lg:aspect-[0.98]">
           <img
@@ -140,11 +140,11 @@ function FeaturedHomeBlog({
             loading="lazy"
             decoding="async"
             onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"; }}
-            className="h-full w-full object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.05]"
+            className="h-full w-full object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.06]"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,10,6,0.02)_42%,rgba(15,10,6,0.42))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,10,6,0.02)_42%,rgba(15,10,6,0.52))]" />
           <div className="absolute left-5 top-5 flex flex-wrap gap-2">
-            <span className="rounded-[3px] border border-[#f0d894]/70 bg-[#201714] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0] text-[#f5d780]">
+            <span className="rounded-[4px] border border-[#f0d894]/70 bg-[#201714] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.04em] text-[#f5d780]">
               Featured
             </span>
             {isNewest ? <LatestBadge /> : null}

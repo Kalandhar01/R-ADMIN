@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+export type JsonValue = Record<string, unknown> | unknown[] | string | number | boolean | null;
 
 export type AdminView =
   | "home"
@@ -18,7 +18,8 @@ export type AdminView =
   | "settings"
   | "audit"
   | "chatbot"
-  | "contacts";
+  | "contacts"
+  | "subscribers";
 
 export type LeadFilter = "New" | "Read" | "Responded" | "Archived";
 export type ProjectKey = string;
@@ -217,12 +218,12 @@ export type ServiceRow = {
   category: string;
   href: string | null;
   imageUrl: string | null;
-  heroContent: Prisma.JsonValue;
-  metrics: Prisma.JsonValue;
+  heroContent: JsonValue;
+  metrics: JsonValue;
   images: string[];
-  sections: Prisma.JsonValue;
-  cta: Prisma.JsonValue;
-  seo: Prisma.JsonValue;
+  sections: JsonValue;
+  cta: JsonValue;
+  seo: JsonValue;
   tags: string[];
   status: string;
   position: number;
@@ -336,7 +337,7 @@ export type SettingsRow = {
   key: string;
   label: string;
   scope: string;
-  value: Prisma.JsonValue;
+  value: JsonValue;
   updatedAt: string;
 };
 

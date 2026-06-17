@@ -23,6 +23,7 @@
     "dotenv": "^16.4.7",
     "framer-motion": "^12.0.1",
     "gsap": "^3.12.7",
+    "mongoose": "^8.9.5",
     "lenis": "^1.1.20",
     "lucide-react": "^0.471.1",
     "next": "^15.5.18",

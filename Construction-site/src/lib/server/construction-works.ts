@@ -196,7 +196,7 @@ function mapWork(row: ProjectRow): ConstructionWorkItem | null {
 }
 
 async function allPublicWorks() {
-  if (!process.env.DATABASE_URL?.trim()) {
+  if (!process.env.MONGODB_URI?.trim()) {
     return fallbackWorks;
   }
 

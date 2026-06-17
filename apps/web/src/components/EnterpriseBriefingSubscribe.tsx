@@ -7,7 +7,7 @@ import { ArrowRight, ArrowUpRight, Check, Mail } from "lucide-react";
 import { subscribeToRactyshNewsletter } from "@/lib/newsletterSubscribe";
 
 export type SubscribeInteractionStatus = "idle" | "loading" | "success";
-export const subscribedStorageKey = "ractysh_subscribed";
+const subscribedStorageKey = "ractysh_subscribed";
 
 interface EnterpriseBriefingSubscribeProps {
   variant?: "footer" | "popup";

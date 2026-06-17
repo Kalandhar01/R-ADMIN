@@ -3,7 +3,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { gsap } from "gsap";
-import { ArrowLeft, Bell, DraftingCompass, Globe2, HardHat } from "lucide-react";
+import { ArrowLeft, Bell, DraftingCompass, Globe2 } from "lucide-react";
 import Link from "next/link";
 import { useLenis } from "@/components/providers/SmoothScrollProvider";
 
@@ -29,17 +29,6 @@ const importExportConfig: FutureWorkConfig = {
   Visual: ImportExportTradeVisual
 };
 
-const infraConfig: FutureWorkConfig = {
-  label: "Ractysh Infra",
-  titleLines: ["Infrastructure execution", "systems are currently", "under development."],
-  mutedLineIndex: 1,
-  body:
-    "Construction control, delivery intelligence and premium infrastructure execution systems are being prepared for the next Ractysh ecosystem layer.",
-  status: "Infra Execution Initializing",
-  primaryHref: "/",
-  Visual: InfraExecutionVisual
-};
-
 const designConfig: FutureWorkConfig = {
   label: "RACTYSH DESIGN",
   titleLines: ["Architectural systems", "are currently", "under development."],
@@ -58,10 +47,6 @@ export function ImportExportFutureWorkPage() {
 
 export function DesignFutureWorkPage() {
   return <FutureWorkPreview config={designConfig} />;
-}
-
-export function InfraFutureWorkPage() {
-  return <FutureWorkPreview config={infraConfig} />;
 }
 
 function FutureWorkPreview({ config }: { config: FutureWorkConfig }) {
@@ -256,36 +241,4 @@ function DesignArchitectureVisual({ reduceMotion }: { reduceMotion: boolean }) {
   );
 }
 
-function InfraExecutionVisual({ reduceMotion }: { reduceMotion: boolean }) {
-  return (
-    <>
-      <div className="future-pulse-ring absolute inset-4 rounded-full border border-[#d6b45f]/[0.22]" />
-      <div className="future-pulse-ring future-pulse-ring-delayed absolute inset-8 rounded-full border border-[#fff7e8]/10" />
-      <div className="future-wire-grid absolute inset-[1.9rem] rounded-full opacity-50 sm:inset-[2.25rem]" />
-      <svg
-        viewBox="0 0 180 180"
-        className="relative h-[6.8rem] w-[6.8rem] overflow-visible drop-shadow-[0_0_34px_rgba(214,180,95,0.16)] sm:h-[9.2rem] sm:w-[9.2rem]"
-        role="img"
-        aria-label="Infrastructure execution wireframe"
-      >
-        <path className="service-visual-gridline" d="M32 54H148M32 90H148M32 126H148M54 32V148M90 32V148M126 32V148" />
-        <path
-          className="service-visual-draw service-visual-ivory"
-          d="M44 128H136M54 128V58M126 128V58M54 58H126M70 128V82M110 128V82M70 82H110"
-        />
-        <path
-          className="service-visual-draw service-visual-gold"
-          d="M54 128L72 58L90 128L108 58L126 128M72 58H108"
-        />
-        <path className="service-visual-scan" d="M38 94H142" />
-        <circle className="service-visual-node" cx="90" cy="82" r="3.8" />
-      </svg>
-      <div className="absolute inset-[3.35rem] flex items-center justify-center rounded-full border border-[#d6b45f]/[0.26] bg-[#d6b45f]/[0.07] shadow-[0_0_52px_rgba(214,180,95,0.14)] sm:inset-[4.45rem]">
-        <HardHat className="h-5 w-5 text-[#d6b45f] sm:h-6 sm:w-6" strokeWidth={1.55} />
-      </div>
-      {!reduceMotion && (
-        <span className="future-node absolute right-[22%] top-[28%] h-1.5 w-1.5 rounded-full bg-[#fff7e8]" />
-      )}
-    </>
-  );
-}
+

@@ -1,4 +1,3 @@
-import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ensureRealEstateDefaults, realEstatePropertySeeds } from "@/lib/real-estate-defaults";
 
@@ -52,9 +51,9 @@ const propertySelect = {
       url: true
     }
   }
-} satisfies Prisma.PropertySelect;
+};
 
-type PropertyRecord = Prisma.PropertyGetPayload<{ select: typeof propertySelect }>;
+type PropertyRecord = Record<string, unknown>;
 
 export type PropertyView = {
   id: string;
@@ -129,7 +128,7 @@ function croreValue(value: string) {
   return match ? Number(match[1]) : 0;
 }
 
-function metricsFromJson(value: Prisma.JsonValue | null, fallback: PropertyRecord) {
+function metricsFromJson(value: any, fallback: any) {
   const json = value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
   const floors = typeof json.floors === "number" ? String(json.floors) : fallback.handover || "Private";
   const space = typeof json.space === "number" ? `${json.space}` : fallback.area || "On request";
@@ -144,17 +143,17 @@ function metricsFromJson(value: Prisma.JsonValue | null, fallback: PropertyRecor
   ];
 }
 
-function propertyToView(property: PropertyRecord): PropertyView {
-  const gallery = property.media
-    .filter((media) => media.kind === "image" || media.kind === "gallery_asset" || media.kind === "floor_plan" || media.kind === "video")
-    .map((media) => ({
+function propertyToView(property: any): PropertyView {
+  const gallery: Array<{ id: string; kind: string; title: string; alt: string; url: string }> = (property.media || [])
+    .filter((media: any) => media.kind === "image" || media.kind === "gallery_asset" || media.kind === "floor_plan" || media.kind === "video")
+    .map((media: any) => ({
       id: media.id,
       kind: media.kind,
       title: media.title,
       alt: media.altText || media.title,
       url: media.url
     }));
-  const coverImage = normalizeImage(property.coverImage || gallery[0]?.url);
+  const coverImage = normalizeImage((property as any).coverImage || gallery[0]?.url);
   const heroVideo = property.heroVideo || gallery.find((media) => media.kind === "video")?.url || null;
 
   return {
@@ -404,14 +403,14 @@ export async function getLandingData(): Promise<LandingData> {
     const propertyViews = properties.map(propertyToView);
     if (!propertyViews.length) return fallbackLandingData();
 
-    const storyViews = testimonials.map((story, index) => ({ ...story, image: testimonialImage(index + 1, propertyViews) }));
+    const storyViews = testimonials.map((story: any, index: number) => ({ ...story, image: testimonialImage(index + 1, propertyViews) }));
 
     return {
       properties: propertyViews,
       featured: propertyViews.filter((property) => property.featured).concat(propertyViews.filter((property) => !property.featured)).slice(0, 8),
       testimonials: storyViews.length ? storyViews : fallbackTestimonials(propertyViews),
-      trustMetrics: trustMetrics(propertyViews, leadCount, testimonials),
-      locations: locations.map((location) => ({
+      trustMetrics: trustMetrics(propertyViews, leadCount, testimonials as any),
+      locations: locations.map((location: any) => ({
         city: location.city,
         microMarket: location.microMarket || "Private corridor",
         propertyCount: location._count.properties
@@ -451,13 +450,13 @@ export async function getPropertyDetail(slug: string): Promise<PropertyDetailDat
 
     const propertyView = propertyToView(property);
     const relatedViews = related.map(propertyToView);
-    const storyViews = testimonials.map((story, index) => ({ ...story, image: testimonialImage(index, [propertyView, ...relatedViews]) }));
+    const storyViews = testimonials.map((story: any, index: number) => ({ ...story, image: testimonialImage(index, [propertyView, ...relatedViews]) }));
 
     return {
       property: propertyView,
       related: relatedViews,
       testimonials: storyViews.length ? storyViews : fallbackTestimonials([propertyView, ...relatedViews]),
-      trustMetrics: trustMetrics([propertyView, ...relatedViews], leadCount, testimonials)
+      trustMetrics: trustMetrics([propertyView, ...relatedViews], leadCount, testimonials as any)
     };
   } catch (error) {
     console.error("[real-estate-detail] database unavailable, using shared seed fallback", error);

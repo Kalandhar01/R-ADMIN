@@ -1,5 +1,4 @@
 import { v2 as cloudinary, type UploadApiResponse } from "cloudinary";
-import { Prisma, type BlogStatus } from "@prisma/client";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import multer from "multer";
 import {
@@ -86,8 +85,8 @@ function numberQuery(value: unknown): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-function statusQuery(value: unknown): BlogStatus | undefined {
-  return typeof value === "string" && statuses.includes(value as BlogStatus) ? (value as BlogStatus) : undefined;
+function statusQuery(value: unknown): string | undefined {
+  return typeof value === "string" && statuses.includes(value as typeof statuses[number]) ? value : undefined;
 }
 
 function listOptions(req: Request, includeStatus = false): BlogListOptions {
@@ -106,21 +105,9 @@ function handleBlogError(error: unknown, res: Response): boolean {
     return true;
   }
 
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    if (error.code === "P2025") {
-      res.status(404).json({ message: "Blog not found." });
-      return true;
-    }
-
-    if (error.code === "P2002") {
-      res.status(409).json({ message: "Blog slug already exists." });
-      return true;
-    }
-
-    if (error.code === "P2021" || error.code === "P2022") {
-      res.status(503).json({ message: "Blog database schema is out of date. Run the latest Prisma migration." });
-      return true;
-    }
+  if (error instanceof Error && /not found/i.test(error.message)) {
+    res.status(404).json({ message: "Blog not found." });
+    return true;
   }
 
   if (error instanceof Error && /published date|valid date|scheduled blogs|upload provider/i.test(error.message)) {

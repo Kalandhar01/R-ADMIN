@@ -1,8 +1,8 @@
-import type { ContactInquiry } from "@prisma/client";
 import { inferDivisionFromText } from "@ractysh/shared";
-import { prisma } from "../lib/prisma.js";
+import { ContactInquiryModel, type IContactInquiry } from "../models/ContactInquiry.js";
 import type { ContactInquiryInput, DemoInquiryInput } from "../validation/inquiry.js";
 import { safelyIngestLead } from "./ingestionService.js";
+import { isMongoConnected } from "../lib/db.js";
 
 export type InquiryKind = "contact" | "book-demo";
 export type ContactPipelineStatus = "new" | "contacted" | "qualified" | "proposal_sent" | "won" | "closed" | "archived";
@@ -18,9 +18,9 @@ export type InquiryPayload =
   | (ContactInquiryInput & { kind: "contact" })
   | (DemoInquiryInput & { kind: "book-demo" });
 
-export function mapContactInquiry(record: ContactInquiry) {
+export function mapContactInquiry(record: IContactInquiry) {
   return {
-    id: record.id,
+    id: String(record._id),
     division: record.division,
     name: record.name,
     email: record.email,
@@ -50,19 +50,17 @@ export async function createInquiry(payload: InquiryPayload): Promise<StoredInqu
         : payload.message || `Book demo request for ${payload.discussionTopic}.`;
     const sourcePage = payload.kind === "contact" ? payload.sourcePage : "book-demo";
 
-    const record = await prisma.contactInquiry.create({
-      data: {
-        name,
-        division,
-        email: payload.email,
-        phone: payload.phone || undefined,
-        company: company || undefined,
-        service: service || undefined,
-        subject: subject || undefined,
-        message,
-        sourcePage: sourcePage || payload.kind,
-        status: "new"
-      }
+    const record = await ContactInquiryModel.create({
+      name,
+      division,
+      email: payload.email,
+      phone: payload.phone || undefined,
+      company: company || undefined,
+      service: service || undefined,
+      subject: subject || undefined,
+      message,
+      sourcePage: sourcePage || payload.kind,
+      status: "new"
     });
 
     const ingestion = await safelyIngestLead({
@@ -83,13 +81,13 @@ export async function createInquiry(payload: InquiryPayload): Promise<StoredInqu
         subject,
         sourcePage
       },
-      externalEntityId: record.id,
+      externalEntityId: String(record._id),
       externalEntityModel: "ContactInquiry"
     });
 
-    return { stored: true, id: record.id, ingestionId: ingestion?.entityId };
+    return { stored: true, id: String(record._id), ingestionId: ingestion?.entityId };
   } catch (error) {
-    console.error("Prisma inquiry persistence failed:", error);
+    console.error("MongoDB inquiry persistence failed:", error);
     return {
       stored: false,
       error: error instanceof Error ? error.message : "Inquiry persistence failed."
@@ -98,25 +96,24 @@ export async function createInquiry(payload: InquiryPayload): Promise<StoredInqu
 }
 
 export async function listContactInquiries() {
-  const records = await prisma.contactInquiry.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 250
-  });
+  const records = await ContactInquiryModel.find()
+    .sort({ createdAt: -1 })
+    .limit(250)
+    .lean();
 
-  return records.map(mapContactInquiry);
+  return records.map((record) => mapContactInquiry(record as IContactInquiry));
 }
 
 export async function updateContactInquiry(
   id: string,
   input: { status?: ContactPipelineStatus; notes?: string }
 ) {
-  const record = await prisma.contactInquiry.update({
-    where: { id },
-    data: {
-      status: input.status,
-      notes: input.notes
-    }
-  });
+  const record = await ContactInquiryModel.findByIdAndUpdate(
+    id,
+    { $set: { status: input.status, notes: input.notes } },
+    { new: true }
+  ).lean();
 
-  return mapContactInquiry(record);
+  if (!record) throw new Error("Contact inquiry not found.");
+  return mapContactInquiry(record as IContactInquiry);
 }

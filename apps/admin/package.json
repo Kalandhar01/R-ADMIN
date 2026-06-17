@@ -2,14 +2,15 @@
   "name": "@ractysh/admin",
   "version": "1.0.0",
   "private": true,
+  "workspaces": ["packages/*"],
   "scripts": {
-    "predev": "prisma generate --schema ../../packages/db/prisma/schema.prisma",
+    "predev": "prisma generate --schema packages/db/prisma/schema.prisma",
     "dev": "next dev --port 3000",
-    "prebuild": "prisma generate --schema ../../packages/db/prisma/schema.prisma",
+    "prebuild": "prisma generate --schema packages/db/prisma/schema.prisma",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "pretypecheck": "prisma generate --schema ../../packages/db/prisma/schema.prisma",
+    "pretypecheck": "prisma generate --schema packages/db/prisma/schema.prisma",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -26,6 +27,7 @@
     "dotenv": "^16.4.7",
     "framer-motion": "^12.0.1",
     "lucide-react": "^0.471.2",
+    "mongoose": "^8.23.1",
     "next": "^15.5.18",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

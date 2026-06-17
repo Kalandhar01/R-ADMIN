@@ -1,4 +1,4 @@
-export interface KnowledgeEntry {
+interface KnowledgeEntry {
   keywords: string[];
   title: string;
   content: string;

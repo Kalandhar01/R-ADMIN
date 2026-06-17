@@ -1,5 +1,4 @@
 import { v2 as cloudinary, type UploadApiResponse } from "cloudinary";
-import { Prisma } from "@prisma/client";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import multer from "multer";
 import {
@@ -120,7 +119,7 @@ function handleIngestionError(error: unknown, res: Response): boolean {
     return true;
   }
 
-  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+  if (error instanceof Error && /not found/i.test(error.message)) {
     res.status(404).json({ message: "Ingestion record not found." });
     return true;
   }

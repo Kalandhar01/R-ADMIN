@@ -7,7 +7,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
-export interface PremiumSelectOption {
+interface PremiumSelectOption {
   value: string;
   label: string;
 }

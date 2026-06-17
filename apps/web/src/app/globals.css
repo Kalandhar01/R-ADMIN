@@ -2182,6 +2182,133 @@ button {
   }
 }
 
+/* =============================================
+   Design System Refinements
+   Consistent premium layer for card, section,
+   and interaction patterns across the landing page.
+   ============================================= */
+
+.premium-card {
+  border-radius: 12px;
+  border: 1px solid rgba(232, 224, 208, 0.7);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 18px 48px rgba(24, 20, 17, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition:
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.premium-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(198, 164, 91, 0.45);
+  box-shadow:
+    0 24px 60px rgba(24, 20, 17, 0.09),
+    0 0 30px rgba(198, 164, 91, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.premium-section {
+  position: relative;
+  isolation: isolate;
+}
+
+.premium-section::after {
+  pointer-events: none;
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(255, 252, 247, 0.3) 50%, transparent 100%);
+  opacity: 0.5;
+}
+
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(214, 180, 95, 0.35), transparent);
+}
+
+.card-accent-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(198, 164, 91, 0.6), transparent);
+  opacity: 0.6;
+}
+
+.hover-scale {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+.hover-lift {
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 24px 60px rgba(24, 20, 17, 0.1),
+    0 0 30px rgba(198, 164, 91, 0.06);
+}
+
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in-up,
+  .hover-scale:hover,
+  .hover-lift:hover,
+  .premium-card:hover {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Focus visible ring for accessibility */
+.focus-ring:focus-visible {
+  outline: 2px solid rgba(198, 164, 91, 0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Smooth scroll behavior for anchor links */
+html {
+  scroll-padding-top: 80px;
+}
+
+/* Selection color */
+::selection {
+  background: rgba(198, 164, 91, 0.25);
+  color: #111;
+}
+
 .premium-services-page {
   --services-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
   --services-ui: "Manrope", var(--font-inter), Inter, system-ui, sans-serif;
@@ -4412,127 +4539,6 @@ button {
     linear-gradient(112deg, transparent 0%, rgba(255, 255, 255, 0.06) 36%, transparent 72%);
 }
 
-.home-hero-story-flow {
-  height: 200svh;
-  min-height: 1240px;
-  background: #fbf7ef;
-  scroll-snap-align: start;
-}
-
-.home-hero-story-flow::before {
-  pointer-events: none;
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  opacity: var(--landing-background-opacity);
-  background:
-    linear-gradient(rgba(17, 17, 17, 0.1), rgba(17, 17, 17, 0.1)),
-    image-set(url("/landingpage-light-theme.avif") type("image/avif"), url("/landingpage-light-theme.webp") type("image/webp")) center center / cover no-repeat;
-  transition: opacity 1.65s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity;
-}
-
-.home-hero-story-anchor {
-  position: absolute;
-  top: 100svh;
-  left: 0;
-  width: 1px;
-  height: 1px;
-}
-
-.home-hero-story-pin {
-  z-index: 1;
-  isolation: isolate;
-  background: #fbf7ef;
-  transform: translateZ(0);
-  contain: paint;
-}
-
-.home-hero-story-pin::before {
-  pointer-events: none;
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  opacity: var(--landing-background-opacity);
-  background:
-    linear-gradient(rgba(17, 17, 17, 0.1), rgba(17, 17, 17, 0.1)),
-    image-set(url("/landingpage-light-theme.avif") type("image/avif"), url("/landingpage-light-theme.webp") type("image/webp")) center center / cover no-repeat;
-  transition: opacity 1.65s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity;
-}
-
-.home-hero-story-panel {
-  position: absolute;
-  inset: 0;
-  height: 100%;
-  min-height: inherit;
-  backface-visibility: hidden;
-  transform: translateZ(0);
-  will-change: transform, opacity;
-}
-
-.home-hero-story-hero {
-  z-index: 2;
-}
-
-.home-hero-story-who {
-  z-index: 3;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transform: translate3d(0, 60px, 0) scale(1.03);
-}
-
-.home-hero-story-flow.is-who-active .home-hero-story-who {
-  pointer-events: auto;
-}
-
-.home-hero-story-hero > #hero {
-  height: 100%;
-  min-height: 100%;
-  padding-top: clamp(6.7rem, 11.5svh, 8.25rem);
-  padding-bottom: clamp(2.5rem, 5svh, 4rem);
-}
-
-.home-hero-story-who-section,
-.home-hero-story-who-section.who-fullscreen-carousel {
-  height: 100%;
-  min-height: 100%;
-}
-
-.home-hero-story-flow.is-motion-reduced {
-  height: auto;
-  min-height: 0;
-}
-
-.home-hero-story-flow.is-motion-reduced .home-hero-story-anchor {
-  top: auto;
-}
-
-.home-hero-story-flow.is-motion-reduced .home-hero-story-pin {
-  position: relative;
-  height: auto;
-  min-height: 0;
-  overflow: visible;
-}
-
-.home-hero-story-flow.is-motion-reduced .home-hero-story-panel {
-  position: relative;
-  inset: auto;
-  height: auto;
-  min-height: 0;
-  opacity: 1;
-  visibility: visible;
-  transform: none;
-  filter: none;
-  will-change: auto;
-}
-
-.home-hero-story-flow.is-motion-reduced .home-hero-story-who {
-  pointer-events: auto;
-}
 
 .mobile-control-shell {
   background:
@@ -4688,7 +4694,23 @@ button {
   .mobile-control-card,
   .mobile-control-status-dot::after,
   .mobile-control-progress-bar,
-  .ei-ticker-track {
+@keyframes dashboard-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.home-dashboard-float {
+  animation: dashboard-float 6s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-dashboard-float {
+    animation: none;
+  }
+}
+
+.ei-ticker-track {
     animation: none !important;
   }
 }
@@ -8446,261 +8468,6 @@ select.contact-field-input {
   }
 }
 
-.security-achievement-gpu {
-  backface-visibility: hidden;
-  transform: translateZ(0);
-  transform-style: preserve-3d;
-  will-change: transform, opacity;
-}
-
-.security-achievement-panel {
-  border-color: rgba(212, 175, 55, 0.26);
-  background:
-    radial-gradient(circle at 78% 8%, rgba(212, 175, 55, 0.16), transparent 30%),
-    radial-gradient(circle at 8% 92%, rgba(139, 17, 24, 0.12), transparent 32%),
-    linear-gradient(180deg, rgba(22, 14, 10, 0.96), rgba(12, 8, 6, 0.98));
-  box-shadow:
-    0 38px 110px rgba(38, 25, 13, 0.24),
-    0 0 48px rgba(212, 175, 55, 0.1),
-    inset 0 1px 0 rgba(255, 248, 238, 0.12),
-    inset 0 -42px 90px rgba(0, 0, 0, 0.26);
-  backdrop-filter: blur(18px) saturate(118%);
-}
-
-.security-achievement-panel::before,
-.security-achievement-panel::after {
-  pointer-events: none;
-  content: "";
-  position: absolute;
-  inset: 0;
-}
-
-.security-achievement-panel::before {
-  background:
-    linear-gradient(90deg, rgba(255, 248, 238, 0.08), transparent 18%, transparent 82%, rgba(212, 175, 55, 0.08)),
-    radial-gradient(ellipse at 50% 0%, rgba(255, 245, 230, 0.08), transparent 56%);
-  opacity: 0.85;
-}
-
-.security-achievement-panel::after {
-  border-radius: inherit;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 248, 238, 0.045),
-    inset 0 0 38px rgba(212, 175, 55, 0.055);
-}
-
-.security-achievement-grid {
-  background-image:
-    linear-gradient(rgba(255, 248, 238, 0.075) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(212, 175, 55, 0.065) 1px, transparent 1px);
-  background-size: 34px 34px;
-  mask-image: radial-gradient(ellipse at 56% 36%, black 0%, rgba(0, 0, 0, 0.72) 58%, transparent 86%);
-  animation: security-achievement-grid-drift 26s ease-in-out infinite;
-  will-change: transform, opacity;
-}
-
-.security-achievement-header-icon,
-.security-achievement-card-icon {
-  border-color: rgba(212, 175, 55, 0.32);
-  background:
-    linear-gradient(180deg, rgba(255, 248, 238, 0.13), rgba(255, 248, 238, 0.055)),
-    rgba(24, 16, 11, 0.62);
-  box-shadow:
-    0 14px 30px rgba(0, 0, 0, 0.24),
-    inset 0 1px 0 rgba(255, 248, 238, 0.14);
-}
-
-.security-achievement-ambient {
-  animation: security-achievement-ambient 11s ease-in-out infinite;
-  will-change: transform, opacity;
-}
-
-.security-achievement-ambient:nth-of-type(3) {
-  animation-delay: -5s;
-}
-
-.security-achievement-pulse::after {
-  content: "";
-  position: absolute;
-  inset: -5px;
-  border-radius: 9999px;
-  border: 1px solid rgba(214, 180, 95, 0.42);
-  animation: security-achievement-pulse 2.35s ease-out infinite;
-  will-change: transform, opacity;
-}
-
-.security-achievement-line-flow {
-  animation: security-achievement-line-flow 3.6s ease-in-out infinite;
-  will-change: transform, opacity;
-}
-
-.security-achievement-line {
-  background:
-    linear-gradient(180deg, rgba(212, 175, 55, 0.18), rgba(255, 248, 238, 0.18), rgba(212, 175, 55, 0.12));
-  box-shadow:
-    0 0 18px rgba(212, 175, 55, 0.18),
-    0 0 34px rgba(255, 248, 238, 0.06);
-}
-
-.security-achievement-line-fill {
-  background: linear-gradient(180deg, #d6b45f 0%, #f1d98d 42%, #c98b44 72%, rgba(139, 17, 24, 0.72) 100%);
-  box-shadow:
-    0 0 18px rgba(214, 180, 95, 0.46),
-    0 0 38px rgba(241, 217, 141, 0.18);
-}
-
-.security-achievement-node {
-  border-color: rgba(255, 248, 238, 0.24);
-  background:
-    radial-gradient(circle at 38% 24%, rgba(255, 248, 238, 0.18), transparent 45%),
-    rgba(255, 248, 238, 0.08);
-  color: rgba(255, 248, 238, 0.86);
-  box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 248, 238, 0.12);
-}
-
-.security-achievement-card {
-  border-color: rgba(255, 248, 238, 0.14);
-  background:
-    radial-gradient(circle at 82% 0%, rgba(212, 175, 55, 0.12), transparent 34%),
-    linear-gradient(180deg, rgba(255, 248, 238, 0.105), rgba(255, 248, 238, 0.052)),
-    rgba(24, 16, 11, 0.72);
-  box-shadow:
-    0 18px 58px rgba(0, 0, 0, 0.26),
-    0 0 0 1px rgba(212, 175, 55, 0.04),
-    inset 0 1px 0 rgba(255, 248, 238, 0.12),
-    inset 0 -18px 42px rgba(0, 0, 0, 0.18);
-  transition:
-    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 420ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 420ms cubic-bezier(0.22, 1, 0.36, 1),
-    background 420ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.security-achievement-card::before {
-  pointer-events: none;
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background:
-    linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.12), transparent) top / 100% 1px no-repeat,
-    radial-gradient(circle at 12% 0%, rgba(255, 248, 238, 0.09), transparent 30%);
-  opacity: 0.78;
-}
-
-.security-achievement-card:hover {
-  transform: translate3d(0, -4px, 0);
-  border-color: rgba(212, 175, 55, 0.32);
-  background:
-    radial-gradient(circle at 82% 0%, rgba(212, 175, 55, 0.18), transparent 36%),
-    linear-gradient(180deg, rgba(255, 248, 238, 0.13), rgba(255, 248, 238, 0.07)),
-    rgba(24, 16, 11, 0.78);
-  box-shadow:
-    0 24px 70px rgba(0, 0, 0, 0.3),
-    0 0 36px rgba(212, 175, 55, 0.12),
-    inset 0 1px 0 rgba(255, 248, 238, 0.16),
-    inset 0 -18px 42px rgba(0, 0, 0, 0.2);
-}
-
-.security-achievement-card-glow {
-  background:
-    radial-gradient(circle at 82% 0%, rgba(214, 180, 95, 0.24), transparent 42%),
-    radial-gradient(circle at 8% 100%, rgba(255, 245, 230, 0.1), transparent 42%),
-    linear-gradient(135deg, rgba(255, 248, 238, 0.08), transparent 58%);
-}
-
-.security-achievement-year-text,
-.security-achievement-signal,
-.security-achievement-pulse {
-  color: rgba(212, 175, 55, 0.82);
-}
-
-.security-achievement-card-title {
-  color: rgba(255, 248, 238, 0.95);
-  text-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
-}
-
-.security-achievement-card-description {
-  color: rgba(255, 245, 230, 0.72);
-  font-weight: 500;
-}
-
-.security-achievement-card-footer {
-  border-color: rgba(255, 248, 238, 0.13);
-}
-
-.security-achievement-scan {
-  animation: security-achievement-scan 7.2s ease-in-out infinite;
-  will-change: transform, opacity;
-}
-
-@keyframes security-achievement-grid-drift {
-  0%,
-  100% {
-    opacity: 0.62;
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    opacity: 0.38;
-    transform: translate3d(0, -18px, 0);
-  }
-}
-
-@keyframes security-achievement-ambient {
-  0%,
-  100% {
-    opacity: 0.7;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    opacity: 0.96;
-    transform: translate3d(0, -12px, 0) scale(1.035);
-  }
-}
-
-@keyframes security-achievement-pulse {
-  0% {
-    opacity: 0.42;
-    transform: scale(0.76);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(2.5);
-  }
-}
-
-@keyframes security-achievement-line-flow {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, -120%, 0);
-  }
-  26%,
-  62% {
-    opacity: 0.78;
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(0, 640%, 0);
-  }
-}
-
-@keyframes security-achievement-scan {
-  0% {
-    opacity: 0;
-    transform: translate3d(-120%, 0, 0);
-  }
-  34%,
-  54% {
-    opacity: 0.82;
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(430%, 0, 0);
-  }
-}
-
 .hiring-journey {
   background:
     radial-gradient(circle at 58% 22%, rgba(214, 180, 95, 0.18), transparent 30rem),
@@ -10349,7 +10116,7 @@ select.contact-field-input {
 }
 
 .architecture-story-stage strong {
-  font-family: var(--font-build-manifest), system-ui, sans-serif;
+  font-family: var(--font-manrope), system-ui, sans-serif;
   font-size: clamp(1.35rem, 2vw, 2rem);
   font-weight: 650;
   line-height: 1;
@@ -10431,7 +10198,7 @@ select.contact-field-input {
   bottom: 1.2rem;
   left: 1.2rem;
   right: 1.2rem;
-  font-family: var(--font-build-manifest), system-ui, sans-serif;
+  font-family: var(--font-manrope), system-ui, sans-serif;
   font-size: clamp(2.7rem, 4.6vw, 5.4rem);
   font-weight: 650;
   line-height: 0.92;
@@ -10487,7 +10254,7 @@ select.contact-field-input {
 
 .architecture-work-copy h2 {
   margin-top: 0.65rem;
-  font-family: var(--font-build-manifest), system-ui, sans-serif;
+  font-family: var(--font-manrope), system-ui, sans-serif;
   font-size: clamp(2.25rem, 3.6vw, 4.1rem);
   font-weight: 650;
   line-height: 0.94;
@@ -11094,11 +10861,6 @@ select.contact-field-input {
   .enterprise-module-flow-line::after,
   .enterprise-module-scan,
   .enterprise-module-rail::after,
-  .security-achievement-grid,
-  .security-achievement-ambient,
-  .security-achievement-pulse::after,
-  .security-achievement-line-flow,
-  .security-achievement-scan,
   .architecture-blueprint,
   .hiring-journey-grid,
   .hiring-journey-flow-bg,

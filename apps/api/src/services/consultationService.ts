@@ -1,6 +1,12 @@
 import { randomUUID } from "node:crypto";
-import type { Prisma } from "@prisma/client";
-import { prisma } from "../lib/prisma.js";
+import {
+  ConsultationModel,
+  WorkflowStageModel,
+  WorkflowLogModel,
+  UploadedDocumentModel,
+  StatusHistoryModel,
+  type IConsultation
+} from "../models/Consultation.js";
 import {
   workflowStepDefinitions,
   type ConsultationAttachment,
@@ -15,23 +21,13 @@ import {
 import type { ConsultationSubmissionInput } from "../validation/consultation.js";
 import { publishConsultationUpdate } from "./consultationWorkflowEvents.js";
 import { safelyIngestDocument, safelyIngestLead } from "./ingestionService.js";
+import { isMongoConnected } from "../lib/db.js";
 
-const consultationInclude = {
-  workflowStages: true,
-  workflowLogs: true,
-  uploadedDocuments: true,
-  statusHistory: true
-} satisfies Prisma.ConsultationInclude;
-
-type ConsultationWithRelations = Prisma.ConsultationGetPayload<{
-  include: typeof consultationInclude;
-}>;
-
-let prismaEnabled = false;
+let mongoEnabled = false;
 let memoryConsultations: ConsultationRecord[] = [];
 
 export function setConsultationPrismaEnabled(value: boolean): void {
-  prismaEnabled = value;
+  mongoEnabled = value;
 }
 
 function iso(value: Date | string | null | undefined): string | undefined {
@@ -71,149 +67,104 @@ function defaultWorkflowStages(now: Date): ConsultationWorkflowStage[] {
   });
 }
 
-function defaultWorkflowStageRows(consultationId: string, now: Date) {
-  return workflowStepDefinitions.map((step, index) => {
-    const isSubmitted = step.key === "consultation_submitted";
-    const isInternalReview = step.key === "internal_review";
-    const status: WorkflowStageStatus = isSubmitted ? "completed" : isInternalReview ? "active" : "locked";
+async function findConsultation(id: string): Promise<ConsultationRecord | null> {
+  try {
+    const record = await ConsultationModel.findById(id).lean();
+    if (!record) return null;
+
+    const [workflowStages, workflowLogs, uploadedDocuments, statusHistory] = await Promise.all([
+      WorkflowStageModel.find({ consultationId: record._id }).sort({ position: 1 }).lean(),
+      WorkflowLogModel.find({ consultationId: record._id }).sort({ createdAt: -1 }).lean(),
+      UploadedDocumentModel.find({ consultationId: record._id }).sort({ createdAt: 1 }).lean(),
+      StatusHistoryModel.find({ consultationId: record._id }).sort({ createdAt: -1 }).lean()
+    ]);
+
+    const documents = uploadedDocuments.map((doc) => ({
+      id: String(doc._id),
+      filename: doc.filename,
+      mimeType: doc.mimeType,
+      size: doc.size,
+      url: doc.url || undefined,
+      provider: (doc.provider || "metadata") as ConsultationAttachment["provider"],
+      providerId: doc.providerId || undefined,
+      kind: doc.kind as UploadedDocumentKind,
+      stageKey: doc.stageKey || undefined,
+      uploadedBy: doc.uploadedBy,
+      createdAt: iso(doc.createdAt)
+    }));
+
+    const stages = workflowStages.map((stage) => ({
+      id: String(stage._id),
+      key: stage.key as ConsultationWorkflowStage["key"],
+      title: stage.title,
+      description: stage.description,
+      position: stage.position,
+      status: stage.status as WorkflowStageStatus,
+      stateLabel: stage.stateLabel,
+      startedAt: iso(stage.startedAt),
+      unlockedAt: iso(stage.unlockedAt),
+      completedAt: iso(stage.completedAt),
+      rejectedAt: iso(stage.rejectedAt),
+      updatedAt: iso(stage.updatedAt) || new Date().toISOString(),
+      responseDocuments: documents.filter((d) => d.kind === "response" && d.stageKey === stage.key)
+    }));
 
     return {
-      consultationId,
-      key: step.key,
-      title: step.title,
-      description: step.description,
-      position: index + 1,
-      status,
-      stateLabel: stageLabelFor(status),
-      startedAt: isSubmitted || isInternalReview ? now : undefined,
-      unlockedAt: isSubmitted || isInternalReview ? now : undefined,
-      completedAt: isSubmitted ? now : undefined
+      _id: String(record._id),
+      id: String(record._id),
+      trackingToken: record.trackingToken,
+      fullName: record.fullName,
+      companyName: record.companyName,
+      emailAddress: record.emailAddress,
+      phoneNumber: record.phoneNumber,
+      serviceType: record.serviceType as ConsultationSubmissionInput["serviceType"],
+      division: record.division,
+      budgetRange: record.budgetRange,
+      projectTimeline: record.projectTimeline,
+      projectDescription: record.projectDescription,
+      preferredConsultationType: record.preferredConsultationType as ConsultationSubmissionInput["preferredConsultationType"],
+      attachments: documents.filter((d) => d.kind === "submission"),
+      documents,
+      workflowStages: stages,
+      logs: workflowLogs.map((log) => ({
+        id: String(log._id),
+        consultationId: String(log.consultationId),
+        stageId: log.stageId ? String(log.stageId) : undefined,
+        stageKey: log.stageKey || undefined,
+        action: log.action,
+        actorId: log.actorId || undefined,
+        actorEmail: log.actorEmail || undefined,
+        actorRole: log.actorRole || undefined,
+        note: log.note || undefined,
+        createdAt: iso(log.createdAt) || new Date().toISOString()
+      })),
+      statusHistory: statusHistory.map((h) => ({
+        id: String(h._id),
+        consultationId: String(h.consultationId),
+        stageId: h.stageId ? String(h.stageId) : undefined,
+        stageKey: h.stageKey || undefined,
+        fromStatus: h.fromStatus || undefined,
+        toStatus: h.toStatus,
+        label: h.label || undefined,
+        changedBy: h.changedBy || undefined,
+        note: h.note || undefined,
+        createdAt: iso(h.createdAt) || new Date().toISOString()
+      })),
+      currentStageKey: record.currentStageKey as ConsultationRecord["currentStageKey"],
+      status: record.status as ConsultationRecord["status"],
+      source: record.source,
+      notification: {
+        sent: record.notificationSent,
+        skipped: record.notificationSkipped || undefined,
+        error: record.notificationError || undefined,
+        sentAt: iso(record.notificationSentAt)
+      },
+      createdAt: iso(record.createdAt) || new Date().toISOString(),
+      updatedAt: iso(record.updatedAt) || new Date().toISOString()
     };
-  });
-}
-
-function mapDocument(document: ConsultationWithRelations["uploadedDocuments"][number]): ConsultationAttachment {
-  return {
-    id: document.id,
-    filename: document.filename,
-    mimeType: document.mimeType,
-    size: document.size,
-    url: document.url || undefined,
-    provider: (document.provider as ConsultationAttachment["provider"]) || "metadata",
-    providerId: document.providerId || undefined,
-    kind: document.kind as UploadedDocumentKind,
-    stageKey: document.stageKey || undefined,
-    uploadedBy: document.uploadedBy,
-    createdAt: iso(document.createdAt)
-  };
-}
-
-function mapWorkflowStage(
-  stage: ConsultationWithRelations["workflowStages"][number],
-  documents: ConsultationAttachment[]
-): ConsultationWorkflowStage {
-  return {
-    id: stage.id,
-    key: stage.key,
-    title: stage.title,
-    description: stage.description,
-    position: stage.position,
-    status: stage.status,
-    stateLabel: stage.stateLabel,
-    startedAt: iso(stage.startedAt),
-    unlockedAt: iso(stage.unlockedAt),
-    completedAt: iso(stage.completedAt),
-    rejectedAt: iso(stage.rejectedAt),
-    updatedAt: iso(stage.updatedAt) || new Date().toISOString(),
-    responseDocuments: documents.filter((document) => document.kind === "response" && document.stageKey === stage.key)
-  };
-}
-
-function mapWorkflowLog(log: ConsultationWithRelations["workflowLogs"][number]): WorkflowLogRecord {
-  return {
-    id: log.id,
-    consultationId: log.consultationId,
-    stageId: log.stageId || undefined,
-    stageKey: log.stageKey || undefined,
-    action: log.action,
-    actorId: log.actorId || undefined,
-    actorEmail: log.actorEmail || undefined,
-    actorRole: log.actorRole || undefined,
-    note: log.note || undefined,
-    createdAt: iso(log.createdAt) || new Date().toISOString()
-  };
-}
-
-function mapStatusHistory(history: ConsultationWithRelations["statusHistory"][number]): StatusHistoryRecord {
-  return {
-    id: history.id,
-    consultationId: history.consultationId,
-    stageId: history.stageId || undefined,
-    stageKey: history.stageKey || undefined,
-    fromStatus: history.fromStatus || undefined,
-    toStatus: history.toStatus,
-    label: history.label || undefined,
-    changedBy: history.changedBy || undefined,
-    note: history.note || undefined,
-    createdAt: iso(history.createdAt) || new Date().toISOString()
-  };
-}
-
-function mapConsultation(record: ConsultationWithRelations): ConsultationRecord {
-  const documents = [...record.uploadedDocuments]
-    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-    .map(mapDocument);
-  const workflowStages = [...record.workflowStages]
-    .sort((a, b) => a.position - b.position)
-    .map((stage) => mapWorkflowStage(stage, documents));
-
-  return {
-    _id: record.id,
-    id: record.id,
-    trackingToken: record.trackingToken,
-    fullName: record.fullName,
-    companyName: record.companyName,
-    emailAddress: record.emailAddress,
-    phoneNumber: record.phoneNumber,
-    serviceType: record.serviceType as ConsultationSubmissionInput["serviceType"],
-    division: record.division,
-    budgetRange: record.budgetRange,
-    projectTimeline: record.projectTimeline,
-    projectDescription: record.projectDescription,
-    preferredConsultationType: record.preferredConsultationType as ConsultationSubmissionInput["preferredConsultationType"],
-    attachments: documents.filter((document) => document.kind === "submission"),
-    documents,
-    workflowStages,
-    logs: [...record.workflowLogs].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).map(mapWorkflowLog),
-    statusHistory: [...record.statusHistory]
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-      .map(mapStatusHistory),
-    currentStageKey: record.currentStageKey,
-    status: record.status,
-    source: record.source,
-    notification: {
-      sent: record.notificationSent,
-      skipped: record.notificationSkipped || undefined,
-      error: record.notificationError || undefined,
-      sentAt: iso(record.notificationSentAt)
-    },
-    createdAt: iso(record.createdAt) || new Date().toISOString(),
-    updatedAt: iso(record.updatedAt) || new Date().toISOString()
-  };
-}
-
-function normalizeMemoryRecord(record: ConsultationRecord): ConsultationRecord {
-  return {
-    ...record,
-    attachments: record.attachments.map((attachment) => ({ ...attachment })),
-    documents: record.documents.map((document) => ({ ...document })),
-    workflowStages: record.workflowStages.map((stage) => ({
-      ...stage,
-      responseDocuments: stage.responseDocuments.map((document) => ({ ...document }))
-    })),
-    logs: record.logs.map((log) => ({ ...log })),
-    statusHistory: record.statusHistory.map((history) => ({ ...history }))
-  };
+  } catch {
+    return null;
+  }
 }
 
 async function captureConsultationIngestion(record: ConsultationRecord): Promise<void> {
@@ -269,21 +220,12 @@ async function captureConsultationIngestion(record: ConsultationRecord): Promise
   );
 }
 
-async function findPrismaConsultation(id: string): Promise<ConsultationRecord | null> {
-  const record = await prisma.consultation.findUnique({
-    where: { id },
-    include: consultationInclude
-  });
-
-  return record ? mapConsultation(record) : null;
-}
-
 export async function createConsultation(
   input: ConsultationSubmissionInput & { attachments: ConsultationAttachment[]; source: string }
 ): Promise<ConsultationRecord> {
   const now = new Date();
 
-  if (!prismaEnabled) {
+  if (!mongoEnabled) {
     const id = randomUUID();
     const stages = defaultWorkflowStages(now);
     const submittedStage = stages.find((stage) => stage.key === "consultation_submitted");
@@ -347,106 +289,98 @@ export async function createConsultation(
 
     memoryConsultations = [record, ...memoryConsultations].slice(0, 200);
     publishConsultationUpdate(id);
-    return normalizeMemoryRecord(record);
+    return record;
   }
 
-  const createdId = await prisma.$transaction(async (tx) => {
-    const consultation = await tx.consultation.create({
-      data: {
-        fullName: input.fullName,
-        division: input.division,
-        companyName: input.companyName,
-        emailAddress: input.emailAddress,
-        phoneNumber: input.phoneNumber,
-        serviceType: input.serviceType,
-        budgetRange: input.budgetRange,
-        projectTimeline: input.projectTimeline,
-        projectDescription: input.projectDescription,
-        preferredConsultationType: input.preferredConsultationType,
-        source: input.source,
-        status: "new",
-        currentStageKey: "internal_review"
-      }
-    });
-
-    await tx.workflowStage.createMany({
-      data: defaultWorkflowStageRows(consultation.id, now)
-    });
-
-    const submittedStage = await tx.workflowStage.findUnique({
-      where: {
-        consultationId_key: {
-          consultationId: consultation.id,
-          key: "consultation_submitted"
-        }
-      }
-    });
-    const internalReviewStage = await tx.workflowStage.findUnique({
-      where: {
-        consultationId_key: {
-          consultationId: consultation.id,
-          key: "internal_review"
-        }
-      }
-    });
-
-    if (input.attachments.length) {
-      await tx.uploadedDocument.createMany({
-        data: input.attachments.map((attachment) => ({
-          consultationId: consultation.id,
-          stageId: submittedStage?.id,
-          stageKey: "consultation_submitted",
-          kind: "submission",
-          filename: attachment.filename,
-          mimeType: attachment.mimeType,
-          size: attachment.size,
-          url: attachment.url,
-          provider: attachment.provider || "metadata",
-          providerId: attachment.providerId,
-          uploadedBy: "client"
-        }))
-      });
-    }
-
-    await tx.workflowLog.create({
-      data: {
-        consultationId: consultation.id,
-        stageId: submittedStage?.id,
-        stageKey: "consultation_submitted",
-        action: "submitted",
-        actorRole: "client",
-        note: "Consultation documents submitted by client."
-      }
-    });
-    await tx.statusHistory.createMany({
-      data: [
-        {
-          consultationId: consultation.id,
-          stageId: submittedStage?.id,
-          stageKey: "consultation_submitted",
-          toStatus: "completed",
-          label: "Consultation Submitted",
-          changedBy: "client"
-        },
-        {
-          consultationId: consultation.id,
-          stageId: internalReviewStage?.id,
-          stageKey: "internal_review",
-          toStatus: "active",
-          label: "Waiting for Approval",
-          changedBy: "system"
-        }
-      ]
-    });
-
-    return consultation.id;
+  const consultation = await ConsultationModel.create({
+    trackingToken: randomUUID(),
+    fullName: input.fullName,
+    division: input.division,
+    companyName: input.companyName,
+    emailAddress: input.emailAddress,
+    phoneNumber: input.phoneNumber,
+    serviceType: input.serviceType,
+    budgetRange: input.budgetRange,
+    projectTimeline: input.projectTimeline,
+    projectDescription: input.projectDescription,
+    preferredConsultationType: input.preferredConsultationType,
+    source: input.source,
+    status: "new",
+    currentStageKey: "internal_review"
   });
 
-  const record = await findPrismaConsultation(createdId);
+  const stageRows = workflowStepDefinitions.map((step, index) => {
+    const isSubmitted = step.key === "consultation_submitted";
+    const isInternalReview = step.key === "internal_review";
+    const status: WorkflowStageStatus = isSubmitted ? "completed" : isInternalReview ? "active" : "locked";
+
+    return {
+      consultationId: consultation._id,
+      key: step.key,
+      title: step.title,
+      description: step.description,
+      position: index + 1,
+      status,
+      stateLabel: stageLabelFor(status),
+      startedAt: isSubmitted || isInternalReview ? now : undefined,
+      unlockedAt: isSubmitted || isInternalReview ? now : undefined,
+      completedAt: isSubmitted ? now : undefined
+    };
+  });
+
+  const stages = await WorkflowStageModel.insertMany(stageRows);
+  const submittedStage = stages.find((s) => s.key === "consultation_submitted");
+
+  if (input.attachments.length) {
+    await UploadedDocumentModel.insertMany(
+      input.attachments.map((attachment) => ({
+        consultationId: consultation._id,
+        stageId: submittedStage?._id,
+        stageKey: "consultation_submitted",
+        kind: "submission",
+        filename: attachment.filename,
+        mimeType: attachment.mimeType,
+        size: attachment.size,
+        url: attachment.url,
+        provider: attachment.provider || "metadata",
+        providerId: attachment.providerId,
+        uploadedBy: "client"
+      }))
+    );
+  }
+
+  await WorkflowLogModel.create({
+    consultationId: consultation._id,
+    stageId: submittedStage?._id,
+    stageKey: "consultation_submitted",
+    action: "submitted",
+    actorRole: "client",
+    note: "Consultation documents submitted by client."
+  });
+
+  await StatusHistoryModel.insertMany([
+    {
+      consultationId: consultation._id,
+      stageId: submittedStage?._id,
+      stageKey: "consultation_submitted",
+      toStatus: "completed",
+      label: "Consultation Submitted",
+      changedBy: "client"
+    },
+    {
+      consultationId: consultation._id,
+      stageKey: "internal_review",
+      toStatus: "active",
+      label: "Waiting for Approval",
+      changedBy: "system"
+    }
+  ]);
+
+  const record = await findConsultation(String(consultation._id));
   if (!record) throw new Error("Consultation workflow could not be loaded after creation.");
 
   await captureConsultationIngestion(record);
-  publishConsultationUpdate(createdId);
+  publishConsultationUpdate(String(consultation._id));
   return record;
 }
 
@@ -454,14 +388,14 @@ export async function getConsultationWorkflow(
   id: string,
   trackingToken?: string
 ): Promise<ConsultationRecord | null> {
-  if (!prismaEnabled) {
+  if (!mongoEnabled) {
     const record = memoryConsultations.find((item) => item._id === id || item.id === id);
     if (!record) return null;
     if (trackingToken && record.trackingToken !== trackingToken) return null;
-    return normalizeMemoryRecord(record);
+    return record;
   }
 
-  const record = await findPrismaConsultation(id);
+  const record = await findConsultation(id);
   if (!record) return null;
   if (trackingToken && record.trackingToken !== trackingToken) return null;
   return record;
@@ -473,7 +407,7 @@ export async function updateConsultationNotification(
 ): Promise<void> {
   if (!id) return;
 
-  if (!prismaEnabled) {
+  if (!mongoEnabled) {
     memoryConsultations = memoryConsultations.map((record) =>
       record._id === id || record.id === id
         ? {
@@ -487,9 +421,8 @@ export async function updateConsultationNotification(
     return;
   }
 
-  await prisma.consultation.update({
-    where: { id },
-    data: {
+  await ConsultationModel.findByIdAndUpdate(id, {
+    $set: {
       notificationSent: notification.sent,
       notificationSkipped: Boolean(notification.skipped),
       notificationError: notification.error,

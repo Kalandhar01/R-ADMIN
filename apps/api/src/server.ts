@@ -10,15 +10,16 @@ import { adminContactInquiryRoutes, contactRouter } from "./routes/contact.js";
 import { adminIngestionRoutes, ingestionRouter } from "./routes/ingestion.js";
 import inquiryRoutes from "./routes/inquiries.js";
 import { adminNewsletterRoutes, newsletterRoutes, publicNewsletterRoutes } from "./routes/newsletters.js";
-import { adminOperationsRoutes } from "./routes/operations.js";
+import adminDashboardRoutes from "./routes/adminDashboard.js";
+import businessRoutes from "./routes/business.js";
+import subscriberRoutes from "./routes/subscribers.js";
+import contactInfoRoutes from "./routes/contactInfo.js";
 import siteRoutes from "./routes/site.js";
 import { connectDatabase } from "./lib/db.js";
-import { connectPrismaDatabase } from "./lib/prisma.js";
 import { setBlogPrismaEnabled } from "./services/blogService.js";
 import { setConsultationPrismaEnabled } from "./services/consultationService.js";
 import { setIngestionPrismaEnabled } from "./services/ingestionService.js";
 import { setNewsletterPrismaEnabled } from "./services/newsletterService.js";
-import { setOperationsPrismaEnabled } from "./services/operationsService.js";
 import { setMongoEnabled } from "./services/siteContentService.js";
 
 const app = express();
@@ -72,7 +73,12 @@ app.use("/api/admin/contact-inquiries", adminContactInquiryRoutes);
 app.use("/api/newsletters", publicNewsletterRoutes);
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/admin/newsletters", adminNewsletterRoutes);
-app.use("/api/admin/operations", adminOperationsRoutes);
+
+app.use("/api/business", businessRoutes);
+app.use("/api/subscribers", subscriberRoutes);
+app.use("/api/contact-info", contactInfoRoutes);
+app.use("/api/admin", adminDashboardRoutes);
+
 app.use("/api/ingestion", ingestionRouter);
 app.use("/api/admin/ingestion", adminIngestionRoutes);
 app.use("/api/consultations", consultationRoutes);
@@ -83,12 +89,11 @@ app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ message: "Internal server error" });
 });
 
-const [mongoConnected, prismaConnected] = await Promise.all([connectDatabase(), connectPrismaDatabase()]);
+const mongoConnected = await connectDatabase();
 setMongoEnabled(mongoConnected);
-setBlogPrismaEnabled(prismaConnected);
-setConsultationPrismaEnabled(prismaConnected);
-setIngestionPrismaEnabled(prismaConnected);
-setNewsletterPrismaEnabled(prismaConnected);
-setOperationsPrismaEnabled(prismaConnected);
+setBlogPrismaEnabled(mongoConnected);
+setConsultationPrismaEnabled(mongoConnected);
+setIngestionPrismaEnabled(mongoConnected);
+setNewsletterPrismaEnabled(mongoConnected);
 
 app.listen(port);

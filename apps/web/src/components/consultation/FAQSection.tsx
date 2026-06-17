@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import { cn } from "@/lib/utils";
 
 const faqs = [
@@ -41,12 +42,12 @@ export function FAQSection() {
       className="relative isolate overflow-hidden bg-[#F8F6F1] px-5 pb-20 pt-16 text-[#181512] md:px-8 md:pb-24 md:pt-20 lg:pt-24"
       id="consultation-faq"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_72%_8%,rgba(214,180,95,0.16),transparent_30rem),radial-gradient(circle_at_18%_82%,rgba(255,252,247,0.94),transparent_30rem),linear-gradient(135deg,#FFFCF7_0%,#F8F6F1_48%,#F4F1EA_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_72%_8%,rgba(214,180,95,0.12),transparent_30rem),radial-gradient(circle_at_18%_82%,rgba(255,252,247,0.94),transparent_30rem),linear-gradient(135deg,#FFFCF7_0%,#F8F6F1_48%,#F4F1EA_100%)]" />
       <div
         data-faq-background-grid
-        className="pointer-events-none absolute -inset-x-8 -inset-y-16 opacity-100 [background-image:linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.035)_1px,transparent_1px)] [background-size:58px_58px]"
+        className="pointer-events-none absolute -inset-x-8 -inset-y-16 opacity-70 [background-image:linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.035)_1px,transparent_1px)] [background-size:58px_58px]"
       />
-      <div className="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:radial-gradient(circle,rgba(154,116,40,0.42)_1px,transparent_1.4px)] [background-size:38px_38px] [mask-image:radial-gradient(circle_at_68%_36%,black,transparent_70%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:radial-gradient(circle,rgba(154,116,40,0.42)_1px,transparent_1.4px)] [background-size:38px_38px] [mask-image:radial-gradient(circle_at_68%_36%,black,transparent_70%)]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(214,180,95,0.34),transparent)]" />
       <div className="mx-auto grid max-w-[86rem] gap-9 lg:grid-cols-[0.45fr_0.55fr] lg:gap-12">
         <motion.div
@@ -55,13 +56,19 @@ export function FAQSection() {
           transition={{ duration: 0.72, ease: [0.22, 1, 0.36, 1] }}
           className="relative z-10"
         >
-          <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[#9a7428]">FAQ</p>
-          <h2 className="mt-3 font-display text-[2.45rem] font-semibold leading-[0.98] tracking-[0] text-[#181512] md:text-[3.15rem] lg:text-[3.65rem]">
-            Clear answers before the first private session.
-          </h2>
-          <p className="mt-4 text-[15px] leading-[1.7] text-[#68645b]/80 md:text-[16px]">
-            The intake is designed to reduce ambiguity before a senior Ractysh team member reviews your requirement.
-          </p>
+          <ScrollReveal>
+            <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-[#9a7428]">FAQ</p>
+          </ScrollReveal>
+          <ScrollReveal>
+            <h2 className="mt-3 font-display text-[2.45rem] font-semibold leading-[0.98] tracking-[-0.02em] text-[#181512] md:text-[3.15rem] lg:text-[3.65rem]">
+              Clear answers before the first private session.
+            </h2>
+          </ScrollReveal>
+          <ScrollReveal>
+            <p className="mt-4 text-[15px] leading-[1.7] text-[#68645b]/80 md:text-[16px]">
+              The intake is designed to reduce ambiguity before a senior Ractysh team member reviews your requirement.
+            </p>
+          </ScrollReveal>
         </motion.div>
 
         <motion.div

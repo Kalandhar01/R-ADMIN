@@ -99,10 +99,10 @@ const menuModels: Record<string, MegaDefinition> = {
         title: "Business Divisions",
         links: [
           { label: "Architecture Division", description: "Spatial intelligence, planning and visualization.", href: "/architecture", Icon: DraftingCompass },
-          { label: "Construction Division", description: "Civil, MEP, buildings, interiors, landscape, turnkey and 25+ services.", href: "/construction", Icon: HardHat },
+          { label: "Construction Division", description: "Site execution, MEP and turnkey delivery.", href: "/construction", Icon: HardHat },
           { label: "Real Estate Division", description: "Asset positioning and development advisory.", href: "/real-estate", Icon: Building2 },
           { label: "Import & Export Division", description: "Global trade and supplier network operations.", href: "/import-export", Icon: Globe2 },
-          { label: "OTC Exchange Division", description: "Crypto currency exchange, USDT services and KYC-verified OTC transactions.", href: "/otc-exchange", Icon: ShieldCheck }
+          { label: "OTC Exchange Division", description: "Private counterparty and deal-room coordination.", href: "/otc-exchange", Icon: ShieldCheck }
         ]
       }
     ]
@@ -118,11 +118,11 @@ const menuModels: Record<string, MegaDefinition> = {
       {
         title: "Work Index",
         links: [
-          { label: "Construction Work", description: "Civil, MEP, buildings, interiors, landscape and mega structures.", href: "/our-projects", Icon: HardHat },
+          { label: "Construction Work", description: "Commercial facilities and turnkey delivery.", href: "/our-projects", Icon: HardHat },
           { label: "Architecture Work", description: "Premium interiors and architectural concepts.", href: "/our-projects", Icon: DraftingCompass },
           { label: "Real Estate Work", description: "Asset positioning and investor-ready property workflows.", href: "/our-projects", Icon: Building2 },
           { label: "Export & Import Hubs", description: "Global trade coordination and enterprise operations.", href: "/our-projects", Icon: Globe2 },
-          { label: "OTC Exchange Workflows", description: "Crypto, USDT and KYC-verified OTC transaction systems.", href: "/our-projects", Icon: ShieldCheck }
+          { label: "OTC Exchange Workflows", description: "Private counterparty and transaction-readiness systems.", href: "/our-projects", Icon: ShieldCheck }
         ]
       }
     ]
@@ -139,7 +139,7 @@ const menuModels: Record<string, MegaDefinition> = {
         title: "Professional Service Offerings",
         links: [
           { label: "Architecture Service", description: "Commercial architecture planning and design support.", href: "/architecture-service", Icon: DraftingCompass },
-          { label: "Construction Service", description: "Full-spectrum construction: civil, MEP, buildings, interiors, turnkey and more.", href: "/construction-service", Icon: HardHat },
+          { label: "Construction Service", description: "Site execution and delivery coordination.", href: "/construction-service", Icon: HardHat },
           { label: "Real Estate Service", description: "Asset positioning and property presentation.", href: "/real-estate-service", Icon: Building2 }
         ]
       },
@@ -147,7 +147,7 @@ const menuModels: Record<string, MegaDefinition> = {
         title: "Trade and Transaction Services",
         links: [
           { label: "Import & Export Service", description: "Cross-border trade and supplier coordination.", href: "/import-export-service", Icon: Globe2 },
-          { label: "OTC Exchange Service", description: "Crypto exchange, USDT services and KYC-verified OTC transactions.", href: "/otc-exchange-service", Icon: ShieldCheck }
+          { label: "OTC Exchange Service", description: "Private transaction-readiness coordination.", href: "/otc-exchange-service", Icon: ShieldCheck }
         ]
       }
     ]
@@ -202,7 +202,7 @@ const menuModels: Record<string, MegaDefinition> = {
           { label: "Construction News", description: "Execution and delivery frameworks.", href: "/blog", Icon: HardHat },
           { label: "Real Estate Strategy", description: "Asset positioning and development notes.", href: "/blog", Icon: Building2 },
           { label: "Export & Import Updates", description: "Trade documentation and supplier network notes.", href: "/blog", Icon: Globe2 },
-          { label: "OTC Exchange Notes", description: "Crypto, USDT and OTC exchange market notes.", href: "/blog", Icon: ShieldCheck }
+          { label: "OTC Exchange Notes", description: "Private transaction workflow notes.", href: "/blog", Icon: ShieldCheck }
         ]
       }
     ]
@@ -369,7 +369,7 @@ const globalSearchItems: SearchItem[] = [
     description: "Private counterparty, deal-room and OTC transaction coordination",
     href: "/otc-exchange",
     Icon: ShieldCheck,
-    keywords: ["otc", "exchange", "crypto", "usdt", "kyc", "fiu", "digital currency"]
+    keywords: ["otc", "exchange", "private deals", "counterparty", "deal room", "transaction"]
   },
   {
     title: "Services",
@@ -1250,7 +1250,13 @@ export function Navbar({ logoText, items }: NavbarProps) {
                 </div>
               ) : null}
 
-
+              <section className="mt-7 border-t border-[#E5E7EB] pt-5" aria-label="Company information">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[#8B1118]">Company Information</p>
+                <CompanyContactPanel mode="company" tone="transparent" className="mt-4 sm:grid-cols-1" />
+                <p className="mt-4 rounded-[8px] border border-[#E5E7EB] bg-[#F9FAFB] px-4 py-3 text-[0.92rem] font-medium leading-7 text-[#4B5563]">
+                  Architecture, Construction, Real Estate, Trade and OTC Exchange in one premium ecosystem.
+                </p>
+              </section>
             </motion.aside>
           </motion.div>
         ) : null}
