@@ -14,7 +14,7 @@ interface FooterProps {
 
 export function Footer({ headline, description, links, socialLinks }: FooterProps) {
   return (
-    <footer className="relative z-[70] isolate overflow-hidden overflow-x-clip bg-[#080807] px-6 py-8 text-white [contain:paint] sm:px-7 md:px-8 md:py-6">
+    <footer className="relative z-[70] isolate overflow-hidden overflow-x-clip bg-[#080807] px-6 py-8 text-white [contain:paint] sm:px-7 md:px-8 md:py-8">
       <FooterBackground />
       <motion.div
         initial={{ opacity: 0, y: 28 }}
@@ -23,6 +23,7 @@ export function Footer({ headline, description, links, socialLinks }: FooterProp
         transition={{ duration: 0.76, ease: [0.22, 1, 0.36, 1] }}
         className="relative z-10 mx-auto max-w-[76rem]"
       >
+        <div className="relative before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-[linear-gradient(90deg,transparent,rgba(224,197,121,0.5),transparent)]" />
         <FooterBottom headline={headline} description={description} links={links} socialLinks={socialLinks} />
       </motion.div>
     </footer>

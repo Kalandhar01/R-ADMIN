@@ -1,6 +1,21 @@
-import type { Prisma, PrismaClient, RealEstatePropertyStatus } from "@prisma/client";
+type RealEstatePropertyStatus = "draft" | "private_review" | "available" | "reserved" | "sold" | "archived";
 
-type RealEstateSeederClient = Pick<PrismaClient, "propertyCategory" | "propertyLocation" | "property" | "propertyMedia">;
+interface RealEstateSeederClient {
+  propertyCategory: {
+    upsert: (args: { where: { slug: string }; update: Record<string, unknown>; create: Record<string, unknown> }) => Promise<Record<string, unknown>>;
+  };
+  propertyLocation: {
+    upsert: (args: { where: { slug: string }; update: Record<string, unknown>; create: Record<string, unknown> }) => Promise<Record<string, unknown>>;
+  };
+  property: {
+    findUnique: (args: { where: { slug: string }; select: { id: boolean } }) => Promise<Record<string, unknown> | null>;
+    create: (args: { data: Record<string, unknown> }) => Promise<Record<string, unknown>>;
+  };
+  propertyMedia: {
+    count: (args: { where: { propertyId: string } }) => Promise<number>;
+    createMany: (args: { data: Record<string, unknown>[] }) => Promise<void>;
+  };
+}
 
 type PropertySeed = {
   title: string;
@@ -387,7 +402,7 @@ export async function ensureRealEstateDefaults(db: RealEstateSeederClient) {
       categoryId: categoryBySlug.get(categorySlug) || null,
       locationId: locationBySlug.get(locationSlug) || null,
       coverImageAlt: `${seed.title} property image`,
-      metrics: metrics as Prisma.InputJsonValue,
+      metrics: metrics as Record<string, unknown>,
       published: true
     };
 
@@ -397,7 +412,7 @@ export async function ensureRealEstateDefaults(db: RealEstateSeederClient) {
     });
     const property = existingProperty || (await db.property.create({ data: propertyData }));
 
-    const mediaCount = await db.propertyMedia.count({ where: { propertyId: property.id } });
+    const mediaCount = await db.propertyMedia.count({ where: { propertyId: property.id as string } });
     if (mediaCount === 0) {
       await db.propertyMedia.createMany({
         data: media.map((url, index) => ({
@@ -408,7 +423,7 @@ export async function ensureRealEstateDefaults(db: RealEstateSeederClient) {
           url,
           provider: "local",
           position: index,
-          metadata: { seeded: true, propertySlug: seed.slug } as Prisma.InputJsonValue
+          metadata: { seeded: true, propertySlug: seed.slug }
         }))
       });
     }

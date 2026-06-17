@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   LayoutDashboard,
@@ -103,6 +103,7 @@ const GROUP_NAV: NavItem[] = [
   { key: "blogs", label: "Blogs", icon: BookOpenText },
   { key: "careers", label: "Careers", icon: BriefcaseBusiness },
   { key: "newsletter", label: "Newsletter", icon: Send },
+  { key: "subscribers", label: "Subscribers", icon: Users },
   { key: "chatbot", label: "Chatbot", icon: MessageCircle },
 ];
 
@@ -198,7 +199,19 @@ function Sidebar({
   onMobileClose: () => void;
   unreadCount: number;
   navItems: NavItem[];
-}) {
+  }) {
+    const router = useRouter();
+
+    async function handleLogout() {
+      try {
+        await fetch("/api/admin/auth/logout", { method: "POST" });
+      } catch {
+        // ignore
+      }
+      router.push("/admin");
+    }
+
+    
   const sidebarContent = (
     <div className="flex h-full flex-col">
       <div className={cn("flex items-center gap-3 px-4 py-5", collapsed && "justify-center px-2")}>
@@ -270,7 +283,7 @@ function Sidebar({
             </div>
           )}
           {!collapsed && (
-            <button className="flex h-8 w-8 items-center justify-center rounded-lg text-[#555] transition-colors hover:bg-white/[0.06] hover:text-white">
+            <button onClick={handleLogout} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#555] transition-colors hover:bg-white/[0.06] hover:text-white">
               <LogOut className="h-4 w-4" />
             </button>
           )}
@@ -283,7 +296,7 @@ function Sidebar({
     <>
       <aside
         className={cn(
-          "hidden lg:flex h-screen flex-col border-r border-white/[0.06] bg-[#050505] transition-all duration-300",
+          "hidden lg:flex sticky top-0 h-screen flex-col border-r border-white/[0.06] bg-[#050505] transition-all duration-300",
           collapsed ? "w-[68px]" : "w-[240px]"
         )}
       >
@@ -1279,6 +1292,93 @@ function NewsletterView({ data }: { data: AdminCommandCenterData }) {
   );
 }
 
+// ─── Subscribers View ────────────────────────────────────────────────────────────
+
+function SubscribersView({ data }: { data: AdminCommandCenterData }) {
+  const [searchQuery, setSearchQuery] = React.useState("");
+
+  const filtered = React.useMemo(() => {
+    if (!searchQuery.trim()) return data.subscribers;
+    const q = searchQuery.toLowerCase();
+    return data.subscribers.filter(
+      (s) =>
+        s.email.toLowerCase().includes(q) ||
+        s.source?.toLowerCase().includes(q) ||
+        s.status?.toLowerCase().includes(q)
+    );
+  }, [data.subscribers, searchQuery]);
+
+  return (
+    <div className="space-y-4 p-4 lg:p-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-white">Subscribers</h1>
+          <p className="text-sm text-[#888]">All newsletter subscribers ({data.subscribers.length})</p>
+        </div>
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#555]" />
+          <input
+            type="text"
+            placeholder="Search subscribers..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-lg border border-white/[0.06] bg-white/[0.04] py-2 pl-9 pr-3 text-sm text-white outline-none transition placeholder:text-[#555] focus:border-[#D4AF37]/30"
+          />
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="rounded-xl border border-white/[0.06] bg-white/[0.02]"
+      >
+        <div className="divide-y divide-white/[0.04]">
+          {filtered.length > 0 ? (
+            filtered.map((sub, i) => (
+              <motion.div
+                key={sub.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.02 }}
+                className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-white/[0.02]"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-500/20 to-rose-500/5 text-sm font-semibold text-rose-400">
+                  {sub.email.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-white">{sub.email}</span>
+                    {sub.source && (
+                      <span className="inline-flex rounded-full bg-white/[0.04] px-2 py-0.5 text-[10px] text-[#555]">
+                        {sub.source}
+                      </span>
+                    )}
+                    <span className={cn(
+                      "ml-auto inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium",
+                      sub.status === "active" ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"
+                    )}>
+                      {sub.status}
+                    </span>
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-3 text-[10px] text-[#444]">
+                    <span>{formatRelativeTime(sub.createdAt)}</span>
+                    <span>· {sub.table}</span>
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <div className="px-5 py-16 text-center text-sm text-[#555]">
+              {searchQuery ? "No subscribers match your search." : "No subscribers yet."}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function AnalyticsView({ data }: { data: AdminCommandCenterData }) {
   return (
     <div className="space-y-4 p-4 lg:p-6">
@@ -1566,6 +1666,7 @@ export function AdminCommandCenter({
               {isGroup && activeView === "blogs" && <BlogsView data={data} />}
               {isGroup && activeView === "careers" && <CareersView data={data} />}
               {isGroup && activeView === "newsletter" && <NewsletterView data={data} />}
+              {isGroup && activeView === "subscribers" && <SubscribersView data={data} />}
               {isGroup && activeView === "chatbot" && <ChatbotView data={data} />}
             </motion.div>
           </AnimatePresence>

@@ -1,4 +1,4 @@
-export type ServiceVisualKey =
+type ServiceVisualKey =
   | "architecture"
   | "interior"
   | "landscape"
@@ -17,18 +17,18 @@ export type ServiceVisualKey =
   | "commercial"
   | "logo";
 
-export interface ServiceCapability {
+interface ServiceCapability {
   title: string;
   body: string;
 }
 
-export interface ServiceWorkflowStep {
+interface ServiceWorkflowStep {
   label: string;
   title: string;
   body: string;
 }
 
-export interface ServiceMetric {
+interface ServiceMetric {
   label: string;
   value: string;
 }

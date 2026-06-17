@@ -1,10 +1,14 @@
 import { createHash } from "node:crypto";
-import { Prisma, type CareerApplicationStatus, type ConsultationStatus, type InquiryStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentAdminFromRequest } from "@/lib/admin/auth";
 import { getAdminCommandCenterData } from "@/lib/admin/data";
-import { prisma } from "@/lib/server/prisma";
+import { prisma as _prisma } from "@/lib/server/prisma";
+const prisma = _prisma as any;
+
+type InquiryStatus = "new" | "contacted" | "archived";
+type ConsultationStatus = "new" | "reviewed" | "contacted" | "archived";
+type CareerApplicationStatus = "new" | "reviewed" | "shortlisted" | "hired" | "rejected";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -207,7 +211,7 @@ async function audit(
       entity,
       entityId: entityId || undefined,
       summary,
-      metadata: metadata ? (metadata as Prisma.InputJsonValue) : undefined,
+      metadata: metadata ? (metadata as Record<string, unknown>) : undefined,
       ...context
     }
   });
@@ -359,7 +363,7 @@ async function handleMultipart(request: NextRequest, admin: { id: string; email:
       size: upload.bytes || file.size,
       width: upload.width || null,
       height: upload.height || null,
-      metadata: { ...upload, folder } as Prisma.InputJsonValue
+      metadata: { ...upload, folder } as Record<string, unknown>
     }
   });
 
@@ -579,7 +583,7 @@ export async function POST(request: NextRequest) {
       const asset = await prisma.mediaAsset.create({
         data: {
           ...assetInput,
-          metadata: { folder } as Prisma.InputJsonValue
+          metadata: { folder } as Record<string, unknown>
         }
       });
       await audit(request, admin.id, "create", "MediaAsset", asset.id, `Added media asset ${asset.title}.`);

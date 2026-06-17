@@ -4,7 +4,6 @@ import { ConsultationBenefits } from "@/components/consultation/ConsultationBene
 import { ConsultationFinalCTA } from "@/components/consultation/ConsultationFinalCTA";
 import { ConsultationForm } from "@/components/consultation/ConsultationForm";
 import { ConsultationHero } from "@/components/consultation/ConsultationHero";
-import { ConsultationWorkflowTracker } from "@/components/consultation/ConsultationWorkflowTracker";
 import { FAQSection } from "@/components/consultation/FAQSection";
 import { getSiteContent } from "@/lib/api";
 
@@ -25,7 +24,6 @@ export default async function BookConsultationPage() {
           <ConsultationForm />
           <ConsultationBenefits />
         </div>
-        <ConsultationWorkflowTracker />
         <div className="overflow-hidden">
           <FAQSection />
           <ConsultationFinalCTA />

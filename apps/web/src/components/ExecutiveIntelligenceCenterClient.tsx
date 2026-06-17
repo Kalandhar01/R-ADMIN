@@ -3,6 +3,7 @@
 import { type FormEvent, type MouseEvent, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import {
   ArrowUpRight,
   BarChart3,
@@ -97,7 +98,7 @@ function FeaturedCard({ issue, compact = false }: { issue: NewsletterSummary; co
   return (
     <motion.article
       className={cn(
-        "group relative overflow-hidden rounded-[8px] border border-[#ECECEC] bg-white shadow-[0_26px_70px_rgba(24,20,17,0.09)]",
+        "group relative overflow-hidden rounded-[12px] border border-[#E8E0D0] bg-white shadow-[0_26px_70px_rgba(24,20,17,0.09)] transition-shadow duration-500 hover:shadow-[0_34px_90px_rgba(24,20,17,0.14)]",
         compact ? "min-h-[31rem]" : "min-h-[38rem]"
       )}
       onMouseMove={parallax.onMove}
@@ -111,8 +112,8 @@ function FeaturedCard({ issue, compact = false }: { issue: NewsletterSummary; co
     >
       <div className={cn("relative overflow-hidden", compact ? "h-56" : "h-[22rem]")}>
         <ArticleImage issue={issue} priority />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#111111]/72 via-[#111111]/16 to-transparent" />
-        <div className="absolute bottom-5 left-5 right-5">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#111111]/80 via-[#111111]/20 to-transparent" />
+        <div className="absolute bottom-6 left-6 right-6">
           <IssueMeta issue={issue} light />
           <h3 className="mt-3 font-display text-[2.25rem] font-semibold leading-[0.96] tracking-normal text-white md:text-[3.25rem]">
             {issue.title}
@@ -122,12 +123,12 @@ function FeaturedCard({ issue, compact = false }: { issue: NewsletterSummary; co
 
       <div className={cn("grid gap-6", compact ? "p-5" : "p-7")}>
         <p className="max-w-[36rem] text-[0.98rem] font-medium leading-7 text-[#4f4840]">{issue.excerpt}</p>
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[#ECECEC] pt-5">
-          <div className="flex items-center gap-3 text-[0.76rem] font-semibold uppercase tracking-[0.14em] text-[#6e6256]">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[#E8E0D0] pt-5">
+          <div className="flex items-center gap-3 text-[0.76rem] font-semibold uppercase tracking-[0.12em] text-[#6e6256]">
             <Eye className="h-4 w-4 text-[#C6A45B]" />
             {formatCount(issue.views)} views
           </div>
-          <Button asChild size="lg" className="rounded-[8px]">
+          <Button asChild size="lg" className="rounded-[10px] px-5">
             <Link href={`/journal/${issue.slug}`}>
               Read Article
               <ArrowUpRight className="h-4 w-4" />
@@ -142,25 +143,26 @@ function FeaturedCard({ issue, compact = false }: { issue: NewsletterSummary; co
 function RecentIssueCard({ issue, index }: { issue: NewsletterSummary; index: number }) {
   return (
     <motion.article
-      className="group min-w-[17.5rem] overflow-hidden rounded-[8px] border border-[#ECECEC] bg-white shadow-[0_18px_46px_rgba(24,20,17,0.055)] transition duration-300 hover:-translate-y-1 hover:border-[#C6A45B]/55 hover:shadow-[0_22px_58px_rgba(24,20,17,0.085)] md:min-w-0"
+      className="group min-w-[17.5rem] overflow-hidden rounded-[12px] border border-[#E8E0D0] bg-white shadow-[0_18px_46px_rgba(24,20,17,0.055)] transition-all duration-300 hover:-translate-y-1.5 hover:border-[#C6A45B]/50 hover:shadow-[0_24px_64px_rgba(24,20,17,0.1)] md:min-w-0"
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-10%" }}
       transition={{ duration: 0.48, ease, delay: index * 0.06 }}
     >
-      <div className="h-36 overflow-hidden">
+      <div className="relative h-36 overflow-hidden">
         <ArticleImage issue={issue} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       </div>
       <div className="p-4">
         <IssueMeta issue={issue} />
-        <h4 className="mt-2 text-[1rem] font-semibold leading-snug tracking-normal text-[#111111]">{issue.title}</h4>
+        <h4 className="mt-2 text-[1rem] font-semibold leading-snug tracking-normal text-[#111111] transition-colors duration-300 group-hover:text-[#8B1118]">{issue.title}</h4>
         <p className="mt-2 line-clamp-2 text-[0.82rem] leading-5 text-[#5d554c]">{issue.excerpt}</p>
         <Link
           href={`/journal/${issue.slug}`}
-          className="mt-4 inline-flex items-center gap-1.5 text-[0.74rem] font-bold uppercase tracking-[0.14em] text-[#8B1118]"
+          className="mt-4 inline-flex items-center gap-1.5 text-[0.74rem] font-bold uppercase tracking-[0.12em] text-[#8B1118] transition-colors duration-300 hover:text-[#C6A45B]"
         >
           Read
-          <ChevronRight className="h-3.5 w-3.5" />
+          <ChevronRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
         </Link>
       </div>
     </motion.article>
@@ -255,13 +257,14 @@ export function ExecutiveIntelligenceCenterClient({ intelligence }: ExecutiveInt
   return (
     <section
       id="executive-intelligence-center"
-      className="executive-intelligence-center relative isolate overflow-hidden bg-[#FFFFFF] px-5 py-20 text-[#111111] sm:px-8 md:py-24 lg:px-12"
+      className="executive-intelligence-center relative isolate overflow-hidden bg-[#FFFFFF] px-5 py-20 text-[#111111] sm:px-8 md:py-28 lg:px-12"
       aria-label="Executive Intelligence Center"
     >
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,17,17,0.035)_1px,transparent_1px),linear-gradient(rgba(17,17,17,0.03)_1px,transparent_1px)] bg-[size:72px_72px]" />
-        <div className="absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-[#C6A45B]/60 to-transparent" />
-        <div className="absolute right-[12%] top-16 h-60 w-60 rounded-full bg-[#C6A45B]/[0.08]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,17,17,0.025)_1px,transparent_1px),linear-gradient(rgba(17,17,17,0.02)_1px,transparent_1px)] bg-[size:72px_72px]" />
+        <div className="absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-[#C6A45B]/50 to-transparent" />
+        <div className="absolute right-[8%] top-24 h-72 w-72 rounded-full bg-[radial-gradient(circle_at_center,rgba(198,164,91,0.12),transparent_70%)]" />
+        <div className="absolute bottom-12 left-[5%] h-48 w-48 rounded-full bg-[radial-gradient(circle_at_center,rgba(139,17,24,0.06),transparent_70%)]" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-[1440px]">
@@ -274,34 +277,46 @@ export function ExecutiveIntelligenceCenterClient({ intelligence }: ExecutiveInt
             transition={{ duration: 0.72, ease }}
           >
             <div>
-              <div className="inline-flex items-center gap-3 rounded-full border border-[#ECECEC] bg-white px-4 py-2 text-[0.72rem] font-bold uppercase tracking-[0.22em] text-[#8B1118] shadow-[0_12px_32px_rgba(17,17,17,0.04)]">
-                <BarChart3 className="h-4 w-4 text-[#C6A45B]" />
-                Ractysh Journal
-              </div>
-              <h2 className="mt-8 max-w-[36rem] font-display text-[4.8rem] font-semibold leading-[0.88] tracking-normal text-[#111111]">
-                Executive Intelligence Center
-              </h2>
-              <p className="mt-7 max-w-[31rem] text-[1.02rem] font-medium leading-8 text-[#5b5148]">
-                Database-published intelligence for Architecture, Construction, Real Estate, Global Trade and Private Exchange decision makers.
-              </p>
+              <ScrollReveal>
+                <div className="inline-flex items-center gap-3 rounded-full border border-[#ECECEC] bg-white px-4 py-2 text-[0.72rem] font-bold uppercase tracking-[0.22em] text-[#8B1118] shadow-[0_12px_32px_rgba(17,17,17,0.04)]">
+                  <BarChart3 className="h-4 w-4 text-[#C6A45B]" />
+                  Ractysh Journal
+                </div>
+              </ScrollReveal>
+              <ScrollReveal>
+                <h2 className="mt-8 max-w-[36rem] font-display text-[4.8rem] font-semibold leading-[0.88] tracking-normal text-[#111111]">
+                  Executive Intelligence Center
+                </h2>
+              </ScrollReveal>
+              <ScrollReveal>
+                <p className="mt-7 max-w-[31rem] text-[1.02rem] font-medium leading-8 text-[#5b5148]">
+                  Database-published intelligence for Architecture, Construction, Real Estate, Global Trade and Private Exchange decision makers.
+                </p>
+              </ScrollReveal>
             </div>
 
             <div className="grid gap-3">
-              {metrics.map(({ label, value, Icon }) => (
-                <Card key={label} className="grid grid-cols-[auto_1fr] items-center gap-4 rounded-[8px] border-[#ECECEC] bg-white/86 p-4 shadow-[0_14px_36px_rgba(17,17,17,0.045)]">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-[8px] border border-[#F0E6D1] bg-[#FFF9EA] text-[#C6A45B]">
-                    <Icon className="h-5 w-5" />
+              {metrics.map(({ label, value, Icon }, index) => (
+                <Card
+                  key={label}
+                  className="group relative grid grid-cols-[auto_1fr] items-center gap-4 overflow-hidden rounded-[12px] border border-[#ECECEC] bg-white p-4 shadow-[0_14px_36px_rgba(17,17,17,0.045)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#C6A45B]/40 hover:shadow-[0_18px_48px_rgba(17,17,17,0.07)]"
+                >
+                  <span className="relative flex h-12 w-12 items-center justify-center rounded-[10px] border border-[#F0E6D1] bg-[#FFF9EA] text-[#C6A45B] transition-all duration-300 group-hover:scale-105 group-hover:border-[#C6A45B]/50 group-hover:bg-[#FFF5E0]">
+                    <Icon className="h-5 w-5" strokeWidth={1.8} />
                   </span>
-                  <span>
-                    <span className="block text-[0.68rem] font-bold uppercase tracking-[0.18em] text-[#8B1118]">{label}</span>
-                    <span className="mt-1 block text-[1.18rem] font-semibold text-[#111111]">{value}</span>
+                  <span className="relative">
+                    <span className="block text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[#8B1118]">{label}</span>
+                    <span className="mt-1 block text-[1.25rem] font-semibold tracking-tight text-[#111111]">{value}</span>
+                  </span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[0.62rem] font-medium text-[#C6A45B]/30">
+                    {String(index + 1).padStart(2, "0")}
                   </span>
                 </Card>
               ))}
             </div>
 
-            <div className="rounded-[8px] border border-[#ECECEC] bg-[#FAFAFA] p-5">
-              <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-[#8B1118]">Private Briefing List</p>
+            <div className="rounded-[12px] border border-[#E8E0D0] bg-[linear-gradient(135deg,#FAFAFA,#F8F6F1)] p-5 shadow-[0_14px_36px_rgba(17,17,17,0.03)]">
+              <p className="text-[0.7rem] font-bold uppercase tracking-[0.16em] text-[#8B1118]">Private Briefing List</p>
               <p className="mt-2 text-[0.9rem] leading-6 text-[#5b5148]">Receive new executive publications when they are released from the Ractysh database.</p>
               <div className="mt-4">
                 <SubscribeForm />
@@ -326,16 +341,22 @@ export function ExecutiveIntelligenceCenterClient({ intelligence }: ExecutiveInt
           {featured ? <FeaturedCard issue={featured} compact /> : null}
 
           <div className="mt-10">
-            <div className="inline-flex items-center gap-3 rounded-full border border-[#ECECEC] bg-white px-3.5 py-2 text-[0.68rem] font-bold uppercase tracking-[0.2em] text-[#8B1118]">
-              <BarChart3 className="h-3.5 w-3.5 text-[#C6A45B]" />
-              Ractysh Journal
-            </div>
-            <h2 className="mt-5 font-display text-[3rem] font-semibold leading-[0.92] tracking-normal text-[#111111]">
-              Executive Intelligence Center
-            </h2>
-            <p className="mt-5 text-[0.98rem] font-medium leading-7 text-[#5b5148]">
-              Published intelligence from the Ractysh operating ecosystem.
-            </p>
+            <ScrollReveal>
+              <div className="inline-flex items-center gap-3 rounded-full border border-[#ECECEC] bg-white px-3.5 py-2 text-[0.68rem] font-bold uppercase tracking-[0.2em] text-[#8B1118]">
+                <BarChart3 className="h-3.5 w-3.5 text-[#C6A45B]" />
+                Ractysh Journal
+              </div>
+            </ScrollReveal>
+            <ScrollReveal>
+              <h2 className="mt-5 font-display text-[3rem] font-semibold leading-[0.92] tracking-normal text-[#111111]">
+                Executive Intelligence Center
+              </h2>
+            </ScrollReveal>
+            <ScrollReveal>
+              <p className="mt-5 text-[0.98rem] font-medium leading-7 text-[#5b5148]">
+                Published intelligence from the Ractysh operating ecosystem.
+              </p>
+            </ScrollReveal>
           </div>
 
           <div className="mt-6 grid grid-cols-1 gap-3">

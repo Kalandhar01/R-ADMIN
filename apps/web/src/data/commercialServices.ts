@@ -1,14 +1,14 @@
-export interface CommercialServiceMetric {
+interface CommercialServiceMetric {
   label: string;
   value: string;
 }
 
-export interface CommercialServiceSection {
+interface CommercialServiceSection {
   title: string;
   body: string;
 }
 
-export interface CommercialServicePageData {
+interface CommercialServicePageData {
   slug: string;
   href: string;
   eyebrow: string;

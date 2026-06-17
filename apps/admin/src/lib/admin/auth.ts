@@ -3,7 +3,8 @@ import "server-only";
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import type { NextRequest } from "next/server";
-import { prisma } from "@/lib/server/prisma";
+import { prisma as _prisma } from "@/lib/server/prisma";
+const prisma = _prisma as any;
 import { ADMIN_SESSION_COOKIE as SHARED_ADMIN_SESSION_COOKIE } from "@ractysh/auth";
 import type { AdminSessionUser } from "@ractysh/types/admin";
 
@@ -66,7 +67,7 @@ function sessionUser(admin: AdminWithRoles): AdminSessionUser {
     id: admin.id,
     email: admin.email,
     name: admin.name,
-    roles: admin.roles.map((role) => role.name)
+    roles: (admin.roles || []).map((role) => role.name)
   };
 }
 
@@ -125,10 +126,10 @@ function verifyAdminSessionToken(token: string | undefined): SessionPayload | nu
 }
 
 async function getAdminById(adminId: string): Promise<AdminSessionUser | null> {
-  const admin = await prisma.admin.findUnique({
+  const admin = (await prisma.admin.findUnique({
     where: { id: adminId },
     include: { roles: { select: { name: true } } }
-  });
+  })) as AdminWithRoles | null;
 
   if (!admin?.active) return null;
   return sessionUser(admin);

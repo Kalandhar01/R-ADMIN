@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { NextRequest } from "next/server";
-import type { ArchitectureLeadStatus, ArchitectureMediaKind, ArchitectureProjectStatus } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 import { projects as staticArchitectureProjects } from "./architectureContent";
 import { heroSupportingContent } from "./architecturePremiumContent";
@@ -32,7 +32,7 @@ export type ArchitectureProjectView = {
   detail: string;
   year: string;
   area: string | null;
-  status: ArchitectureProjectStatus;
+  status: string;
   galleryImages: string[];
   featured: boolean;
 };
@@ -46,7 +46,7 @@ export type ArchitectureAdminLead = {
   location: string | null;
   budget: string | null;
   message: string;
-  status: ArchitectureLeadStatus;
+  status: string;
   createdAt: string;
   updatedAt: string;
   contactedAt: string | null;
@@ -63,7 +63,7 @@ export type ArchitectureAdminProject = {
   projectType: string;
   year: string;
   area: string | null;
-  status: ArchitectureProjectStatus;
+  status: string;
   coverImage: string | null;
   coverImageAlt: string | null;
   galleryImages: string[];
@@ -77,7 +77,7 @@ export type ArchitectureAdminProject = {
 
 export type ArchitectureAdminMedia = {
   id: string;
-  kind: ArchitectureMediaKind;
+  kind: string;
   title: string;
   altText: string | null;
   url: string;
@@ -174,7 +174,7 @@ function toProjectView(project: {
   projectType: string;
   year: string;
   area: string | null;
-  status: ArchitectureProjectStatus;
+  status: string;
   coverImage: string | null;
   coverImageAlt: string | null;
   galleryImages: string[];
@@ -225,7 +225,7 @@ function fallbackProjectViews(): ArchitectureProjectView[] {
       detail: project.detail,
       year: "Concept",
       area: null,
-      status: "concept" as ArchitectureProjectStatus,
+      status: "concept" as string,
       galleryImages: [project.image],
       featured: index < 3
     };
@@ -268,7 +268,7 @@ export async function ensureArchitectureDefaults() {
 }
 
 export async function getArchitecturePageData() {
-  if (!process.env.DATABASE_URL?.trim()) {
+  if (!process.env.MONGODB_URI?.trim()) {
     return {
       hero: defaultHero,
       projects: fallbackProjectViews()
@@ -310,11 +310,11 @@ export async function getArchitecturePageData() {
           featured: true
         }
       })
-    ]);
+  ]);
 
     return {
-      hero: hero ? toHeroView(hero) : defaultHero,
-      projects: publishedProjects.length ? publishedProjects.map(toProjectView) : fallbackProjectViews()
+      hero: hero ? toHeroView(hero as any) : defaultHero,
+      projects: publishedProjects.length ? publishedProjects.map((p, i) => toProjectView(p as any, i)) : fallbackProjectViews()
     };
   } catch (error) {
     console.warn("[architecture-cms] Falling back to static homepage content.", error);
@@ -349,7 +349,7 @@ export async function getArchitectureAdminData(): Promise<ArchitectureAdminData>
     pageViews,
     projectViews,
     mostViewedProject
-  ] = await Promise.all([
+  ] = (await Promise.all([
     prisma.architectureHero.findUnique({
       where: { key: "architecture-home" },
       select: {
@@ -451,7 +451,7 @@ export async function getArchitectureAdminData(): Promise<ArchitectureAdminData>
       orderBy: { viewCount: "desc" },
       select: { title: true, slug: true, viewCount: true }
     })
-  ]);
+  ])) as any;
 
   return {
     dashboard: {
@@ -462,8 +462,8 @@ export async function getArchitectureAdminData(): Promise<ArchitectureAdminData>
       publishedProjects,
       draftProjects
     },
-    hero: hero ? toHeroView(hero) : defaultHero,
-    leads: leads.map((lead) => ({
+    hero: hero ? toHeroView(hero as any) : defaultHero,
+    leads: (leads as any[]).map((lead: any) => ({
       id: lead.id,
       name: lead.name,
       email: lead.email,
@@ -479,7 +479,7 @@ export async function getArchitectureAdminData(): Promise<ArchitectureAdminData>
       convertedAt: toIso(lead.convertedAt),
       archivedAt: toIso(lead.archivedAt)
     })),
-    projects: projects.map((project) => ({
+    projects: (projects as any[]).map((project: any) => ({
       id: project.id,
       title: project.title,
       slug: project.slug,
@@ -499,7 +499,7 @@ export async function getArchitectureAdminData(): Promise<ArchitectureAdminData>
       createdAt: project.createdAt.toISOString(),
       updatedAt: project.updatedAt.toISOString()
     })),
-    media: media.map((asset) => ({
+    media: (media as any[]).map((asset: any) => ({
       id: asset.id,
       kind: asset.kind,
       title: asset.title,
@@ -512,7 +512,7 @@ export async function getArchitectureAdminData(): Promise<ArchitectureAdminData>
       projectId: asset.projectId,
       createdAt: asset.createdAt.toISOString()
     })),
-    notifications: notifications.map((notification) => ({
+    notifications: (notifications as any[]).map((notification: any) => ({
       id: notification.id,
       title: notification.title,
       message: notification.message,
@@ -527,9 +527,9 @@ export async function getArchitectureAdminData(): Promise<ArchitectureAdminData>
       projectViews,
       mostViewedProject: mostViewedProject
         ? {
-            title: mostViewedProject.title,
-            slug: mostViewedProject.slug,
-            views: mostViewedProject.viewCount
+            title: (mostViewedProject as any).title,
+            slug: (mostViewedProject as any).slug,
+            views: (mostViewedProject as any).viewCount
           }
         : null
     }

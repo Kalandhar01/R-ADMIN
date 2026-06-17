@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { Router } from "express";
 import {
   NewsletterDatabaseUnavailableError,
@@ -33,21 +32,9 @@ function handleNewsletterError(error: unknown, res: { status: (code: number) => 
     return true;
   }
 
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    if (error.code === "P2025") {
-      res.status(404).json({ message: "Newsletter not found." });
-      return true;
-    }
-
-    if (error.code === "P2002") {
-      res.status(409).json({ message: "Newsletter slug already exists." });
-      return true;
-    }
-
-    if (error.code === "P2021" || error.code === "P2022") {
-      res.status(503).json({ message: "Newsletter database schema is out of date. Run the latest Prisma migration." });
-      return true;
-    }
+  if (error instanceof Error && /not found/i.test(error.message)) {
+    res.status(404).json({ message: "Newsletter not found." });
+    return true;
   }
 
   if (error instanceof Error && /publish date|valid date/i.test(error.message)) {

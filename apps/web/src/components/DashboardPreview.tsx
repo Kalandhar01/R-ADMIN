@@ -329,6 +329,16 @@ export function DashboardPreview({ divisions, enableDesktopFloat = false }: Dash
           </motion.div>
         </div>
       </motion.div>
+
+      <div className="absolute left-1/2 top-[52rem] z-20 -translate-x-1/2 text-center md:hidden">
+        <div className="inline-flex items-center gap-2 rounded-full border border-[#d6b45f]/20 bg-white/80 px-4 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.06)] backdrop-blur-sm">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9A7428" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          <span className="text-[0.72rem] font-semibold tracking-[0.04em] text-[#4a3f35]">Coimbatore, India</span>
+        </div>
+      </div>
     </div>
   );
 }

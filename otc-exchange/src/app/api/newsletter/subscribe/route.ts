@@ -1,5 +1,4 @@
 import { after, NextResponse, type NextRequest } from "next/server";
-import { Prisma, type NewsletterSubscriber } from "@prisma/client";
 import {
   getOtcNewsletterWebsiteUrl,
   sendOtcNewsletterWelcomeEmail,
@@ -21,8 +20,9 @@ type SubscribePayload = {
   source?: unknown;
 };
 
+type SubscriberDoc = { id: string; email: string; createdAt: Date; [key: string]: unknown };
 type SubscribeRecord = {
-  subscriber: NewsletterSubscriber;
+  subscriber: SubscriberDoc;
   created: boolean;
 };
 
@@ -88,7 +88,7 @@ async function createSubscriber(email: string): Promise<SubscribeRecord> {
     where: { email },
   });
 
-  if (existingSubscriber) return { subscriber: existingSubscriber, created: false };
+  if (existingSubscriber) return { subscriber: existingSubscriber as SubscriberDoc, created: false };
 
   try {
     const subscriber = await prisma.newsletterSubscriber.create({
@@ -98,21 +98,26 @@ async function createSubscriber(email: string): Promise<SubscribeRecord> {
       },
     });
 
-    return { subscriber, created: true };
+    return { subscriber: subscriber as SubscriberDoc, created: true };
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error as { code: number }).code === 11000
+    ) {
       const subscriber = await prisma.newsletterSubscriber.findUnique({
         where: { email },
       });
 
-      if (subscriber) return { subscriber, created: false };
+      if (subscriber) return { subscriber: subscriber as SubscriberDoc, created: false };
     }
 
     throw error;
   }
 }
 
-async function notifyAdmins(subscriber: NewsletterSubscriber, source: string) {
+async function notifyAdmins(subscriber: SubscriberDoc, source: string) {
   const admins = await prisma.admin.findMany({
     where: { active: true },
     select: { id: true },
@@ -120,7 +125,7 @@ async function notifyAdmins(subscriber: NewsletterSubscriber, source: string) {
 
   if (!admins.length) return;
 
-  const rows: Prisma.NotificationCreateManyInput[] = admins.map((admin) => ({
+  const rows: Record<string, unknown>[] = admins.map((admin) => ({
     adminId: admin.id,
     dedupeKey: `${admin.id}:subscriber:NewsletterSubscriber:${subscriber.id}`,
     title: "New OTC Exchange Newsletter Subscriber",
@@ -136,7 +141,7 @@ async function notifyAdmins(subscriber: NewsletterSubscriber, source: string) {
       submittedFrom: "ractysh-otc-exchange",
     },
     createdAt: subscriber.createdAt,
-  }));
+  })) as Record<string, unknown>[];
 
   await prisma.notification.createMany({
     data: rows,

@@ -108,15 +108,15 @@ export async function POST(request: NextRequest) {
 
     after(() =>
       sendConsultationEmails({
-        leadId: lead.id,
+        leadId: lead.id as string,
         name,
         email,
         phone: phone || null,
         investmentInterest: interestType,
         budget: budget || null,
-        propertyType: property?.propertyType || clean(body.propertyType, 160) || null,
+        propertyType: (property as any)?.propertyType || clean(body.propertyType, 160) || null,
         message: message || null,
-        createdAt: lead.createdAt,
+        createdAt: lead.createdAt as unknown as Date,
         ipAddress: ipAddress(request) || null,
         city: decodedHeader(request, ["x-vercel-ip-city", "cf-ipcity"]) || null,
         state: decodedHeader(request, ["x-vercel-ip-country-region", "cf-region"]) || null,

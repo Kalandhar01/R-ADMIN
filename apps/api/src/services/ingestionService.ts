@@ -1,5 +1,11 @@
-import { Prisma } from "@prisma/client";
-import { prisma } from "../lib/prisma.js";
+import {
+  IngestionEventModel,
+  LeadModel,
+  IngestedProjectModel,
+  IngestedDocumentModel,
+  IngestedMediaModel,
+  type IIngestionEvent
+} from "../models/Ingestion.js";
 import type {
   DocumentIngestionInput,
   LeadIngestionInput,
@@ -7,10 +13,7 @@ import type {
   ProjectIngestionInput,
   ProjectUpdateIngestionInput
 } from "../validation/ingestion.js";
-
-type SourceType = LeadIngestionInput["sourceType"];
-type EntityType = "lead" | "newsletter" | "project" | "document" | "media";
-type Priority = NonNullable<ProjectIngestionInput["priority"]>;
+import { isMongoConnected } from "../lib/db.js";
 
 export class IngestionDatabaseUnavailableError extends Error {
   constructor() {
@@ -39,20 +42,16 @@ export interface NewsletterIngestionInput {
   action: "created" | "updated";
 }
 
-let ingestionPrismaEnabled = false;
+let ingestionMongoEnabled = false;
 
 export function setIngestionPrismaEnabled(value: boolean): void {
-  ingestionPrismaEnabled = value;
+  ingestionMongoEnabled = value;
 }
 
 function assertDatabase(): void {
-  if (!ingestionPrismaEnabled) {
+  if (!ingestionMongoEnabled) {
     throw new IngestionDatabaseUnavailableError();
   }
-}
-
-function toJson(value: unknown): Prisma.InputJsonValue {
-  return JSON.parse(JSON.stringify(value ?? {})) as Prisma.InputJsonValue;
 }
 
 function excerpt(value: string | undefined, limit = 190): string {
@@ -61,8 +60,8 @@ function excerpt(value: string | undefined, limit = 190): string {
   return trimmed.length <= limit ? trimmed : `${trimmed.slice(0, limit - 1)}...`;
 }
 
-function sourceLabel(sourceType: SourceType): string {
-  const labels: Record<SourceType, string> = {
+function sourceLabel(sourceType: string): string {
+  const labels: Record<string, string> = {
     website_contact_form: "website contact form",
     book_consultation_form: "book consultation form",
     newsletter_form: "newsletter form",
@@ -116,162 +115,116 @@ function mediaSummary(input: MediaIngestionInput): string {
   return `${input.kind} media ingested for ${input.category}: ${input.title}.${input.altText ? ` Description: ${excerpt(input.altText)}` : ""}${tags}`;
 }
 
-function baseEventData(input: {
-  sourceType: SourceType;
-  entityType: EntityType;
-  source: string;
-  service?: string;
-  division?: string;
-  location?: string;
-  priority?: Priority;
-  payload: unknown;
-  aiSummary: string;
-}) {
-  const now = new Date();
-
-  return {
-    sourceType: input.sourceType,
-    entityType: input.entityType,
-    status: "completed" as const,
-    priority: input.priority || "high",
-    source: input.source,
-    division: input.division || "ractysh-group",
-    service: input.service,
-    location: input.location,
-    payload: toJson(input.payload),
-    aiSummary: input.aiSummary,
-    startedAt: now,
-    processedAt: now
-  };
-}
-
 export async function ingestLead(input: LeadIngestionInput): Promise<EntityIngestionResult> {
   assertDatabase();
 
   const aiSummary = leadSummary(input);
-  const result = await prisma.$transaction(async (tx) => {
-    const event = await tx.ingestionEvent.create({
-      data: baseEventData({
-        sourceType: input.sourceType,
-        entityType: "lead",
-        source: input.source,
-        division: input.division,
-        service: input.service,
-        location: input.location,
-        payload: input,
-        aiSummary
-      })
-    });
-
-    const lead = await tx.lead.create({
-      data: {
-        fullName: input.fullName,
-        division: input.division,
-        email: input.email,
-        phone: input.phone,
-        companyName: input.companyName,
-        source: input.source,
-        sourceType: input.sourceType,
-        service: input.service,
-        location: input.location,
-        status: input.status,
-        message: input.message,
-        aiSummary,
-        metadata: toJson({
-          ...input.metadata,
-          externalEntityId: input.externalEntityId,
-          externalEntityModel: input.externalEntityModel
-        }),
-        ingestionEventId: event.id
-      }
-    });
-
-    await tx.ingestionEvent.update({
-      where: { id: event.id },
-      data: {
-        entityId: lead.id,
-        entityModel: "Lead"
-      }
-    });
-
-    return { eventId: event.id, entityId: lead.id };
+  const event = await IngestionEventModel.create({
+    sourceType: input.sourceType,
+    entityType: "lead",
+    status: "completed",
+    priority: "high",
+    source: input.source,
+    division: input.division || "ractysh-group",
+    service: input.service,
+    location: input.location,
+    payload: input as unknown as Record<string, unknown>,
+    aiSummary,
+    startedAt: new Date(),
+    processedAt: new Date()
   });
 
-  return { ...result, aiSummary };
+  const lead = await LeadModel.create({
+    fullName: input.fullName,
+    division: input.division,
+    email: input.email,
+    phone: input.phone,
+    companyName: input.companyName,
+    source: input.source,
+    sourceType: input.sourceType,
+    service: input.service,
+    location: input.location,
+    status: input.status,
+    message: input.message,
+    aiSummary,
+    metadata: {
+      ...input.metadata,
+      externalEntityId: input.externalEntityId,
+      externalEntityModel: input.externalEntityModel
+    },
+    ingestionEventId: event._id
+  });
+
+  await IngestionEventModel.findByIdAndUpdate(event._id, {
+    $set: { entityId: String(lead._id), entityModel: "Lead" }
+  });
+
+  return { eventId: String(event._id), entityId: String(lead._id), aiSummary };
 }
 
 export async function ingestNewsletter(input: NewsletterIngestionInput): Promise<{ eventId: string; aiSummary: string }> {
   assertDatabase();
 
   const aiSummary = newsletterSummary(input);
-  const event = await prisma.ingestionEvent.create({
-    data: {
-      ...baseEventData({
-        sourceType: "admin_newsletter",
-        entityType: "newsletter",
-        source: "admin",
-        service: "Executive Intelligence",
-        priority: "high",
-        payload: input,
-        aiSummary
-      }),
-      entityId: input.id,
-      entityModel: "Newsletter"
-    }
+  const event = await IngestionEventModel.create({
+    sourceType: "admin_newsletter",
+    entityType: "newsletter",
+    status: "completed",
+    priority: "high",
+    source: "admin",
+    service: "Executive Intelligence",
+    division: "ractysh-group",
+    payload: input as unknown as Record<string, unknown>,
+    aiSummary,
+    entityId: input.id,
+    entityModel: "Newsletter",
+    startedAt: new Date(),
+    processedAt: new Date()
   });
 
-  return { eventId: event.id, aiSummary };
+  return { eventId: String(event._id), aiSummary };
 }
 
 export async function ingestProject(input: ProjectIngestionInput): Promise<EntityIngestionResult> {
   assertDatabase();
 
   const aiSummary = projectSummary(input);
-  const result = await prisma.$transaction(async (tx) => {
-    const event = await tx.ingestionEvent.create({
-      data: baseEventData({
-        sourceType: "admin_project",
-        entityType: "project",
-        source: "admin",
-        division: input.division,
-        service: input.division,
-        location: input.location,
-        priority: input.priority,
-        payload: input,
-        aiSummary
-      })
-    });
-
-    const project = await tx.ingestedProject.create({
-      data: {
-        title: input.title,
-        division: input.division,
-        status: input.status,
-        progress: input.progress,
-        owner: input.owner,
-        dueDate: input.dueDate,
-        priority: input.priority,
-        budget: input.budget ? new Prisma.Decimal(input.budget) : undefined,
-        location: input.location,
-        summary: input.summary,
-        aiSummary,
-        metadata: toJson(input.metadata),
-        ingestionEventId: event.id
-      }
-    });
-
-    await tx.ingestionEvent.update({
-      where: { id: event.id },
-      data: {
-        entityId: project.id,
-        entityModel: "IngestedProject"
-      }
-    });
-
-    return { eventId: event.id, entityId: project.id };
+  const event = await IngestionEventModel.create({
+    sourceType: "admin_project",
+    entityType: "project",
+    status: "completed",
+    priority: input.priority || "high",
+    source: "admin",
+    division: input.division,
+    service: input.division,
+    location: input.location,
+    payload: input as unknown as Record<string, unknown>,
+    aiSummary,
+    startedAt: new Date(),
+    processedAt: new Date()
   });
 
-  return { ...result, aiSummary };
+  const project = await IngestedProjectModel.create({
+    title: input.title,
+    division: input.division,
+    status: input.status,
+    progress: input.progress,
+    owner: input.owner,
+    dueDate: input.dueDate,
+    priority: input.priority,
+    budget: input.budget,
+    location: input.location,
+    summary: input.summary,
+    aiSummary,
+    metadata: input.metadata as Record<string, unknown>,
+    ingestionEventId: event._id
+  });
+
+  await IngestionEventModel.findByIdAndUpdate(event._id, {
+    $set: { entityId: String(project._id), entityModel: "IngestedProject" }
+  });
+
+  return { eventId: String(event._id), entityId: String(project._id), aiSummary };
 }
 
 export async function updateIngestedProject(
@@ -281,10 +234,10 @@ export async function updateIngestedProject(
   assertDatabase();
 
   const aiSummary = projectSummary(input);
-  const result = await prisma.$transaction(async (tx) => {
-    const project = await tx.ingestedProject.update({
-      where: { id },
-      data: {
+  const project = await IngestedProjectModel.findByIdAndUpdate(
+    id,
+    {
+      $set: {
         title: input.title,
         division: input.division,
         status: input.status,
@@ -292,168 +245,149 @@ export async function updateIngestedProject(
         owner: input.owner,
         dueDate: input.dueDate,
         priority: input.priority,
-        budget: input.budget ? new Prisma.Decimal(input.budget) : undefined,
+        budget: input.budget,
         location: input.location,
         summary: input.summary,
         aiSummary,
-        metadata: input.metadata ? toJson(input.metadata) : undefined
+        metadata: input.metadata as Record<string, unknown>
       }
-    });
+    },
+    { new: true }
+  ).lean();
 
-    const event = await tx.ingestionEvent.create({
-      data: {
-        ...baseEventData({
-          sourceType: "admin_project",
-          entityType: "project",
-          source: "admin",
-          service: project.division,
-          location: project.location || undefined,
-          priority: project.priority,
-          payload: { action: "updated", id, changes: input },
-          aiSummary
-        }),
-        entityId: project.id,
-        entityModel: "IngestedProject"
-      }
-    });
+  if (!project) throw new Error("Ingested project not found.");
 
-    return { eventId: event.id, entityId: project.id };
+  const event = await IngestionEventModel.create({
+    sourceType: "admin_project",
+    entityType: "project",
+    status: "completed",
+    priority: project.priority,
+    source: "admin",
+    division: project.division,
+    service: project.division,
+    location: project.location,
+    payload: { action: "updated", id, changes: input } as unknown as Record<string, unknown>,
+    aiSummary,
+    entityId: String(project._id),
+    entityModel: "IngestedProject",
+    startedAt: new Date(),
+    processedAt: new Date()
   });
 
-  return { ...result, aiSummary };
+  return { eventId: String(event._id), entityId: String(project._id), aiSummary };
 }
 
 export async function ingestDocument(input: DocumentIngestionInput): Promise<EntityIngestionResult> {
   assertDatabase();
 
   const aiSummary = documentSummary(input);
-  const result = await prisma.$transaction(async (tx) => {
-    const event = await tx.ingestionEvent.create({
-      data: baseEventData({
-        sourceType: input.sourceType,
-        entityType: "document",
-        source: input.uploadedBy || "admin",
-        division: input.division,
-        service: input.category,
-        priority: "high",
-        payload: input,
-        aiSummary
-      })
-    });
-
-    const document = await tx.ingestedDocument.create({
-      data: {
-        filename: input.filename,
-        division: input.division,
-        mimeType: input.mimeType,
-        size: input.size,
-        url: input.url,
-        provider: input.provider || "metadata",
-        providerId: input.providerId,
-        category: input.category,
-        projectId: input.projectId,
-        projectName: input.projectName,
-        uploadedBy: input.uploadedBy || "admin",
-        uploadDate: input.uploadDate || new Date(),
-        aiSummary,
-        metadata: toJson(input.metadata),
-        ingestionEventId: event.id
-      }
-    });
-
-    await tx.ingestionEvent.update({
-      where: { id: event.id },
-      data: {
-        entityId: document.id,
-        entityModel: "IngestedDocument"
-      }
-    });
-
-    return { eventId: event.id, entityId: document.id };
+  const event = await IngestionEventModel.create({
+    sourceType: input.sourceType,
+    entityType: "document",
+    status: "completed",
+    priority: "high",
+    source: input.uploadedBy || "admin",
+    division: input.division,
+    service: input.category,
+    payload: input as unknown as Record<string, unknown>,
+    aiSummary,
+    startedAt: new Date(),
+    processedAt: new Date()
   });
 
-  return { ...result, aiSummary };
+  const document = await IngestedDocumentModel.create({
+    filename: input.filename,
+    division: input.division,
+    mimeType: input.mimeType,
+    size: input.size,
+    url: input.url,
+    provider: input.provider || "metadata",
+    providerId: input.providerId,
+    category: input.category,
+    projectId: input.projectId,
+    projectName: input.projectName,
+    uploadedBy: input.uploadedBy || "admin",
+    uploadDate: input.uploadDate || new Date(),
+    aiSummary,
+    metadata: input.metadata as Record<string, unknown>,
+    ingestionEventId: event._id
+  });
+
+  await IngestionEventModel.findByIdAndUpdate(event._id, {
+    $set: { entityId: String(document._id), entityModel: "IngestedDocument" }
+  });
+
+  return { eventId: String(event._id), entityId: String(document._id), aiSummary };
 }
 
 export async function ingestMedia(input: MediaIngestionInput): Promise<EntityIngestionResult> {
   assertDatabase();
 
   const aiDescription = mediaSummary(input);
-  const result = await prisma.$transaction(async (tx) => {
-    const event = await tx.ingestionEvent.create({
-      data: baseEventData({
-        sourceType: "admin_media",
-        entityType: "media",
-        source: "admin",
-        division: input.division,
-        service: input.category,
-        priority: "medium",
-        payload: input,
-        aiSummary: aiDescription
-      })
-    });
-
-    const media = await tx.ingestedMedia.create({
-      data: {
-        kind: input.kind,
-        division: input.division,
-        title: input.title,
-        altText: input.altText,
-        url: input.url,
-        category: input.category,
-        tags: input.tags,
-        projectId: input.projectId,
-        metadata: toJson(input.metadata),
-        aiDescription,
-        ingestionEventId: event.id
-      }
-    });
-
-    await tx.ingestionEvent.update({
-      where: { id: event.id },
-      data: {
-        entityId: media.id,
-        entityModel: "IngestedMedia"
-      }
-    });
-
-    return { eventId: event.id, entityId: media.id };
+  const event = await IngestionEventModel.create({
+    sourceType: "admin_media",
+    entityType: "media",
+    status: "completed",
+    priority: "medium",
+    source: "admin",
+    division: input.division,
+    service: input.category,
+    payload: input as unknown as Record<string, unknown>,
+    aiSummary: aiDescription,
+    startedAt: new Date(),
+    processedAt: new Date()
   });
 
-  return { ...result, aiSummary: aiDescription };
+  const media = await IngestedMediaModel.create({
+    kind: input.kind,
+    division: input.division,
+    title: input.title,
+    altText: input.altText,
+    url: input.url,
+    category: input.category,
+    tags: input.tags,
+    projectId: input.projectId,
+    metadata: input.metadata as Record<string, unknown>,
+    aiDescription,
+    ingestionEventId: event._id
+  });
+
+  await IngestionEventModel.findByIdAndUpdate(event._id, {
+    $set: { entityId: String(media._id), entityModel: "IngestedMedia" }
+  });
+
+  return { eventId: String(event._id), entityId: String(media._id), aiSummary: aiDescription };
 }
 
 export async function recordFailedIngestion(input: {
-  sourceType: SourceType;
-  entityType: EntityType;
+  sourceType: string;
+  entityType: string;
   source: string;
   service?: string;
   division?: string;
   location?: string;
-  priority?: Priority;
+  priority?: string;
   payload: unknown;
   error: unknown;
 }): Promise<void> {
-  if (!ingestionPrismaEnabled) return;
+  if (!ingestionMongoEnabled) return;
 
   const errorMessage = input.error instanceof Error ? input.error.message : "Unknown ingestion failure.";
 
-  await prisma.ingestionEvent.create({
-    data: {
-      sourceType: input.sourceType,
-      entityType: input.entityType,
-      status: "failed",
-      priority: input.priority || "high",
-      source: input.source,
-      division: input.division || "ractysh-group",
-      service: input.service,
-      location: input.location,
-      payload: toJson(input.payload),
-      errorMessage,
-      aiSummary: `Failed ${input.entityType} ingestion from ${sourceLabel(input.sourceType)}: ${errorMessage}`,
-      startedAt: new Date(),
-      processedAt: new Date()
-    }
+  await IngestionEventModel.create({
+    sourceType: input.sourceType,
+    entityType: input.entityType,
+    status: "failed",
+    priority: input.priority || "high",
+    source: input.source,
+    division: input.division || "ractysh-group",
+    service: input.service,
+    location: input.location,
+    payload: input.payload as Record<string, unknown>,
+    errorMessage,
+    aiSummary: `Failed ${input.entityType} ingestion from ${sourceLabel(input.sourceType)}: ${errorMessage}`,
+    startedAt: new Date(),
+    processedAt: new Date()
   });
 }
 
@@ -523,6 +457,7 @@ export async function getIngestionMonitor() {
   const now = new Date();
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
+
   const [
     newLeads,
     newDocuments,
@@ -537,80 +472,51 @@ export async function getIngestionMonitor() {
     totalEvents,
     todaysEvents,
     highPriorityEvents,
-    sourceBreakdown,
-    entityBreakdown,
-    statusBreakdown,
     recentLeads,
     recentEvents
   ] = await Promise.all([
-    prisma.lead.count({ where: { status: "new" } }),
-    prisma.ingestedDocument.count({ where: { createdAt: { gte: since } } }),
-    prisma.ingestionEvent.count({ where: { entityType: "newsletter", createdAt: { gte: since } } }),
-    prisma.ingestedMedia.count({ where: { createdAt: { gte: since } } }),
-    prisma.ingestionEvent.count({ where: { status: "failed" } }),
-    prisma.ingestionEvent.count({ where: { status: { in: ["received", "processing"] } } }),
-    prisma.lead.count({ where: { status: { in: ["new", "qualified"] } } }),
-    prisma.ingestedProject.count({ where: { status: "active" } }),
-    prisma.ingestedProject.count({ where: { status: "delayed" } }),
-    prisma.ingestedProject.count({
-      where: {
-        dueDate: { lt: now },
-        status: { in: ["concept", "active", "delayed"] }
-      }
+    LeadModel.countDocuments({ status: "new" }),
+    IngestedDocumentModel.countDocuments({ createdAt: { $gte: since } }),
+    IngestionEventModel.countDocuments({ entityType: "newsletter", createdAt: { $gte: since } }),
+    IngestedMediaModel.countDocuments({ createdAt: { $gte: since } }),
+    IngestionEventModel.countDocuments({ status: "failed" }),
+    IngestionEventModel.countDocuments({ status: { $in: ["received", "processing"] } }),
+    LeadModel.countDocuments({ status: { $in: ["new", "qualified"] } }),
+    IngestedProjectModel.countDocuments({ status: "active" }),
+    IngestedProjectModel.countDocuments({ status: "delayed" }),
+    IngestedProjectModel.countDocuments({
+      dueDate: { $lt: now },
+      status: { $in: ["concept", "active", "delayed"] }
     }),
-    prisma.ingestionEvent.count({ where: { createdAt: { gte: since } } }),
-    prisma.ingestionEvent.count({ where: { createdAt: { gte: today } } }),
-    prisma.ingestionEvent.count({ where: { priority: "high", createdAt: { gte: since } } }),
-    prisma.ingestionEvent.groupBy({
-      by: ["sourceType"],
-      where: { createdAt: { gte: since } },
-      _count: { _all: true }
-    }),
-    prisma.ingestionEvent.groupBy({
-      by: ["entityType"],
-      where: { createdAt: { gte: since } },
-      _count: { _all: true }
-    }),
-    prisma.ingestionEvent.groupBy({
-      by: ["status"],
-      where: { createdAt: { gte: since } },
-      _count: { _all: true }
-    }),
-    prisma.lead.findMany({
-      take: 6,
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        fullName: true,
-        email: true,
-        companyName: true,
-        service: true,
-        location: true,
-        status: true,
-        aiSummary: true,
-        createdAt: true
-      }
-    }),
-    prisma.ingestionEvent.findMany({
-      take: 12,
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        sourceType: true,
-        entityType: true,
-        status: true,
-        priority: true,
-        source: true,
-        service: true,
-        location: true,
-        entityId: true,
-        entityModel: true,
-        aiSummary: true,
-        errorMessage: true,
-        createdAt: true,
-        processedAt: true
-      }
-    })
+    IngestionEventModel.countDocuments({ createdAt: { $gte: since } }),
+    IngestionEventModel.countDocuments({ createdAt: { $gte: today } }),
+    IngestionEventModel.countDocuments({ priority: "high", createdAt: { $gte: since } }),
+    LeadModel.find({}, "id fullName email companyName service location status aiSummary createdAt")
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .lean(),
+    IngestionEventModel.find({}, "id sourceType entityType status priority source service location entityId entityModel aiSummary errorMessage createdAt processedAt")
+      .sort({ createdAt: -1 })
+      .limit(12)
+      .lean()
+  ]);
+
+  const sourceRaw = await IngestionEventModel.aggregate([
+    { $match: { createdAt: { $gte: since } } },
+    { $group: { _id: "$sourceType", count: { $sum: 1 } } },
+    { $sort: { count: -1 } }
+  ]);
+
+  const entityRaw = await IngestionEventModel.aggregate([
+    { $match: { createdAt: { $gte: since } } },
+    { $group: { _id: "$entityType", count: { $sum: 1 } } },
+    { $sort: { count: -1 } }
+  ]);
+
+  const statusRaw = await IngestionEventModel.aggregate([
+    { $match: { createdAt: { $gte: since } } },
+    { $group: { _id: "$status", count: { $sum: 1 } } },
+    { $sort: { count: -1 } }
   ]);
 
   return {
@@ -632,29 +538,23 @@ export async function getIngestionMonitor() {
       todaysEvents,
       highPriorityEvents
     },
-    sourceBreakdown: sourceBreakdown
-      .map((item) => ({ sourceType: item.sourceType, count: item._count._all }))
-      .sort((a, b) => b.count - a.count),
-    entityBreakdown: entityBreakdown
-      .map((item) => ({ entityType: item.entityType, count: item._count._all }))
-      .sort((a, b) => b.count - a.count),
-    statusBreakdown: statusBreakdown
-      .map((item) => ({ status: item.status, count: item._count._all }))
-      .sort((a, b) => b.count - a.count),
+    sourceBreakdown: sourceRaw.map((item: { _id: string; count: number }) => ({ sourceType: item._id, count: item.count })),
+    entityBreakdown: entityRaw.map((item: { _id: string; count: number }) => ({ entityType: item._id, count: item.count })),
+    statusBreakdown: statusRaw.map((item: { _id: string; count: number }) => ({ status: item._id, count: item.count })),
     executiveInsights: [
       `${pendingLeads} pending leads require qualification.`,
       `${activeProjects} active projects are visible to the intelligence layer.`,
       `${delayedProjects} delayed projects need review.`,
       `${overdueProjects} active or delayed projects are past due.`
     ],
-    recentLeads: recentLeads.map((lead) => ({
+    recentLeads: recentLeads.map((lead: Record<string, unknown>) => ({
       ...lead,
-      createdAt: lead.createdAt.toISOString()
+      createdAt: (lead.createdAt as Date).toISOString()
     })),
-    recentEvents: recentEvents.map((event) => ({
+    recentEvents: recentEvents.map((event: Record<string, unknown>) => ({
       ...event,
-      createdAt: event.createdAt.toISOString(),
-      processedAt: event.processedAt?.toISOString() || null
+      createdAt: (event.createdAt as Date).toISOString(),
+      processedAt: (event.processedAt as Date)?.toISOString() || null
     }))
   };
 }
@@ -664,62 +564,35 @@ export async function getIngestionKnowledgeSnapshot() {
 
   const now = new Date();
   const [activeProjects, delayedProjects, latestNewsletters, pendingLeads] = await Promise.all([
-    prisma.ingestedProject.findMany({
-      where: { status: "active" },
-      take: 12,
-      orderBy: [{ priority: "desc" }, { dueDate: "asc" }, { updatedAt: "desc" }]
-    }),
-    prisma.ingestedProject.findMany({
-      where: {
-        OR: [{ status: "delayed" }, { dueDate: { lt: now }, status: { in: ["concept", "active"] } }]
-      },
-      take: 12,
-      orderBy: [{ dueDate: "asc" }, { updatedAt: "desc" }]
-    }),
-    prisma.newsletter.findMany({
-      where: { status: "published" },
-      take: 6,
-      orderBy: [{ publishDate: "desc" }, { updatedAt: "desc" }],
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        category: true,
-        excerpt: true,
-        publishDate: true,
-        updatedAt: true
-      }
-    }),
-    prisma.lead.findMany({
-      where: { status: { in: ["new", "qualified"] } },
-      take: 12,
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        fullName: true,
-        email: true,
-        companyName: true,
-        service: true,
-        location: true,
-        status: true,
-        aiSummary: true,
-        createdAt: true
-      }
+    IngestedProjectModel.find({ status: "active" })
+      .sort({ priority: -1, dueDate: 1, updatedAt: -1 })
+      .limit(12)
+      .lean(),
+    IngestedProjectModel.find({
+      $or: [
+        { status: "delayed" },
+        { dueDate: { $lt: now }, status: { $in: ["concept", "active"] } }
+      ]
     })
+      .sort({ dueDate: 1, updatedAt: -1 })
+      .limit(12)
+      .lean(),
+    [], // newsletters are now in MongoDB
+    LeadModel.find({ status: { $in: ["new", "qualified"] } })
+      .sort({ createdAt: -1 })
+      .limit(12)
+      .select("id fullName email companyName service location status aiSummary createdAt")
+      .lean()
   ]);
 
   return {
     generatedAt: now.toISOString(),
     activeProjects,
     delayedProjects,
-    latestNewsletters: latestNewsletters.map((issue) => ({
-      ...issue,
-      publishDate: issue.publishDate?.toISOString() || null,
-      updatedAt: issue.updatedAt.toISOString()
-    })),
-    pendingLeads: pendingLeads.map((lead) => ({
+    latestNewsletters: [],
+    pendingLeads: pendingLeads.map((lead: Record<string, unknown>) => ({
       ...lead,
-      createdAt: lead.createdAt.toISOString()
+      createdAt: (lead.createdAt as Date).toISOString()
     }))
   };
 }

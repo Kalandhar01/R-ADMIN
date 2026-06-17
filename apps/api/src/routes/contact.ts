@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
@@ -45,14 +44,6 @@ function contactBody(body: unknown, fallbackSourcePage: string | undefined) {
         ? payload.sourcePage
         : fallbackSourcePage || "api/contact"
   };
-}
-
-function handlePrismaError(error: unknown): { status: number; body: { message: string } } | null {
-  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-    return { status: 404, body: { message: "Contact inquiry not found." } };
-  }
-
-  return null;
 }
 
 contactRouter.post("/", contactSubmitLimiter, async (req, res, next) => {
@@ -128,12 +119,10 @@ adminRouter.patch("/:id", async (req, res, next) => {
 
     res.json({ inquiry: await updateContactInquiry(req.params.id, parsed.data) });
   } catch (error) {
-    const handled = handlePrismaError(error);
-    if (handled) {
-      res.status(handled.status).json(handled.body);
+    if (error instanceof Error && /not found/i.test(error.message)) {
+      res.status(404).json({ message: "Contact inquiry not found." });
       return;
     }
-
     next(error);
   }
 });

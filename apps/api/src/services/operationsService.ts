@@ -1,19 +1,16 @@
-import { prisma } from "../lib/prisma.js";
+import { isMongoConnected } from "../lib/db.js";
+import { BlogModel } from "../models/Blog.js";
+import { NewsletterModel, SubscriberModel } from "../models/Newsletter.js";
+import { ContactInquiryModel } from "../models/ContactInquiry.js";
+import { LeadModel, IngestedProjectModel, IngestedDocumentModel, IngestedMediaModel, IngestionEventModel, ServiceRequestModel } from "../models/Ingestion.js";
+import { ConsultationModel } from "../models/Consultation.js";
+import { SiteConfigModel, BlogPostModel } from "../models/Content.js";
+import { CompanyDivisionModel } from "../models/Business.js";
 
-type SystemStatus = "online" | "degraded" | "offline";
-type OverallStatus = "healthy" | "attention" | "degraded";
-
-interface OperationsSystem {
-  key: string;
-  label: string;
-  status: SystemStatus;
-  detail: string;
-}
-
-let operationsPrismaEnabled = false;
+let mongoEnabled = false;
 
 export function setOperationsPrismaEnabled(value: boolean): void {
-  operationsPrismaEnabled = value;
+  mongoEnabled = value;
 }
 
 function hasEnv(key: string): boolean {
@@ -24,7 +21,7 @@ function hasAllEnv(keys: string[]): boolean {
   return keys.every(hasEnv);
 }
 
-function statusFromConfig(configured: boolean, connected = configured): SystemStatus {
+function statusFromConfig(configured: boolean, connected = configured): string {
   if (connected) return "online";
   return configured ? "degraded" : "offline";
 }
@@ -39,7 +36,7 @@ function formatUptime(seconds: number): string {
   return `${Math.max(1, minutes)}m`;
 }
 
-function overallStatus(statuses: SystemStatus[]): OverallStatus {
+function overallStatus(statuses: string[]): string {
   if (statuses.includes("offline")) return "attention";
   if (statuses.includes("degraded")) return "degraded";
   return "healthy";
@@ -76,8 +73,7 @@ function baseCounts() {
 export async function getOperationsOverview() {
   const now = new Date();
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const databaseConfigured = hasEnv("DATABASE_URL");
-  const mongoConfigured = hasEnv("MONGODB_URI");
+  const databaseConfigured = hasEnv("MONGODB_URI");
   const emailConfigured = hasEnv("RESEND_API_KEY");
   const cloudinaryConfigured = hasAllEnv(["CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET"]);
   const corsConfigured = hasEnv("WEB_ORIGIN");
@@ -86,11 +82,11 @@ export async function getOperationsOverview() {
   let databaseError: string | null = null;
 
   if (!databaseConfigured) {
-    warnings.push("DATABASE_URL is missing. Ingestion, newsletters, consultations and admin intelligence cannot persist.");
+    warnings.push("MONGODB_URI is missing. Ingestion, newsletters, consultations and admin intelligence cannot persist.");
   }
 
-  if (databaseConfigured && !operationsPrismaEnabled) {
-    warnings.push("Database URL is configured, but the API could not connect to Prisma at startup.");
+  if (databaseConfigured && !mongoEnabled) {
+    warnings.push("MongoDB URI is configured, but the API could not connect to MongoDB at startup.");
   }
 
   if (!emailConfigured) {
@@ -101,15 +97,11 @@ export async function getOperationsOverview() {
     warnings.push("Cloudinary credentials are incomplete. Upload flows will keep metadata, but file storage is limited.");
   }
 
-  if (!mongoConfigured) {
-    warnings.push("MONGODB_URI is missing. Site content API is using its fallback content store.");
-  }
-
   if (!corsConfigured) {
     warnings.push("WEB_ORIGIN is not configured. Localhost origins are allowed, but production should set explicit origins.");
   }
 
-  if (operationsPrismaEnabled) {
+  if (mongoEnabled) {
     try {
       const [
         siteConfigs,
@@ -130,23 +122,23 @@ export async function getOperationsOverview() {
         documents,
         media
       ] = await Promise.all([
-        prisma.siteConfig.count(),
-        prisma.blogPost.count({ where: { status: "published" } }),
-        prisma.blogPost.count({ where: { status: "draft" } }),
-        prisma.newsletter.count({ where: { status: "published" } }),
-        prisma.newsletter.count({ where: { status: { in: ["draft", "scheduled"] } } }),
-        prisma.subscriber.count({ where: { status: "active" } }),
-        prisma.lead.count({ where: { status: "new" } }),
-        prisma.lead.count({ where: { status: { in: ["new", "qualified"] } } }),
-        prisma.serviceRequest.count(),
-        prisma.consultation.count({ where: { status: { in: ["new", "reviewed", "contacted"] } } }),
-        prisma.ingestionEvent.count({ where: { createdAt: { gte: since } } }),
-        prisma.ingestionEvent.count({ where: { status: "failed" } }),
-        prisma.ingestionEvent.count({ where: { status: { in: ["received", "processing"] } } }),
-        prisma.ingestedProject.count({ where: { status: "active" } }),
-        prisma.ingestedProject.count({ where: { status: "delayed" } }),
-        prisma.ingestedDocument.count(),
-        prisma.ingestedMedia.count()
+        SiteConfigModel.countDocuments(),
+        BlogPostModel.countDocuments({ status: "published" }),
+        BlogPostModel.countDocuments({ status: "draft" }),
+        NewsletterModel.countDocuments({ status: "published" }),
+        NewsletterModel.countDocuments({ status: { $in: ["draft", "scheduled"] } }),
+        SubscriberModel.countDocuments({ status: "active" }),
+        LeadModel.countDocuments({ status: "new" }),
+        LeadModel.countDocuments({ status: { $in: ["new", "qualified"] } }),
+        ServiceRequestModel.countDocuments(),
+        ConsultationModel.countDocuments({ status: { $in: ["new", "reviewed", "contacted"] } }),
+        IngestionEventModel.countDocuments({ createdAt: { $gte: since } }),
+        IngestionEventModel.countDocuments({ status: "failed" }),
+        IngestionEventModel.countDocuments({ status: { $in: ["received", "processing"] } }),
+        IngestedProjectModel.countDocuments({ status: "active" }),
+        IngestedProjectModel.countDocuments({ status: "delayed" }),
+        IngestedDocumentModel.countDocuments(),
+        IngestedMediaModel.countDocuments()
       ]);
 
       counts.content = {
@@ -173,12 +165,12 @@ export async function getOperationsOverview() {
         media
       };
     } catch (error) {
-      databaseError = error instanceof Error ? error.message : "Unknown Prisma operations error.";
-      warnings.push("Database overview queries failed. Check Prisma migrations and table availability.");
+      databaseError = error instanceof Error ? error.message : "Unknown MongoDB operations error.";
+      warnings.push("Database overview queries failed. Check MongoDB connection and collection availability.");
     }
   }
 
-  const systems: OperationsSystem[] = [
+  const systems = [
     {
       key: "api",
       label: "API Runtime",
@@ -188,14 +180,8 @@ export async function getOperationsOverview() {
     {
       key: "database",
       label: "Database",
-      status: databaseError ? "degraded" : statusFromConfig(databaseConfigured, operationsPrismaEnabled),
-      detail: databaseError || (operationsPrismaEnabled ? "Prisma connected." : "Prisma is not connected.")
-    },
-    {
-      key: "content",
-      label: "Content Store",
-      status: statusFromConfig(mongoConfigured, mongoConfigured),
-      detail: mongoConfigured ? "MongoDB configured." : "Using fallback site content."
+      status: databaseError ? "degraded" : statusFromConfig(databaseConfigured, mongoEnabled),
+      detail: databaseError || (mongoEnabled ? "MongoDB connected." : "MongoDB is not connected.")
     },
     {
       key: "email",
@@ -212,7 +198,7 @@ export async function getOperationsOverview() {
     {
       key: "ingestion",
       label: "Ingestion Layer",
-      status: operationsPrismaEnabled && counts.intelligence.failedIngestions === 0 ? "online" : "degraded",
+      status: mongoEnabled && counts.intelligence.failedIngestions === 0 ? "online" : "degraded",
       detail:
         counts.intelligence.failedIngestions > 0
           ? `${counts.intelligence.failedIngestions} failed ingestion event(s) need review.`
@@ -226,7 +212,7 @@ export async function getOperationsOverview() {
       ? `Review ${counts.intelligence.failedIngestions} failed ingestion event(s).`
       : null,
     counts.intelligence.delayedProjects > 0 ? `Review ${counts.intelligence.delayedProjects} delayed project(s).` : null,
-    counts.content.publishedNewsletters === 0 ? "Publish the first database-backed newsletter issue." : null,
+    counts.content.publishedNewsletters === 0 ? "Publish the first MongoDB-backed newsletter issue." : null,
     warnings.length ? "Resolve configuration warnings before production launch." : null
   ].filter((item): item is string => Boolean(item));
 
@@ -241,7 +227,6 @@ export async function getOperationsOverview() {
     nextActions: nextActions.length ? nextActions : ["No immediate operational actions detected."],
     configuration: {
       database: databaseConfigured,
-      mongoContent: mongoConfigured,
       emailDelivery: emailConfigured,
       mediaStorage: cloudinaryConfigured,
       corsOrigins: corsConfigured

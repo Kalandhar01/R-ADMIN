@@ -1,5 +1,4 @@
 import { after, NextResponse, type NextRequest } from "next/server";
-import { Prisma, type NewsletterSubscriber } from "@prisma/client";
 import {
   getArchitectureNewsletterWebsiteUrl,
   sendArchitectureNewsletterWelcomeEmail,
@@ -21,8 +20,10 @@ type SubscribePayload = {
   source?: unknown;
 };
 
+type SubscriberDoc = Record<string, unknown> & { id: string; email: string; division: string; createdAt: Date };
+
 type SubscribeRecord = {
-  subscriber: NewsletterSubscriber;
+  subscriber: SubscriberDoc;
   created: boolean;
 };
 
@@ -89,16 +90,16 @@ async function createSubscriber(email: string): Promise<SubscribeRecord> {
   });
 
   if (existingSubscriber) {
-    if (existingSubscriber.division === division) {
-      return { subscriber: existingSubscriber, created: false };
+    if ((existingSubscriber as unknown as SubscriberDoc).division === division) {
+      return { subscriber: existingSubscriber as unknown as SubscriberDoc, created: false };
     }
 
     const subscriber = await prisma.newsletterSubscriber.update({
-      where: { id: existingSubscriber.id },
+      where: { id: (existingSubscriber as unknown as SubscriberDoc).id },
       data: { division },
     });
 
-    return { subscriber, created: false };
+    return { subscriber: subscriber as unknown as SubscriberDoc, created: false };
   }
 
   try {
@@ -111,19 +112,20 @@ async function createSubscriber(email: string): Promise<SubscribeRecord> {
 
     return { subscriber, created: true };
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    const mongoErr = error as { code?: number };
+    if (mongoErr.code === 11000) {
       const subscriber = await prisma.newsletterSubscriber.findUnique({
         where: { email },
       });
 
-      if (subscriber) return { subscriber, created: false };
+      if (subscriber) return { subscriber: subscriber as unknown as SubscriberDoc, created: false };
     }
 
     throw error;
   }
 }
 
-async function notifyAdmins(subscriber: NewsletterSubscriber, source: string) {
+async function notifyAdmins(subscriber: SubscriberDoc, source: string) {
   const admins = await prisma.admin.findMany({
     where: { active: true },
     select: { id: true },
@@ -131,7 +133,7 @@ async function notifyAdmins(subscriber: NewsletterSubscriber, source: string) {
 
   if (!admins.length) return;
 
-  const rows: Prisma.NotificationCreateManyInput[] = admins.map((admin) => ({
+  const rows: Record<string, unknown>[] = admins.map((admin) => ({
     adminId: admin.id,
     dedupeKey: `${admin.id}:subscriber:NewsletterSubscriber:${subscriber.id}`,
     title: "New Architecture Newsletter Subscriber",
@@ -231,7 +233,7 @@ export async function POST(request: NextRequest) {
       subscriber: {
         id: subscriber.id,
         email: subscriber.email,
-        createdAt: subscriber.createdAt.toISOString(),
+        createdAt: subscriber.createdAt instanceof Date ? subscriber.createdAt.toISOString() : String(subscriber.createdAt),
       },
       welcomeEmail: {
         queued: created,
